@@ -3,34 +3,41 @@ import toast from 'react-hot-toast';
 import Navbar from '../components/common/Navbar';
 import ProfileForm from '../components/profile/ProfileForm';
 import PhotoUpload from '../components/profile/PhotoUpload';
+import ConfirmDialog from '../components/common/ConfirmDialog';
 import Spinner from '../components/common/Spinner';
 import { getMyProfile, updateProfile, getPreference, updatePreference } from '../api/profileApi';
+import useAuth from '../hooks/useAuth';
 import logger from '../utils/logger';
 
 /**
- * EditProfilePage — update profile info, partner preference, and manage photos.
+ * EditProfilePage — update profile info, partner preference, photos, and delete account.
  *
  * Sections:
  * 1. Profile info form (pre-filled)
  * 2. Partner preference selector
- * 3. Photo management (via PhotoUpload component)
+ * 3. Photo management
+ * 4. Danger zone — delete account
  *
  * KNOWN LIMITATION (from spec):
  * Backend returns photoUrls as List<String> (only URLs, no IDs).
- * PhotoUpload needs {id, url} objects to delete photos.
- * Workaround: we extract the filename from the URL and use it as a proxy ID.
- * Real fix: ask backend to return List<PhotoDto> with {id, url}.
+ * Workaround: filename from URL is used as proxy delete ID.
  */
 const EditProfilePage = () => {
-  const [profile, setProfile] = useState(null);         // full profile from API
-  const [preference, setPreference] = useState(null);   // partner gender preference
-  const [photos, setPhotos] = useState([]);              // array of { id, url }
-  const [pageLoading, setPageLoading] = useState(true);  // initial load spinner
+  const { deleteAccount } = useAuth();
+
+  const [profile, setProfile] = useState(null);
+  const [preference, setPreference] = useState(null);
+  const [photos, setPhotos] = useState([]);              // { id, url }[]
+  const [pageLoading, setPageLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
   const [prefLoading, setPrefLoading] = useState(false);
   const [profileError, setProfileError] = useState('');
 
-  /** Load profile + preference in parallel on mount */
+  // Delete account dialog state
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  /** Load profile + preference in parallel */
   const loadData = useCallback(async () => {
     logger.info('EditProfilePage loaded');
     setPageLoading(true);
@@ -40,26 +47,20 @@ const EditProfilePage = () => {
 
       const [profileData, prefData] = await Promise.all([
         getMyProfile(),
-        getPreference().catch(() => null), // preference may not exist yet
+        getPreference().catch(() => null),
       ]);
 
       logger.response('/api/profile/me', profileData);
       setProfile(profileData);
 
-      // Convert URL strings to {id, url} objects for PhotoUpload.
-      // We use the filename portion as the "id" — this is the workaround
-      // described in the spec until backend returns proper PhotoDto.
+      // Convert URL strings → { id, url } objects for PhotoUpload
       const photoObjects = (profileData.photoUrls || []).map((url) => ({
-        id: extractPhotoId(url), // extract filename from URL as proxy ID
+        id: extractPhotoId(url),
         url,
       }));
       setPhotos(photoObjects);
 
-      if (prefData) {
-        setPreference(prefData.preferredGender || 'ANY');
-      } else {
-        setPreference('ANY'); // default if preference not set yet
-      }
+      setPreference(prefData?.preferredGender || 'ANY');
     } catch (error) {
       logger.error('Failed to load profile/preferences', error);
       toast.error('Could not load your profile. Please refresh.');
@@ -73,13 +74,11 @@ const EditProfilePage = () => {
   }, [loadData]);
 
   /**
-   * Extract filename from photo URL to use as a proxy ID.
-   * e.g. "http://localhost:8080/uploads/photos/abc123_photo.jpg" → "abc123_photo.jpg"
-   * This is the workaround for the missing photoId in backend response.
+   * Extracts filename from a photo URL to use as proxy delete ID.
+   * e.g. "/uploads/photos/4/uuid.jpg" → "uuid.jpg"
+   * Workaround until backend returns List<PhotoDto> with real IDs.
    */
-  const extractPhotoId = (url) => {
-    return url.split('/').pop();
-  };
+  const extractPhotoId = (url) => url.split('/').pop();
 
   /** Save updated profile info */
   const handleProfileUpdate = async (profileData) => {
@@ -102,7 +101,7 @@ const EditProfilePage = () => {
     }
   };
 
-  /** Save updated partner preference */
+  /** Save partner preference */
   const handlePrefUpdate = async () => {
     setPrefLoading(true);
     try {
@@ -119,27 +118,37 @@ const EditProfilePage = () => {
 
   /**
    * Called by PhotoUpload after upload or delete.
-   * If updatedProfile is provided (from upload), use it directly.
-   * Otherwise reload from API (after delete).
+   * Upload → updatedProfile provided, use directly.
+   * Delete → no arg, reload from API.
    */
   const handlePhotosChange = async (updatedProfile) => {
     if (updatedProfile) {
-      // Upload returns fresh profile — update photos directly
       const photoObjects = (updatedProfile.photoUrls || []).map((url) => ({
         id: extractPhotoId(url),
         url,
       }));
       setPhotos(photoObjects);
     } else {
-      // Delete doesn't return profile — reload from API
       await loadData();
+    }
+  };
+
+  /** Permanently delete account — called after user confirms dialog */
+  const handleDeleteAccount = async () => {
+    setDeleteLoading(true);
+    try {
+      await deleteAccount(); // clears auth + redirects to /account-deleted
+    } catch (error) {
+      logger.error('Account deletion failed', error.response?.data);
+      toast.error(error.response?.data?.message || 'Could not delete account. Please try again.');
+      setDeleteLoading(false);
+      setShowDeleteDialog(false);
     }
   };
 
   const selectClass =
     'px-4 py-2 rounded-lg border border-border dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary';
 
-  // Show full-page spinner on initial load
   if (pageLoading) {
     return (
       <div className="min-h-screen bg-background-light dark:bg-background-dark">
@@ -175,10 +184,10 @@ const EditProfilePage = () => {
 
         {/* ── Section 2: Partner Preference ── */}
         <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
-          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
+          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
             Partner Preference
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             Discover page will show profiles matching your preference.
           </p>
           <div className="flex items-center gap-4">
@@ -210,7 +219,32 @@ const EditProfilePage = () => {
           <PhotoUpload photos={photos} onPhotosChange={handlePhotosChange} />
         </section>
 
+        {/* ── Section 4: Danger Zone ── */}
+        <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6 border border-error/30">
+          <h2 className="text-lg font-bold text-error mb-1">Danger Zone</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Deleting your account is permanent. All your data, photos, likes, and matches will
+            be removed and cannot be recovered.
+          </p>
+          <button
+            onClick={() => setShowDeleteDialog(true)}
+            className="px-5 py-2 rounded-lg border border-error text-error text-sm font-semibold hover:bg-error hover:text-white transition"
+          >
+            🗑️ Delete My Account
+          </button>
+        </section>
+
       </div>
+
+      {/* Delete account confirmation dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteDialog}
+        title="Delete Account"
+        message="This will permanently delete your account, photos, and all your data. This action cannot be undone. Are you sure?"
+        onConfirm={handleDeleteAccount}
+        onCancel={() => setShowDeleteDialog(false)}
+        loading={deleteLoading}
+      />
     </div>
   );
 };

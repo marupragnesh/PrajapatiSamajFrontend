@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { resolveImageUrl } from '../../utils/imageHelper';
 import logger from '../../utils/logger';
 
 /**
@@ -7,7 +8,6 @@ import logger from '../../utils/logger';
  */
 const ProfileCard = ({ profile }) => {
   const navigate = useNavigate();
-
   const { profileId, fullName, age, city, profession, primaryPhotoUrl } = profile;
 
   const handleClick = () => {
@@ -20,11 +20,11 @@ const ProfileCard = ({ profile }) => {
       onClick={handleClick}
       className="cursor-pointer rounded-2xl border border-border bg-white dark:bg-card-dark overflow-hidden shadow-sm hover:shadow-md transition-shadow"
     >
-      {/* Profile photo */}
+      {/* Profile photo — resolveImageUrl strips backend host so Vite proxy handles it */}
       <div className="h-48 bg-gray-100 dark:bg-gray-800 overflow-hidden">
         {primaryPhotoUrl ? (
           <img
-            src={primaryPhotoUrl}
+            src={resolveImageUrl(primaryPhotoUrl)}
             alt={fullName}
             className="w-full h-full object-cover"
           />

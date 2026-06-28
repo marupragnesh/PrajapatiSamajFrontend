@@ -60,6 +60,15 @@
 
 ---
 
+## Bug Fixes
+
+### Session 3
+| # | File | Bug | Fix |
+|---|------|-----|-----|
+| 1 | `vite.config.js` | Profile images not loading in browser — `/uploads/*` relative URLs resolved against `localhost:5173` (Vite) instead of `localhost:8080` (Spring Boot) | Added Vite proxy: `/uploads` → `http://localhost:8080` |
+
+---
+
 ## Known Limitations / TODOs (from spec)
 
 | # | Item | Notes |

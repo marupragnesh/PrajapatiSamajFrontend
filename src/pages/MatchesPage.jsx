@@ -5,21 +5,19 @@ import Navbar from '../components/common/Navbar';
 import SkeletonCard from '../components/common/SkeletonCard';
 import EmptyState from '../components/common/EmptyState';
 import { getMatches } from '../api/interestApi';
+import { resolveImageUrl } from '../utils/imageHelper';
 import logger from '../utils/logger';
 
 /**
- * MatchesPage — shows all mutual matches (both parties accepted interest).
- *
- * Phase 1 rules:
- * - Show: name, age, city, profession, matched date
- * - Do NOT show: phone number or email (contact reveal is Phase 2 feature)
+ * MatchesPage — shows all mutual matches.
+ * Phase 1: name, age, city, profession, matched date only.
+ * Contact info reveal is Phase 2 (paid feature).
  */
 const MatchesPage = () => {
   const navigate = useNavigate();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  /** Load all matches on mount */
   useEffect(() => {
     const fetchMatches = async () => {
       logger.info('MatchesPage loaded');
@@ -46,19 +44,18 @@ const MatchesPage = () => {
 
       <div className="max-w-6xl mx-auto px-4 py-8">
 
-        {/* ── Celebratory banner (only shown when there are matches) ── */}
+        {/* Celebratory banner */}
         {!loading && matches.length > 0 && (
           <div className="bg-primary/10 border border-primary/20 rounded-2xl px-6 py-4 mb-6 text-center">
             <p className="text-lg font-bold text-primary">
               🎉 You have {matches.length} mutual match{matches.length > 1 ? 'es' : ''}!
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              These people have accepted your interest request
+              These people accepted your interest request
             </p>
           </div>
         )}
 
-        {/* Page header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">🎉 Matches</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -66,16 +63,12 @@ const MatchesPage = () => {
           </p>
         </div>
 
-        {/* Skeleton loading grid */}
         {loading && (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
+            {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
         )}
 
-        {/* Matches grid */}
         {!loading && matches.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {matches.map((match) => (
@@ -88,7 +81,6 @@ const MatchesPage = () => {
           </div>
         )}
 
-        {/* Empty state */}
         {!loading && matches.length === 0 && (
           <EmptyState
             icon="🤝"
@@ -101,29 +93,11 @@ const MatchesPage = () => {
   );
 };
 
-/**
- * MatchCard — displays a mutual match.
- * Phase 1: shows name, age, city, profession, matched date.
- * Contact info is NOT shown — that is a Phase 2 paid feature.
- */
 const MatchCard = ({ match, onViewProfile }) => {
-  const {
-    profileId,
-    fullName,
-    age,
-    city,
-    profession,
-    primaryPhotoUrl,
-    matchedAt,
-  } = match;
+  const { profileId, fullName, age, city, profession, primaryPhotoUrl, matchedAt } = match;
 
-  /** Format the match date */
   const formattedDate = matchedAt
-    ? new Date(matchedAt).toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      })
+    ? new Date(matchedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
     : '';
 
   return (
@@ -131,11 +105,10 @@ const MatchCard = ({ match, onViewProfile }) => {
       onClick={() => onViewProfile(profileId)}
       className="cursor-pointer rounded-2xl border border-primary/30 bg-white dark:bg-card-dark overflow-hidden shadow-sm hover:shadow-md transition-shadow"
     >
-      {/* Photo */}
       <div className="h-48 bg-gray-100 dark:bg-gray-800 overflow-hidden relative">
         {primaryPhotoUrl ? (
           <img
-            src={primaryPhotoUrl}
+            src={resolveImageUrl(primaryPhotoUrl)}
             alt={fullName}
             className="w-full h-full object-cover"
           />
@@ -144,24 +117,16 @@ const MatchCard = ({ match, onViewProfile }) => {
             👤
           </div>
         )}
-
-        {/* Match badge overlay */}
         <div className="absolute top-2 right-2 bg-primary text-white text-xs font-bold px-2 py-1 rounded-full">
           ✓ Match
         </div>
       </div>
-
-      {/* Info */}
       <div className="p-4">
         <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{fullName}</h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          {age} yrs · {city}
-        </p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{age} yrs · {city}</p>
         <p className="text-sm text-primary mt-1 truncate">{profession}</p>
         {formattedDate && (
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-            Matched on {formattedDate}
-          </p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">Matched on {formattedDate}</p>
         )}
       </div>
     </div>

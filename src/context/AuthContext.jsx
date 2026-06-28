@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect } from 'react';
 import { saveToken, saveUser, clearAuth, getToken, getUser } from '../utils/tokenHelper';
+import { deleteAccount as deleteAccountApi } from '../api/accountApi';
 import logger from '../utils/logger';
 
 export const AuthContext = createContext(null);
@@ -33,7 +34,7 @@ export const AuthProvider = ({ children }) => {
     logger.info('User logged in', { email: newUser.email });
   };
 
-  /** Clear all auth data and redirect to login */
+  /** Clear all auth data and redirect to /login */
   const logout = () => {
     clearAuth();
     setToken(null);
@@ -42,10 +43,25 @@ export const AuthProvider = ({ children }) => {
     window.location.href = '/login';
   };
 
+  /**
+   * Permanently delete the account via API, then clear auth state.
+   * Redirects to /account-deleted goodbye page.
+   * Throws on API error so the caller can show a toast.
+   */
+  const deleteAccount = async () => {
+    logger.info('User requested account deletion');
+    await deleteAccountApi(); // throws on failure — caller handles it
+    clearAuth();
+    setToken(null);
+    setUser(null);
+    logger.info('Account deleted — redirecting to /account-deleted');
+    window.location.href = '/account-deleted';
+  };
+
   const isLoggedIn = !!token;
 
   return (
-    <AuthContext.Provider value={{ token, user, isLoggedIn, login, logout }}>
+    <AuthContext.Provider value={{ token, user, isLoggedIn, login, logout, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   );

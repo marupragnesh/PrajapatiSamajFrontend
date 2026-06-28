@@ -4,16 +4,17 @@ import toast from 'react-hot-toast';
 import { uploadPhoto, deletePhoto } from '../../api/profileApi';
 import ConfirmDialog from '../common/ConfirmDialog';
 import Spinner from '../common/Spinner';
+import { resolveImageUrl } from '../../utils/imageHelper';
 import logger from '../../utils/logger';
 
 /**
  * Photo management section — upload new photos, delete existing ones.
  * Used inside EditProfilePage.
- * Props: photos (array of { id, url }), onPhotosChange()
+ * Props: photos (array of { id, url }), onPhotosChange(updatedProfile?)
  *
  * KNOWN LIMITATION: Backend returns photoUrls as List<String> (URLs only, no IDs).
- * Current workaround: photos with IDs must be stored from upload response.
- * See spec section 8.7 for full explanation.
+ * Workaround: filename extracted from URL is used as the delete ID.
+ * See EditProfilePage extractPhotoId() for details.
  */
 const PhotoUpload = ({ photos = [], onPhotosChange }) => {
   const [uploading, setUploading] = useState(false);
@@ -21,7 +22,7 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
   const [deleting, setDeleting] = useState(false);
   const fileInputRef = useRef(null);
 
-  /** Compress + upload photo */
+  /** Compress image then upload via multipart/form-data */
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -50,12 +51,11 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
       toast.error(error.response?.data?.message || 'Upload failed. Please try again.');
     } finally {
       setUploading(false);
-      // Reset file input so the same file can be re-selected
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
-  /** Confirm then delete photo */
+  /** Delete photo after user confirms in dialog */
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
     logger.info('User clicked delete photo', { photoId: deleteTarget.id });
@@ -66,7 +66,7 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
       await deletePhoto(deleteTarget.id);
       logger.info('Photo deleted successfully');
       toast.success('Photo deleted.');
-      onPhotosChange(); // trigger parent to refresh profile
+      onPhotosChange(); // no arg → parent reloads profile from API
     } catch (error) {
       logger.error('Photo delete failed', error.response?.data);
       toast.error(error.response?.data?.message || 'Delete failed.');
@@ -78,7 +78,7 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
 
   return (
     <div>
-      {/* Photo count */}
+      {/* Photo count badge */}
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
         {photos.length} / 5 photos
       </p>
@@ -87,12 +87,15 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
       <div className="grid grid-cols-3 gap-3 mb-4">
         {photos.map((photo) => (
           <div key={photo.id} className="relative group">
+            {/*
+              resolveImageUrl converts "http://localhost:8080/uploads/photos/4/uuid.jpg"
+              to "/uploads/photos/4/uuid.jpg" so Vite proxy forwards the request correctly.
+            */}
             <img
-              src={photo.url}
+              src={resolveImageUrl(photo.url)}
               alt="Profile photo"
               className="w-full h-28 object-cover rounded-lg border border-border"
             />
-            {/* Delete button overlay */}
             <button
               onClick={() => setDeleteTarget(photo)}
               className="absolute top-1 right-1 bg-error text-white text-xs rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
@@ -104,7 +107,7 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
         ))}
       </div>
 
-      {/* Upload button — hidden when max photos reached */}
+      {/* Upload button — hidden when limit reached */}
       {photos.length < 5 && (
         <>
           <input
@@ -125,11 +128,11 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
         </>
       )}
 
-      {/* Confirm delete dialog */}
+      {/* Confirmation dialog for delete */}
       <ConfirmDialog
         isOpen={!!deleteTarget}
         title="Delete Photo"
-        message="Are you sure you want to delete this photo? This action cannot be undone."
+        message="Are you sure you want to delete this photo? This cannot be undone."
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteTarget(null)}
         loading={deleting}

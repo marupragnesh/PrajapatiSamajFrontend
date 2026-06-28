@@ -5,24 +5,24 @@ import Spinner from './components/common/Spinner';
 
 /**
  * Lazy load all page-level components — per spec performance rules.
- * This means pages are only downloaded when first visited.
+ * Pages are only downloaded when first visited.
  */
-const RegisterPage       = lazy(() => import('./pages/RegisterPage'));
-const LoginPage          = lazy(() => import('./pages/LoginPage'));
-const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
-const VerifyOtpPage      = lazy(() => import('./pages/VerifyOtpPage'));
-const ResetPasswordPage  = lazy(() => import('./pages/ResetPasswordPage'));
-const ProfileSetupPage   = lazy(() => import('./pages/ProfileSetupPage'));
-const EditProfilePage    = lazy(() => import('./pages/EditProfilePage'));
-const DiscoverPage       = lazy(() => import('./pages/DiscoverPage'));
-const ProfileDetailPage  = lazy(() => import('./pages/ProfileDetailPage'));
-const LikesReceivedPage  = lazy(() => import('./pages/LikesReceivedPage'));
+const RegisterPage          = lazy(() => import('./pages/RegisterPage'));
+const LoginPage             = lazy(() => import('./pages/LoginPage'));
+const ForgotPasswordPage    = lazy(() => import('./pages/ForgotPasswordPage'));
+const VerifyOtpPage         = lazy(() => import('./pages/VerifyOtpPage'));
+const ResetPasswordPage     = lazy(() => import('./pages/ResetPasswordPage'));
+const AccountDeletedPage    = lazy(() => import('./pages/AccountDeletedPage'));
+const ProfileSetupPage      = lazy(() => import('./pages/ProfileSetupPage'));
+const EditProfilePage       = lazy(() => import('./pages/EditProfilePage'));
+const DiscoverPage          = lazy(() => import('./pages/DiscoverPage'));
+const ProfileDetailPage     = lazy(() => import('./pages/ProfileDetailPage'));
+const LikesReceivedPage     = lazy(() => import('./pages/LikesReceivedPage'));
 const InterestsReceivedPage = lazy(() => import('./pages/InterestsReceivedPage'));
-const MatchesPage        = lazy(() => import('./pages/MatchesPage'));
+const MatchesPage           = lazy(() => import('./pages/MatchesPage'));
 
 /**
- * ProtectedRoute — wraps protected pages.
- * If user is not logged in, redirects to /login.
+ * ProtectedRoute — redirects to /login if user is not authenticated.
  */
 const ProtectedRoute = ({ children }) => {
   const { isLoggedIn } = useAuth();
@@ -31,7 +31,7 @@ const ProtectedRoute = ({ children }) => {
 };
 
 /**
- * Full-page loading fallback shown while lazy page chunk is downloading.
+ * Full-page spinner shown while a lazy page chunk is loading.
  */
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
@@ -41,8 +41,8 @@ const PageLoader = () => (
 
 /**
  * App — defines all routes.
- * Public routes: register, login, forgot-password, verify-otp, reset-password
- * Protected routes: everything else (require JWT token in AuthContext)
+ * Public:    register, login, forgot-password, verify-otp, reset-password, account-deleted
+ * Protected: everything else (requires valid JWT in AuthContext)
  */
 const App = () => {
   return (
@@ -51,14 +51,15 @@ const App = () => {
         {/* Root — redirect based on auth status */}
         <Route path="/" element={<RootRedirect />} />
 
-        {/* ── Public routes (no auth needed) ── */}
-        <Route path="/register"        element={<RegisterPage />} />
-        <Route path="/login"           element={<LoginPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/verify-otp"      element={<VerifyOtpPage />} />
-        <Route path="/reset-password"  element={<ResetPasswordPage />} />
+        {/* ── Public routes ── */}
+        <Route path="/register"         element={<RegisterPage />} />
+        <Route path="/login"            element={<LoginPage />} />
+        <Route path="/forgot-password"  element={<ForgotPasswordPage />} />
+        <Route path="/verify-otp"       element={<VerifyOtpPage />} />
+        <Route path="/reset-password"   element={<ResetPasswordPage />} />
+        <Route path="/account-deleted"  element={<AccountDeletedPage />} />
 
-        {/* ── Protected routes (auth required) ── */}
+        {/* ── Protected routes ── */}
         <Route path="/profile/setup" element={<ProtectedRoute><ProfileSetupPage /></ProtectedRoute>} />
         <Route path="/profile/edit"  element={<ProtectedRoute><EditProfilePage /></ProtectedRoute>} />
         <Route path="/discover"      element={<ProtectedRoute><DiscoverPage /></ProtectedRoute>} />
@@ -67,16 +68,14 @@ const App = () => {
         <Route path="/interests"     element={<ProtectedRoute><InterestsReceivedPage /></ProtectedRoute>} />
         <Route path="/matches"       element={<ProtectedRoute><MatchesPage /></ProtectedRoute>} />
 
-        {/* Catch-all — redirect unknown paths to root */}
+        {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
   );
 };
 
-/**
- * Root redirect — logged-in users go to /discover, others go to /login.
- */
+/** Logged-in → /discover, logged-out → /login */
 const RootRedirect = () => {
   const { isLoggedIn } = useAuth();
   return <Navigate to={isLoggedIn ? '/discover' : '/login'} replace />;

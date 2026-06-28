@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Navbar from '../components/common/Navbar';
@@ -11,19 +11,36 @@ import logger from '../utils/logger';
 /**
  * DiscoverPage — browse profiles filtered by user's partner preference.
  * Uses "Load More" pagination (not infinite scroll — better performance per spec).
- * Shows skeleton cards while loading, empty state when no profiles remain.
+ *
+ * Duplicate fix:
+ *   React 18 Strict Mode runs effects twice in development. To prevent the
+ *   initial page-0 fetch from running twice and appending the same profiles
+ *   twice, we use a ref guard (fetchedRef) that blocks the second execution.
+ *   We also deduplicate by profileId as a safety net for any edge cases.
  */
 const DiscoverPage = () => {
   const navigate = useNavigate();
-  const [profiles, setProfiles] = useState([]);    // accumulated profiles across pages
-  const [page, setPage] = useState(0);              // current page index (0-based)
-  const [loading, setLoading] = useState(true);     // true during any fetch
-  const [loadingMore, setLoadingMore] = useState(false); // true only for "Load More"
-  const [hasMore, setHasMore] = useState(true);     // false when API returns empty array
+  const [profiles, setProfiles] = useState([]);
+  const [page, setPage] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+
+  // Guard: prevents React 18 Strict Mode double-invocation from fetching page 0 twice
+  const fetchedRef = useRef(false);
 
   const PAGE_SIZE = 10;
 
-  /** Fetch a page of profiles and append to existing list */
+  /** Append profiles to state, deduplicating by profileId */
+  const appendProfiles = (newProfiles) => {
+    setProfiles((prev) => {
+      const existingIds = new Set(prev.map((p) => p.profileId));
+      const unique = newProfiles.filter((p) => !existingIds.has(p.profileId));
+      return [...prev, ...unique];
+    });
+  };
+
+  /** Fetch a specific page and append results */
   const fetchProfiles = async (pageToLoad, isInitial = false) => {
     if (isInitial) setLoading(true);
     else setLoadingMore(true);
@@ -36,14 +53,12 @@ const DiscoverPage = () => {
       logger.response('/api/discover', { count: data.length, page: pageToLoad });
 
       if (data.length === 0) {
-        // Empty array means no more profiles — hide "Load More"
         logger.info('No more profiles to load');
         setHasMore(false);
-        toast('No more profiles to show.', { icon: '🔍' });
+        if (!isInitial) toast('You have seen all available profiles.', { icon: '🔍' });
       } else {
-        // Append new profiles to existing list
-        setProfiles((prev) => [...prev, ...data]);
-        setPage(pageToLoad + 1); // prepare next page number
+        appendProfiles(data);
+        setPage(pageToLoad + 1);
       }
     } catch (error) {
       logger.error('Discover failed', error);
@@ -54,18 +69,18 @@ const DiscoverPage = () => {
     }
   };
 
-  /** Load first page on mount */
+  /** Load first page on mount — ref guard prevents Strict Mode double-run */
   useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
     fetchProfiles(0, true);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /** Called when user clicks "Load More" */
   const handleLoadMore = () => {
     logger.info('User clicked Load More', { nextPage: page });
     fetchProfiles(page);
   };
 
-  /** Navigate to profile detail on card click */
   const handleCardClick = (profileId) => {
     logger.info('User clicked profile card', { profileId });
     navigate(`/profiles/${profileId}`);
@@ -76,24 +91,21 @@ const DiscoverPage = () => {
       <Navbar />
 
       <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Page header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Discover</h1>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">🔍 Discover</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Showing profiles based on your partner preference
           </p>
         </div>
 
-        {/* ── Initial skeleton loading grid ── */}
+        {/* Skeleton grid on initial load */}
         {loading && (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
+            {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
         )}
 
-        {/* ── Profile grid (shown after load) ── */}
+        {/* Profile grid */}
         {!loading && profiles.length > 0 && (
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -104,7 +116,7 @@ const DiscoverPage = () => {
               ))}
             </div>
 
-            {/* Load More button — hidden when no more pages */}
+            {/* Load More button */}
             {hasMore && (
               <div className="mt-8 flex justify-center">
                 <button
@@ -120,16 +132,16 @@ const DiscoverPage = () => {
               </div>
             )}
 
-            {/* "No more profiles" message at bottom */}
+            {/* End of results */}
             {!hasMore && (
               <p className="text-center text-sm text-gray-400 dark:text-gray-500 mt-8">
-                You've seen all available profiles. Check back later!
+                You have seen all available profiles. Check back later!
               </p>
             )}
           </>
         )}
 
-        {/* ── Empty state — no profiles at all ── */}
+        {/* Empty state — no profiles at all */}
         {!loading && profiles.length === 0 && (
           <EmptyState
             icon="👥"
