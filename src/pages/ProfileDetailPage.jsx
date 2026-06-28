@@ -11,8 +11,11 @@ import logger from '../utils/logger';
 
 /**
  * ProfileDetailPage — full profile view of another user.
- * Shows: photos (large + thumbnail gallery), name, age, city, details.
- * Actions: Like ❤️ and Send Interest 💌.
+ *
+ * Backend PhotoDto shape: { photoId, photoUrl, isPrimary }
+ * primaryPhotoUrl is a separate top-level field (relative path).
+ * photos[] is used for the thumbnail gallery.
+ *
  * Phase 1 — no contact info shown.
  */
 const ProfileDetailPage = () => {
@@ -21,7 +24,7 @@ const ProfileDetailPage = () => {
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [selectedPhotoUrl, setSelectedPhotoUrl] = useState(null); // currently shown large photo
   const [likeLoading, setLikeLoading] = useState(false);
   const [interestLoading, setInterestLoading] = useState(false);
 
@@ -34,7 +37,11 @@ const ProfileDetailPage = () => {
         const data = await getProfileById(profileId);
         logger.response(`/api/profiles/${profileId}`, data);
         setProfile(data);
-        setSelectedPhoto(data.primaryPhotoUrl || data.photoUrls?.[0] || null);
+
+        // Start with primaryPhotoUrl; fall back to first photo in array if missing
+        const primary = data.primaryPhotoUrl
+          || (data.photos?.[0]?.photoUrl ?? null);
+        setSelectedPhotoUrl(primary);
       } catch (error) {
         logger.error('Failed to load profile', error.response?.data);
         if (error.response?.status === 404) {
@@ -57,10 +64,9 @@ const ProfileDetailPage = () => {
     try {
       logger.api('POST', `/api/likes/${profileId}`);
       const data = await likeProfile(profileId);
-      logger.info('Like sent successfully');
       toast.success(data.message || 'Profile liked!');
     } catch (error) {
-      logger.error('Action failed', error.response?.data);
+      logger.error('Like failed', error.response?.data);
       toast.error(error.response?.data?.message || 'Could not like profile.');
     } finally {
       setLikeLoading(false);
@@ -73,10 +79,9 @@ const ProfileDetailPage = () => {
     try {
       logger.api('POST', `/api/interests/${profileId}`);
       const data = await sendInterest(profileId);
-      logger.info('Interest sent successfully');
       toast.success(data.message || 'Interest request sent!');
     } catch (error) {
-      logger.error('Action failed', error.response?.data);
+      logger.error('Send interest failed', error.response?.data);
       toast.error(error.response?.data?.message || 'Could not send interest.');
     } finally {
       setInterestLoading(false);
@@ -96,6 +101,9 @@ const ProfileDetailPage = () => {
 
   if (!profile) return null;
 
+  // photos[] from backend: [{ photoId, photoUrl, isPrimary }]
+  const photos = profile.photos || [];
+
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark">
       <Navbar />
@@ -103,11 +111,11 @@ const ProfileDetailPage = () => {
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="bg-white dark:bg-card-dark rounded-2xl shadow-sm overflow-hidden">
 
-          {/* Large primary photo */}
+          {/* Large selected photo */}
           <div className="h-80 bg-gray-100 dark:bg-gray-800">
-            {selectedPhoto ? (
+            {selectedPhotoUrl ? (
               <img
-                src={resolveImageUrl(selectedPhoto)}
+                src={resolveImageUrl(selectedPhotoUrl)}
                 alt={profile.fullName}
                 className="w-full h-full object-cover"
               />
@@ -119,16 +127,16 @@ const ProfileDetailPage = () => {
           </div>
 
           {/* Thumbnail gallery — click to switch large photo */}
-          {profile.photoUrls && profile.photoUrls.length > 1 && (
+          {photos.length > 1 && (
             <div className="flex gap-2 px-4 py-3 overflow-x-auto">
-              {profile.photoUrls.map((url, index) => (
+              {photos.map((photo) => (
                 <img
-                  key={index}
-                  src={resolveImageUrl(url)}
-                  alt={`Photo ${index + 1}`}
-                  onClick={() => setSelectedPhoto(url)}
+                  key={photo.photoId}
+                  src={resolveImageUrl(photo.photoUrl)}
+                  alt={`Photo ${photo.photoId}`}
+                  onClick={() => setSelectedPhotoUrl(photo.photoUrl)}
                   className={`h-14 w-14 object-cover rounded-lg cursor-pointer border-2 flex-shrink-0 transition ${
-                    selectedPhoto === url
+                    selectedPhotoUrl === photo.photoUrl
                       ? 'border-primary'
                       : 'border-transparent hover:border-primary-light'
                   }`}

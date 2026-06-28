@@ -12,39 +12,42 @@ import logger from '../utils/logger';
 /**
  * EditProfilePage — update profile info, partner preference, photos, and delete account.
  *
- * Sections:
- * 1. Profile info form (pre-filled)
- * 2. Partner preference selector
- * 3. Photo management
- * 4. Danger zone — delete account
+ * Backend PhotoDto shape (confirmed from /api/profile/me response):
+ *   { photoId: 6, photoUrl: "/uploads/photos/5/uuid.jpg", isPrimary: true }
  *
- * KNOWN LIMITATION (from spec):
- * Backend returns photoUrls as List<String> (only URLs, no IDs).
- * Workaround: filename from URL is used as proxy delete ID.
+ * photos[] state passed to PhotoUpload uses:
+ *   { id: photoId, url: photoUrl, isPrimary }
  */
 const EditProfilePage = () => {
   const { deleteAccount } = useAuth();
 
   const [profile, setProfile] = useState(null);
   const [preference, setPreference] = useState(null);
-  const [photos, setPhotos] = useState([]);              // { id, url }[]
+  const [photos, setPhotos] = useState([]);         // { id, url, isPrimary }[]
   const [pageLoading, setPageLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
   const [prefLoading, setPrefLoading] = useState(false);
   const [profileError, setProfileError] = useState('');
-
-  // Delete account dialog state
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  /**
+   * Converts backend photos[] array → { id, url, isPrimary } shape for PhotoUpload.
+   * Backend field: photo.photoId  → mapped to: id
+   * Backend field: photo.photoUrl → mapped to: url
+   */
+  const mapPhotos = (backendPhotos = []) =>
+    backendPhotos.map((p) => ({
+      id: p.photoId,
+      url: p.photoUrl,
+      isPrimary: p.isPrimary,
+    }));
+
   /** Load profile + preference in parallel */
   const loadData = useCallback(async () => {
-    logger.info('EditProfilePage loaded');
+    logger.info('EditProfilePage — loading profile and preferences');
     setPageLoading(true);
     try {
-      logger.api('GET', '/api/profile/me');
-      logger.api('GET', '/api/preferences');
-
       const [profileData, prefData] = await Promise.all([
         getMyProfile(),
         getPreference().catch(() => null),
@@ -52,14 +55,7 @@ const EditProfilePage = () => {
 
       logger.response('/api/profile/me', profileData);
       setProfile(profileData);
-
-      // Convert URL strings → { id, url } objects for PhotoUpload
-      const photoObjects = (profileData.photoUrls || []).map((url) => ({
-        id: extractPhotoId(url),
-        url,
-      }));
-      setPhotos(photoObjects);
-
+      setPhotos(mapPhotos(profileData.photos));
       setPreference(prefData?.preferredGender || 'ANY');
     } catch (error) {
       logger.error('Failed to load profile/preferences', error);
@@ -73,23 +69,15 @@ const EditProfilePage = () => {
     loadData();
   }, [loadData]);
 
-  /**
-   * Extracts filename from a photo URL to use as proxy delete ID.
-   * e.g. "/uploads/photos/4/uuid.jpg" → "uuid.jpg"
-   * Workaround until backend returns List<PhotoDto> with real IDs.
-   */
-  const extractPhotoId = (url) => url.split('/').pop();
-
   /** Save updated profile info */
   const handleProfileUpdate = async (profileData) => {
     setProfileLoading(true);
     setProfileError('');
     try {
-      logger.info('User clicked update profile');
       logger.api('PUT', '/api/profile', profileData);
       const updated = await updateProfile(profileData);
-      logger.response('/api/profile', updated);
       setProfile(updated);
+      setPhotos(mapPhotos(updated.photos));
       toast.success('Profile updated successfully!');
     } catch (error) {
       logger.error('Profile update failed', error);
@@ -118,22 +106,18 @@ const EditProfilePage = () => {
 
   /**
    * Called by PhotoUpload after upload or delete.
-   * Upload → updatedProfile provided, use directly.
-   * Delete → no arg, reload from API.
+   * If backend returns updated profile → use it directly (no extra API call).
+   * If no arg (delete path) → reload from API.
    */
   const handlePhotosChange = async (updatedProfile) => {
     if (updatedProfile) {
-      const photoObjects = (updatedProfile.photoUrls || []).map((url) => ({
-        id: extractPhotoId(url),
-        url,
-      }));
-      setPhotos(photoObjects);
+      setPhotos(mapPhotos(updatedProfile.photos));
     } else {
       await loadData();
     }
   };
 
-  /** Permanently delete account — called after user confirms dialog */
+  /** Permanently delete account — called after confirm dialog */
   const handleDeleteAccount = async () => {
     setDeleteLoading(true);
     try {
@@ -211,7 +195,7 @@ const EditProfilePage = () => {
           </div>
         </section>
 
-        {/* ── Section 3: Photo Management ── */}
+        {/* ── Section 3: Photos ── */}
         <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
           <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
             Photos
@@ -223,8 +207,8 @@ const EditProfilePage = () => {
         <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6 border border-error/30">
           <h2 className="text-lg font-bold text-error mb-1">Danger Zone</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            Deleting your account is permanent. All your data, photos, likes, and matches will
-            be removed and cannot be recovered.
+            Deleting your account is permanent. All your data, photos, likes, and matches
+            will be removed and cannot be recovered.
           </p>
           <button
             onClick={() => setShowDeleteDialog(true)}
@@ -236,7 +220,6 @@ const EditProfilePage = () => {
 
       </div>
 
-      {/* Delete account confirmation dialog */}
       <ConfirmDialog
         isOpen={showDeleteDialog}
         title="Delete Account"
