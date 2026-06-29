@@ -5,6 +5,7 @@ import SkeletonCard from '../components/common/SkeletonCard';
 import EmptyState from '../components/common/EmptyState';
 import Spinner from '../components/common/Spinner';
 import { getInterestsReceived, acceptInterest, declineInterest } from '../api/interestApi';
+import { resolveImageUrl } from '../utils/imageHelper';
 import logger from '../utils/logger';
 
 /**
@@ -17,9 +18,8 @@ import logger from '../utils/logger';
 const InterestsReceivedPage = () => {
   const [interests, setInterests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [actionLoadingId, setActionLoadingId] = useState(null); // track which card is acting
+  const [actionLoadingId, setActionLoadingId] = useState(null);
 
-  /** Load pending interest requests on mount */
   useEffect(() => {
     const fetchInterests = async () => {
       logger.info('InterestsReceivedPage loaded');
@@ -40,41 +40,39 @@ const InterestsReceivedPage = () => {
     fetchInterests();
   }, []);
 
-  /** Remove an interest card from the list by interestId */
+  /** Remove an interest card from the list after action */
   const removeFromList = (interestId) => {
     setInterests((prev) => prev.filter((i) => i.interestId !== interestId));
   };
 
-  /** Accept an interest request */
   const handleAccept = async (interestId) => {
     logger.info('User clicked Accept', { interestId });
     setActionLoadingId(interestId);
     try {
       logger.api('PUT', `/api/interests/${interestId}/accept`);
       const data = await acceptInterest(interestId);
-      logger.info('Interest accepted — removing from list', { interestId });
+      logger.info('Interest accepted', { interestId });
       toast.success(data.message || 'Interest accepted! You have a new match 🎉');
-      removeFromList(interestId); // optimistic remove
+      removeFromList(interestId);
     } catch (error) {
-      logger.error('Action failed', error.response?.data);
+      logger.error('Accept failed', error.response?.data);
       toast.error(error.response?.data?.message || 'Could not accept. Please try again.');
     } finally {
       setActionLoadingId(null);
     }
   };
 
-  /** Decline an interest request */
   const handleDecline = async (interestId) => {
     logger.info('User clicked Decline', { interestId });
     setActionLoadingId(interestId);
     try {
       logger.api('PUT', `/api/interests/${interestId}/decline`);
       const data = await declineInterest(interestId);
-      logger.info('Interest declined — removing from list', { interestId });
+      logger.info('Interest declined', { interestId });
       toast.success(data.message || 'Interest declined.');
-      removeFromList(interestId); // optimistic remove
+      removeFromList(interestId);
     } catch (error) {
-      logger.error('Action failed', error.response?.data);
+      logger.error('Decline failed', error.response?.data);
       toast.error(error.response?.data?.message || 'Could not decline. Please try again.');
     } finally {
       setActionLoadingId(null);
@@ -86,7 +84,6 @@ const InterestsReceivedPage = () => {
       <Navbar />
 
       <div className="max-w-3xl mx-auto px-4 py-8">
-        {/* Page header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">💌 Interest Requests</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -154,7 +151,6 @@ const InterestCard = ({ interest, onAccept, onDecline, isActing }) => {
     requestedAt,
   } = interest;
 
-  /** Format the received date for display */
   const formattedDate = requestedAt
     ? new Date(requestedAt).toLocaleDateString('en-IN', {
         day: 'numeric',
@@ -170,7 +166,7 @@ const InterestCard = ({ interest, onAccept, onDecline, isActing }) => {
         <div className="h-16 w-16 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden flex-shrink-0">
           {senderPrimaryPhotoUrl ? (
             <img
-              src={senderPrimaryPhotoUrl}
+              src={resolveImageUrl(senderPrimaryPhotoUrl)}
               alt={senderFullName}
               className="w-full h-full object-cover"
             />
@@ -198,17 +194,15 @@ const InterestCard = ({ interest, onAccept, onDecline, isActing }) => {
 
       {/* Action buttons */}
       <div className="flex gap-3 mt-4">
-        {/* Accept */}
         <button
           onClick={() => onAccept(interestId)}
           disabled={isActing}
           className="flex-1 py-2.5 rounded-xl bg-success text-white text-sm font-semibold hover:opacity-90 transition disabled:opacity-60 flex items-center justify-center gap-2"
         >
-          {isActing ? <Spinner /> : '✅'}
+          {isActing ? <Spinner color="white" /> : '✅'}
           {isActing ? 'Processing...' : 'Accept'}
         </button>
 
-        {/* Decline */}
         <button
           onClick={() => onDecline(interestId)}
           disabled={isActing}
