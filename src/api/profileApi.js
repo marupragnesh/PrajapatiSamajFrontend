@@ -35,11 +35,35 @@ export const uploadPhoto = async (formData) => {
   return response.data;
 };
 
-/** DELETE /api/profile/photos/{photoId} — delete a specific photo */
+/** DELETE /api/profile/photos/{photoId} — delete a specific photo by numeric ID */
 export const deletePhoto = async (photoId) => {
   logger.api('DELETE', `/api/profile/photos/${photoId}`);
   const response = await axiosInstance.delete(`/api/profile/photos/${photoId}`);
   logger.response(`/api/profile/photos/${photoId}`, response.data);
+  return response.data;
+};
+
+/** PUT /api/profile/photos/{photoId}/primary — set a photo as primary */
+export const setPrimaryPhoto = async (photoId) => {
+  logger.api('PUT', `/api/profile/photos/${photoId}/primary`);
+  const response = await axiosInstance.put(`/api/profile/photos/${photoId}/primary`);
+  logger.response(`/api/profile/photos/${photoId}/primary`, response.data);
+  return response.data;
+};
+
+/** GET /api/profile/expectations — get logged-in user's partner expectations */
+export const getMyExpectations = async () => {
+  logger.api('GET', '/api/profile/expectations');
+  const response = await axiosInstance.get('/api/profile/expectations');
+  logger.response('/api/profile/expectations', response.data);
+  return response.data;
+};
+
+/** PUT /api/profile/expectations — save or update partner expectations */
+export const saveExpectations = async (expectationData) => {
+  logger.api('PUT', '/api/profile/expectations', expectationData);
+  const response = await axiosInstance.put('/api/profile/expectations', expectationData);
+  logger.response('/api/profile/expectations', response.data);
   return response.data;
 };
 

@@ -1,46 +1,44 @@
 import { useState, useRef } from 'react';
 import imageCompression from 'browser-image-compression';
 import toast from 'react-hot-toast';
-import { uploadPhoto, deletePhoto } from '../../api/profileApi';
+import { uploadPhoto, deletePhoto, setPrimaryPhoto } from '../../api/profileApi';
 import ConfirmDialog from '../common/ConfirmDialog';
 import Spinner from '../common/Spinner';
 import { resolveImageUrl } from '../../utils/imageHelper';
 import logger from '../../utils/logger';
 
 /**
- * PhotoUpload — upload new photos one at a time, delete existing ones.
+ * PhotoUpload — upload, delete, and set primary photo.
  *
  * Props:
- *   photos         — array of { id: photoId, url: photoUrl, isPrimary }
- *   onPhotosChange — callback(updatedProfile?) called after upload or delete
+ *   photos         — array of { id, url, isPrimary }
+ *   onPhotosChange — callback(updatedProfile?) — called after upload, delete, or set-primary
  *
- * Upload flow:
- *   1. User picks file → local preview shown immediately via object URL
- *   2. Image compressed → POST multipart to backend
- *   3. On success → preview replaced by backend URL, parent state updated
- *   4. On failure → preview removed, error toast shown
+ * Each photo card shows:
+ *   ⭐ (top-left)  — "Set as Primary" button; hidden on already-primary photo
+ *   ✕ (top-right)  — Delete button
+ *   "Primary" badge (bottom-left) — shown only on the current primary photo
  */
 const PhotoUpload = ({ photos = [], onPhotosChange }) => {
   const [uploading, setUploading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState(null); // local object URL for instant preview
+  const [previewUrl, setPreviewUrl] = useState(null);    // local object URL for instant preview
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [settingPrimaryId, setSettingPrimaryId] = useState(null); // photoId being set as primary
   const fileInputRef = useRef(null);
 
-  /** Show instant local preview, then compress and upload */
+  /** Show instant local preview, compress, and upload */
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     logger.info('Photo selected for upload', { fileName: file.name, size: file.size });
 
-    // Show instant local preview before upload starts
     const localPreview = URL.createObjectURL(file);
     setPreviewUrl(localPreview);
     setUploading(true);
 
     try {
-      // Compress before upload
       const compressed = await imageCompression(file, {
         maxSizeMB: 1,
         maxWidthOrHeight: 1024,
@@ -51,7 +49,6 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
         compressedKB: Math.round(compressed.size / 1024),
       });
 
-      // Use original file.name — compressed is a Blob, not a File
       const formData = new FormData();
       formData.append('photo', compressed, file.name);
 
@@ -60,7 +57,6 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
       logger.info('Photo uploaded successfully');
       toast.success('Photo uploaded!');
 
-      // Clear local preview — parent will render the backend URL
       setPreviewUrl(null);
       onPhotosChange(updatedProfile);
     } catch (error) {
@@ -68,7 +64,6 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
       setPreviewUrl(null);
       toast.error(error.response?.data?.message || 'Upload failed. Please try again.');
     } finally {
-      // Revoke object URL to free memory
       URL.revokeObjectURL(localPreview);
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -76,9 +71,30 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
   };
 
   /**
-   * Delete confirmed — calls DELETE /api/profile/photos/{photoId}.
-   * After success: onPhotosChange() with no arg → parent reloads profile.
+   * Set a photo as primary — PUT /api/profile/photos/{photoId}/primary
+   * Backend returns updated ProfileResponse → parent re-renders from it.
    */
+  const handleSetPrimary = async (photo) => {
+    if (photo.isPrimary) return; // already primary — no-op
+
+    logger.info('Setting primary photo', { photoId: photo.id });
+    logger.api('PUT', `/api/profile/photos/${photo.id}/primary`);
+
+    setSettingPrimaryId(photo.id);
+    try {
+      const updatedProfile = await setPrimaryPhoto(photo.id);
+      logger.info('Primary photo set', { photoId: photo.id });
+      toast.success('Primary photo updated!');
+      onPhotosChange(updatedProfile);
+    } catch (error) {
+      logger.error('Set primary failed', error.response?.data);
+      toast.error(error.response?.data?.message || 'Could not set primary photo.');
+    } finally {
+      setSettingPrimaryId(null);
+    }
+  };
+
+  /** Confirm delete — calls DELETE, then parent reloads profile */
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
 
@@ -90,7 +106,7 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
       await deletePhoto(deleteTarget.id);
       logger.info('Photo deleted successfully', { photoId: deleteTarget.id });
       toast.success('Photo deleted.');
-      onPhotosChange();
+      onPhotosChange(); // no arg → parent reloads full profile
     } catch (error) {
       logger.error('Photo delete failed', error.response?.data);
       toast.error(error.response?.data?.message || 'Delete failed. Please try again.');
@@ -100,7 +116,6 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
     }
   };
 
-  // Total visible slots = uploaded photos + (1 preview slot while uploading)
   const totalCount = photos.length + (previewUrl ? 1 : 0);
 
   return (
@@ -111,34 +126,59 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
         {totalCount} / 5 photos uploaded
       </p>
 
-      {/* Photo grid — existing photos + instant preview slot */}
+      {/* Photo grid */}
       {(photos.length > 0 || previewUrl) && (
         <div className="grid grid-cols-3 gap-3 mb-4">
 
-          {/* Confirmed photos from backend */}
-          {photos.map((photo) => (
-            <div key={photo.id} className="relative group">
-              <img
-                src={resolveImageUrl(photo.url)}
-                alt="Profile photo"
-                className="w-full h-28 object-cover rounded-lg border border-border"
-              />
-              {photo.isPrimary && (
-                <span className="absolute bottom-1 left-1 bg-primary text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                  Primary
-                </span>
-              )}
-              <button
-                onClick={() => setDeleteTarget(photo)}
-                className="absolute top-1 right-1 bg-error text-white text-xs rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
-                title="Delete photo"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
+          {/* Confirmed backend photos */}
+          {photos.map((photo) => {
+            const isSettingThis = settingPrimaryId === photo.id;
 
-          {/* Instant preview slot — shown while upload is in progress */}
+            return (
+              <div key={photo.id} className="relative group">
+                <img
+                  src={resolveImageUrl(photo.url)}
+                  alt="Profile photo"
+                  className="w-full h-28 object-cover rounded-lg border border-border"
+                />
+
+                {/* Primary badge */}
+                {photo.isPrimary && (
+                  <span className="absolute bottom-1 left-1 bg-primary text-white text-xs px-1.5 py-0.5 rounded font-medium pointer-events-none">
+                    ⭐ Primary
+                  </span>
+                )}
+
+                {/* Set as Primary button — shown on non-primary photos, top-left */}
+                {!photo.isPrimary && (
+                  <button
+                    onClick={() => handleSetPrimary(photo)}
+                    disabled={isSettingThis || !!settingPrimaryId}
+                    title="Set as primary photo"
+                    className="absolute top-1 left-1 bg-black/60 text-white text-xs rounded px-1.5 py-0.5
+                               opacity-0 group-hover:opacity-100 transition disabled:opacity-40
+                               flex items-center gap-1"
+                  >
+                    {isSettingThis ? <Spinner color="white" size="xs" /> : '⭐'}
+                  </button>
+                )}
+
+                {/* Delete button — top-right */}
+                <button
+                  onClick={() => setDeleteTarget(photo)}
+                  disabled={isSettingThis}
+                  className="absolute top-1 right-1 bg-error text-white text-xs rounded-full w-6 h-6
+                             flex items-center justify-center opacity-0 group-hover:opacity-100 transition
+                             disabled:opacity-40"
+                  title="Delete photo"
+                >
+                  ✕
+                </button>
+              </div>
+            );
+          })}
+
+          {/* Instant preview while uploading */}
           {previewUrl && (
             <div className="relative">
               <img
@@ -146,7 +186,6 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
                 alt="Uploading..."
                 className="w-full h-28 object-cover rounded-lg border border-primary opacity-70"
               />
-              {/* Spinner overlay on top of preview */}
               <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg">
                 <Spinner color="white" />
               </div>
@@ -159,7 +198,7 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
         </div>
       )}
 
-      {/* Upload button — hidden when 5 photos reached */}
+      {/* Upload button — hidden when limit reached */}
       {totalCount < 5 && (
         <>
           <input
@@ -179,12 +218,11 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
                 : 'border-primary text-primary cursor-pointer hover:bg-primary hover:text-white'
               }`}
           >
-            {/* Use primary color spinner on the light label background */}
             {uploading ? <Spinner color="primary" /> : '📷'}
             {uploading ? 'Uploading...' : 'Upload Photo'}
           </label>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-            Click to select a photo. Repeat for each photo (max 5).
+            Hover a photo and click ⭐ to set it as your primary display photo.
           </p>
         </>
       )}
@@ -201,7 +239,7 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
         title="Delete Photo"
         message={
           deleteTarget?.isPrimary
-            ? 'This is your primary photo. Deleting it will remove it from your profile cover. Are you sure?'
+            ? 'This is your primary photo. Deleting it will automatically promote the next photo. Are you sure?'
             : 'Are you sure you want to delete this photo? This cannot be undone.'
         }
         onConfirm={handleDeleteConfirm}

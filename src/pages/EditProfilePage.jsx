@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Navbar from '../components/common/Navbar';
 import ProfileForm from '../components/profile/ProfileForm';
@@ -10,31 +11,35 @@ import useAuth from '../hooks/useAuth';
 import logger from '../utils/logger';
 
 /**
- * EditProfilePage — update profile info, partner preference, photos, and delete account.
+ * EditProfilePage — /profile/edit
  *
- * Backend PhotoDto shape (confirmed from /api/profile/me response):
+ * Sections:
+ *   1. Profile Information  — update name, age, gender, maritalStatus, etc.
+ *   2. Partner Expectations — button navigates to /profile/expectations
+ *   3. Partner Preference   — which gender to show in discovery
+ *   4. Photos               — upload, delete, set primary
+ *   5. Danger Zone          — delete account
+ *
+ * Backend PhotoDto shape (confirmed):
  *   { photoId: 6, photoUrl: "/uploads/photos/5/uuid.jpg", isPrimary: true }
- *
- * photos[] state passed to PhotoUpload uses:
- *   { id: photoId, url: photoUrl, isPrimary }
  */
 const EditProfilePage = () => {
+  const navigate = useNavigate();
   const { deleteAccount } = useAuth();
 
-  const [profile, setProfile] = useState(null);
-  const [preference, setPreference] = useState(null);
-  const [photos, setPhotos] = useState([]);         // { id, url, isPrimary }[]
-  const [pageLoading, setPageLoading] = useState(true);
+  const [profile, setProfile]             = useState(null);
+  const [preference, setPreference]       = useState(null);
+  const [photos, setPhotos]               = useState([]);
+  const [pageLoading, setPageLoading]     = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
-  const [prefLoading, setPrefLoading] = useState(false);
-  const [profileError, setProfileError] = useState('');
+  const [prefLoading, setPrefLoading]     = useState(false);
+  const [profileError, setProfileError]   = useState('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   /**
-   * Converts backend photos[] array → { id, url, isPrimary } shape for PhotoUpload.
-   * Backend field: photo.photoId  → mapped to: id
-   * Backend field: photo.photoUrl → mapped to: url
+   * Maps backend photos[] → { id, url, isPrimary } for PhotoUpload component.
+   * Backend: photo.photoId → id, photo.photoUrl → url
    */
   const mapPhotos = (backendPhotos = []) =>
     backendPhotos.map((p) => ({
@@ -43,7 +48,7 @@ const EditProfilePage = () => {
       isPrimary: p.isPrimary,
     }));
 
-  /** Load profile + preference in parallel */
+  /** Load profile + preference in parallel on mount */
   const loadData = useCallback(async () => {
     logger.info('EditProfilePage — loading profile and preferences');
     setPageLoading(true);
@@ -89,7 +94,7 @@ const EditProfilePage = () => {
     }
   };
 
-  /** Save partner preference */
+  /** Save partner preference (which gender to show in discovery) */
   const handlePrefUpdate = async () => {
     setPrefLoading(true);
     try {
@@ -106,7 +111,7 @@ const EditProfilePage = () => {
 
   /**
    * Called by PhotoUpload after upload or delete.
-   * If backend returns updated profile → use it directly (no extra API call).
+   * If backend returns updated profile → use it directly.
    * If no arg (delete path) → reload from API.
    */
   const handlePhotosChange = async (updatedProfile) => {
@@ -121,7 +126,7 @@ const EditProfilePage = () => {
   const handleDeleteAccount = async () => {
     setDeleteLoading(true);
     try {
-      await deleteAccount(); // clears auth + redirects to /account-deleted
+      await deleteAccount();
     } catch (error) {
       logger.error('Account deletion failed', error.response?.data);
       toast.error(error.response?.data?.message || 'Could not delete account. Please try again.');
@@ -150,7 +155,7 @@ const EditProfilePage = () => {
 
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-8">
 
-        {/* ── Section 1: Profile Info ── */}
+        {/* ── Section 1: Profile Information ── */}
         <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
           <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
             Profile Information
@@ -166,7 +171,23 @@ const EditProfilePage = () => {
           )}
         </section>
 
-        {/* ── Section 2: Partner Preference ── */}
+        {/* ── Section 2: Partner Expectations ── */}
+        <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
+          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
+            Partner Expectations
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Tell others what you are looking for in a partner. All fields are optional.
+          </p>
+          <button
+            onClick={() => navigate('/profile/expectations')}
+            className="px-5 py-2.5 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary-light transition"
+          >
+            ✏️ Edit Expectations
+          </button>
+        </section>
+
+        {/* ── Section 3: Partner Preference ── */}
         <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
           <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
             Partner Preference
@@ -195,7 +216,7 @@ const EditProfilePage = () => {
           </div>
         </section>
 
-        {/* ── Section 3: Photos ── */}
+        {/* ── Section 4: Photos ── */}
         <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
           <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
             Photos
@@ -203,7 +224,7 @@ const EditProfilePage = () => {
           <PhotoUpload photos={photos} onPhotosChange={handlePhotosChange} />
         </section>
 
-        {/* ── Section 4: Danger Zone ── */}
+        {/* ── Section 5: Danger Zone ── */}
         <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6 border border-error/30">
           <h2 className="text-lg font-bold text-error mb-1">Danger Zone</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
