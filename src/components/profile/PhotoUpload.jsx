@@ -9,25 +9,22 @@ import logger from '../../utils/logger';
 
 /**
  * PhotoUpload — upload, delete, and set primary photo.
+ * Max 10 photos per profile (enforced in backend, reflected here in UI).
  *
  * Props:
  *   photos         — array of { id, url, isPrimary }
  *   onPhotosChange — callback(updatedProfile?) — called after upload, delete, or set-primary
- *
- * Each photo card shows:
- *   ⭐ (top-left)  — "Set as Primary" button; hidden on already-primary photo
- *   ✕ (top-right)  — Delete button
- *   "Primary" badge (bottom-left) — shown only on the current primary photo
  */
-const PhotoUpload = ({ photos = [], onPhotosChange }) => {
-  const [uploading, setUploading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState(null);    // local object URL for instant preview
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [deleting, setDeleting] = useState(false);
-  const [settingPrimaryId, setSettingPrimaryId] = useState(null); // photoId being set as primary
-  const fileInputRef = useRef(null);
+const MAX_PHOTOS = 10;
 
-  /** Show instant local preview, compress, and upload */
+const PhotoUpload = ({ photos = [], onPhotosChange }) => {
+  const [uploading, setUploading]           = useState(false);
+  const [previewUrl, setPreviewUrl]         = useState(null);
+  const [deleteTarget, setDeleteTarget]     = useState(null);
+  const [deleting, setDeleting]             = useState(false);
+  const [settingPrimaryId, setSettingPrimaryId] = useState(null);
+  const fileInputRef                        = useRef(null);
+
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -52,7 +49,6 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
       const formData = new FormData();
       formData.append('photo', compressed, file.name);
 
-      logger.api('POST', '/api/profile/photos');
       const updatedProfile = await uploadPhoto(formData);
       logger.info('Photo uploaded successfully');
       toast.success('Photo uploaded!');
@@ -70,20 +66,11 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
     }
   };
 
-  /**
-   * Set a photo as primary — PUT /api/profile/photos/{photoId}/primary
-   * Backend returns updated ProfileResponse → parent re-renders from it.
-   */
   const handleSetPrimary = async (photo) => {
-    if (photo.isPrimary) return; // already primary — no-op
-
-    logger.info('Setting primary photo', { photoId: photo.id });
-    logger.api('PUT', `/api/profile/photos/${photo.id}/primary`);
-
+    if (photo.isPrimary) return;
     setSettingPrimaryId(photo.id);
     try {
       const updatedProfile = await setPrimaryPhoto(photo.id);
-      logger.info('Primary photo set', { photoId: photo.id });
       toast.success('Primary photo updated!');
       onPhotosChange(updatedProfile);
     } catch (error) {
@@ -94,19 +81,13 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
     }
   };
 
-  /** Confirm delete — calls DELETE, then parent reloads profile */
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
-
-    logger.info('Deleting photo', { photoId: deleteTarget.id });
-    logger.api('DELETE', `/api/profile/photos/${deleteTarget.id}`);
-
     try {
       setDeleting(true);
       await deletePhoto(deleteTarget.id);
-      logger.info('Photo deleted successfully', { photoId: deleteTarget.id });
       toast.success('Photo deleted.');
-      onPhotosChange(); // no arg → parent reloads full profile
+      onPhotosChange();
     } catch (error) {
       logger.error('Photo delete failed', error.response?.data);
       toast.error(error.response?.data?.message || 'Delete failed. Please try again.');
@@ -120,20 +101,17 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
 
   return (
     <div>
-
       {/* Photo count */}
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-        {totalCount} / 5 photos uploaded
+        {totalCount} / {MAX_PHOTOS} photos uploaded
       </p>
 
       {/* Photo grid */}
       {(photos.length > 0 || previewUrl) && (
         <div className="grid grid-cols-3 gap-3 mb-4">
 
-          {/* Confirmed backend photos */}
           {photos.map((photo) => {
             const isSettingThis = settingPrimaryId === photo.id;
-
             return (
               <div key={photo.id} className="relative group">
                 <img
@@ -141,15 +119,11 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
                   alt="Profile photo"
                   className="w-full h-28 object-cover rounded-lg border border-border"
                 />
-
-                {/* Primary badge */}
                 {photo.isPrimary && (
                   <span className="absolute bottom-1 left-1 bg-primary text-white text-xs px-1.5 py-0.5 rounded font-medium pointer-events-none">
                     ⭐ Primary
                   </span>
                 )}
-
-                {/* Set as Primary button — shown on non-primary photos, top-left */}
                 {!photo.isPrimary && (
                   <button
                     onClick={() => handleSetPrimary(photo)}
@@ -162,8 +136,6 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
                     {isSettingThis ? <Spinner color="white" size="xs" /> : '⭐'}
                   </button>
                 )}
-
-                {/* Delete button — top-right */}
                 <button
                   onClick={() => setDeleteTarget(photo)}
                   disabled={isSettingThis}
@@ -194,12 +166,11 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
               </span>
             </div>
           )}
-
         </div>
       )}
 
       {/* Upload button — hidden when limit reached */}
-      {totalCount < 5 && (
+      {totalCount < MAX_PHOTOS && (
         <>
           <input
             ref={fileInputRef}
@@ -227,13 +198,12 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
         </>
       )}
 
-      {totalCount >= 5 && (
+      {totalCount >= MAX_PHOTOS && (
         <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-          Maximum 5 photos reached. Delete one to upload a new photo.
+          Maximum {MAX_PHOTOS} photos reached. Delete one to upload a new photo.
         </p>
       )}
 
-      {/* Confirm delete dialog */}
       <ConfirmDialog
         isOpen={!!deleteTarget}
         title="Delete Photo"
@@ -246,7 +216,6 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
         onCancel={() => setDeleteTarget(null)}
         loading={deleting}
       />
-
     </div>
   );
 };
