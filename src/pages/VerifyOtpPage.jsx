@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { verifyOtp } from '../api/authApi';
+import { verifyOtp, resendOtp } from '../api/authApi';
 import Spinner from '../components/common/Spinner';
 import logger from '../utils/logger';
 
@@ -11,6 +11,8 @@ const VerifyOtpPage = () => {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resending, setResending] = useState(false);
 
   const email = sessionStorage.getItem('reset_email');
 
@@ -23,6 +25,13 @@ const VerifyOtpPage = () => {
       navigate('/forgot-password');
     }
   }, [email, navigate]);
+
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,6 +52,24 @@ const VerifyOtpPage = () => {
       toast.error(msg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (resendCooldown > 0 || resending) return;
+    setResending(true);
+    setError('');
+    try {
+      logger.info('Resending OTP to email:', email);
+      await resendOtp(email);
+      toast.success('A new OTP has been sent.');
+      setResendCooldown(30); // 30-second cooldown
+    } catch (err) {
+      logger.error('Failed to resend OTP', err.response?.data);
+      const msg = err.response?.data?.message || 'Failed to resend OTP. Please try again.';
+      toast.error(msg);
+    } finally {
+      setResending(false);
     }
   };
 
@@ -77,6 +104,17 @@ const VerifyOtpPage = () => {
             {loading ? 'Verifying...' : 'Verify OTP'}
           </button>
         </form>
+
+        <div className="mt-6 text-center">
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={resendCooldown > 0 || resending}
+            className="text-primary hover:text-primary-light font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {resending ? 'Resending...' : resendCooldown > 0 ? `Resend OTP in ${resendCooldown}s` : 'Resend OTP'}
+          </button>
+        </div>
       </div>
     </div>
   );

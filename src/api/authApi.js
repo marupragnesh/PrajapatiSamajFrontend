@@ -28,7 +28,7 @@ export const forgotPassword = async (email) => {
 /** POST /api/auth/verify-otp — verify the 6-digit OTP */
 export const verifyOtp = async (email, otp) => {
   logger.api('POST', '/api/auth/verify-otp', { email });
-  const response = await axiosInstance.post('/api/auth/verify-otp', { email, otp });
+  const response = await axiosInstance.post('/api/auth/verify-otp', { email, otpCode: otp });
   logger.response('/api/auth/verify-otp', response.data);
   return response.data;
 };
@@ -36,7 +36,15 @@ export const verifyOtp = async (email, otp) => {
 /** POST /api/auth/reset-password — set new password after OTP verified */
 export const resetPassword = async (email, otp, newPassword) => {
   logger.api('POST', '/api/auth/reset-password', { email });
-  const response = await axiosInstance.post('/api/auth/reset-password', { email, otp, newPassword });
+  const response = await axiosInstance.post('/api/auth/reset-password', { email, otpCode: otp, newPassword });
   logger.response('/api/auth/reset-password', response.data);
+  return response.data;
+};
+
+/** POST /api/auth/resend-otp — resend OTP to email */
+export const resendOtp = async (email) => {
+  logger.api('POST', '/api/auth/resend-otp', { email });
+  const response = await axiosInstance.post('/api/auth/resend-otp', { email });
+  logger.response('/api/auth/resend-otp', response.data);
   return response.data;
 };
