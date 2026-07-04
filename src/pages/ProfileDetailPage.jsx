@@ -214,6 +214,44 @@ const ProfileDetailPage = () => {
               </div>
             </Section>
 
+            {/* ── Contact Info ── */}
+            {profile.mobileNo && (
+              <Section title="Contact Information">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                  <DetailRow label="Mobile Number" value={profile.mobileNo} />
+                </div>
+              </Section>
+            )}
+
+            {/* ── Family Details ── */}
+            {(profile.fatherName || profile.motherName) && (
+              <Section title="Family Details">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                  {profile.fatherName && (
+                    <DetailRow label="Father's Name" value={profile.fatherName} />
+                  )}
+                  {profile.fatherOccupation && (
+                    <DetailRow label="Father's Occupation" value={profile.fatherOccupation} />
+                  )}
+                  {profile.motherName && (
+                    <DetailRow label="Mother's Name" value={profile.motherName} />
+                  )}
+                  {profile.motherOccupation && (
+                    <DetailRow label="Mother's Occupation" value={profile.motherOccupation} />
+                  )}
+                </div>
+              </Section>
+            )}
+
+            {/* ── Description / About Me ── */}
+            {profile.description && (
+              <Section title="About Me / Description">
+                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 whitespace-pre-line">
+                  {profile.description}
+                </p>
+              </Section>
+            )}
+
             {/* ── Professional Info ── */}
             <Section title="Professional Information">
               <div className="grid grid-cols-2 gap-x-4 gap-y-3">
@@ -221,6 +259,7 @@ const ProfileDetailPage = () => {
                 <DetailRow label="Profession" value={profile.profession} />
               </div>
             </Section>
+
 
             {/* ── Action Buttons ── */}
             <div className="flex gap-3 pt-1">

@@ -48,7 +48,11 @@ const ProfileForm = ({
     gotra:         initialData.gotra         || '',
     diet:          initialData.diet          || '',
     religion:      initialData.religion      || '',
-    hobbies:       initialData.hobbies       || '',
+    fatherName:       initialData.fatherName       || '',
+    fatherOccupation: initialData.fatherOccupation || '',
+    motherName:       initialData.motherName       || '',
+    motherOccupation: initialData.motherOccupation || '',
+    description:      initialData.description      || '',
   });
 
   const [errors, setErrors] = useState({});
@@ -78,6 +82,9 @@ const ProfileForm = ({
     if (!form.education.trim()) newErrors.education = 'Education is required';
     if (!form.profession.trim()) newErrors.profession = 'Profession is required';
 
+    if (!form.fatherName.trim()) newErrors.fatherName = 'Father name is required';
+    if (!form.motherName.trim()) newErrors.motherName = 'Mother name is required';
+
     return newErrors;
   };
 
@@ -97,23 +104,28 @@ const ProfileForm = ({
     setErrors({});
 
     onSubmit({
-      fullName:      form.fullName.trim(),
-      age:           Number(form.age),
-      gender:        form.gender,
-      maritalStatus: form.maritalStatus,
-      city:          form.city.trim(),
-      mobileNo:      form.mobileNo.trim(),
-      addressLine:   form.addressLine.trim(),
-      state:         form.state.trim(),
-      pincode:       form.pincode.trim(),
-      education:     form.education.trim(),
-      profession:    form.profession.trim(),
-      height:        form.height   || null,
-      income:        form.income   || null,
-      gotra:         form.gotra    || null,
-      diet:          form.diet     || null,
-      religion:      form.religion || null,
-      hobbies:       form.hobbies  || null,
+      fullName:         form.fullName.trim(),
+      age:              Number(form.age),
+      gender:           form.gender,
+      maritalStatus:    form.maritalStatus,
+      city:             form.city.trim(),
+      mobileNo:         form.mobileNo.trim(),
+      addressLine:      form.addressLine.trim(),
+      state:            form.state.trim(),
+      pincode:          form.pincode.trim(),
+      education:        form.education.trim(),
+      profession:       form.profession.trim(),
+      fatherName:       form.fatherName.trim(),
+      fatherOccupation: form.fatherOccupation.trim() || null,
+      motherName:       form.motherName.trim(),
+      motherOccupation: form.motherOccupation.trim() || null,
+      description:      form.description.trim()      || null,
+      height:           form.height   || null,
+      income:           form.income   || null,
+      gotra:            form.gotra    || null,
+      diet:             form.diet     || null,
+      religion:         form.religion || null,
+      hobbies:          form.hobbies  || null,
     });
   };
 
@@ -153,6 +165,31 @@ const ProfileForm = ({
           ))}
         </select>
       </Field>
+
+      {/* ── Family Details ── */}
+      <SectionTitle>Family Details</SectionTitle>
+
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="Father's Name *" error={errors.fatherName}>
+          <input name="fatherName" value={form.fatherName} onChange={handleChange}
+            placeholder="Ramesh Prajapati" className={inputClass} />
+        </Field>
+        <Field label="Father's Occupation (Optional)">
+          <input name="fatherOccupation" value={form.fatherOccupation} onChange={handleChange}
+            placeholder="Business / Retired" className={inputClass} />
+        </Field>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="Mother's Name *" error={errors.motherName}>
+          <input name="motherName" value={form.motherName} onChange={handleChange}
+            placeholder="Sunita Prajapati" className={inputClass} />
+        </Field>
+        <Field label="Mother's Occupation (Optional)">
+          <input name="motherOccupation" value={form.motherOccupation} onChange={handleChange}
+            placeholder="Homemaker / Teacher" className={inputClass} />
+        </Field>
+      </div>
 
       {/* ── Contact & Address ── */}
       <SectionTitle>Contact &amp; Address</SectionTitle>
@@ -196,6 +233,13 @@ const ProfileForm = ({
           placeholder="Software Engineer" className={inputClass} />
       </Field>
 
+      {/* ── Description / About Me ── */}
+      <SectionTitle>Description / About Me (Optional)</SectionTitle>
+      <Field label="Description">
+        <textarea name="description" value={form.description} onChange={handleChange}
+          rows={4} placeholder="Write something about yourself, your background, and family..." className={inputClass} />
+      </Field>
+
       {/* ── Optional Fields ── */}
       <SectionTitle>Additional Details (Optional)</SectionTitle>
 
@@ -233,6 +277,7 @@ const ProfileForm = ({
         <textarea name="hobbies" value={form.hobbies} onChange={handleChange}
           rows={3} placeholder="Cricket, Coding, Music..." className={inputClass} />
       </Field>
+
 
       {serverError && <p className="text-error text-sm">{serverError}</p>}
 
