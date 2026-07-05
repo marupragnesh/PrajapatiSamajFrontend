@@ -53,6 +53,7 @@ const ProfileForm = ({
     motherName:       initialData.motherName       || '',
     motherOccupation: initialData.motherOccupation || '',
     description:      initialData.description      || '',
+    hobbies:          initialData.hobbies          || '',
   });
 
   const [errors, setErrors] = useState({});

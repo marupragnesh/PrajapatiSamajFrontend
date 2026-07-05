@@ -39,7 +39,8 @@ const EditProfilePage = () => {
   const [expError, setExpError]           = useState('');
 
   // Account Deletion OTP Modal State
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal]   = useState(false);
   const [otpCode, setOtpCode]                 = useState('');
   const [otpSending, setOtpSending]           = useState(false);
   const [deleteLoading, setDeleteLoading]     = useState(false);
@@ -149,7 +150,18 @@ const EditProfilePage = () => {
     }
   };
 
-  // Step 1: Initiate Delete Account — sends OTP via email and opens Modal
+  // Step 1: Open Are You Sure confirmation modal
+  const handleOpenConfirmDelete = () => {
+    setShowConfirmModal(true);
+  };
+
+  // Step 2: User confirms deletion in popup → send OTP email and open OTP modal
+  const handleConfirmInitiateDelete = async () => {
+    setShowConfirmModal(false);
+    await handleInitiateDelete();
+  };
+
+  // Send Delete OTP via backend
   const handleInitiateDelete = async () => {
     setOtpSending(true);
     setDeleteError('');
@@ -168,7 +180,7 @@ const EditProfilePage = () => {
     }
   };
 
-  // Step 2: Resend Delete Account OTP
+  // Resend Delete Account OTP
   const handleResendDeleteOtp = async () => {
     if (cooldown > 0 || otpSending) return;
     setOtpSending(true);
@@ -280,71 +292,20 @@ const EditProfilePage = () => {
 
         {/* Tab Content: Edit Profile */}
         {activeTab === 'profile' && (
-          <div className="space-y-6">
-            <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
-              <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
-                Profile Information
-              </h2>
-              {profile && (
-                <ProfileForm
-                  initialData={profile}
-                  onSubmit={handleProfileUpdate}
-                  loading={profileLoading}
-                  serverError={profileError}
-                  submitLabel="Update Profile"
-                />
-              )}
-            </section>
-
-            <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
-              <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
-                Profile Photos (Max 10)
-              </h2>
-              <PhotoUpload photos={photos} onPhotosChange={handlePhotosChange} />
-            </section>
-
-            <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
-              <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">
-                Partner Gender Preference
-              </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                Which profiles would you like to see on the Discover page?
-              </p>
-              <div className="flex items-center gap-4">
-                <select
-                  value={preference || 'ANY'}
-                  onChange={(e) => setPreference(e.target.value)}
-                  className={selectClass}
-                >
-                  <option value="ANY">Any (Both Genders)</option>
-                  <option value="FEMALE">Female Profiles Only</option>
-                  <option value="MALE">Male Profiles Only</option>
-                </select>
-                <button
-                  onClick={handlePrefUpdate}
-                  disabled={prefLoading}
-                  className="px-5 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary-light transition disabled:opacity-60 cursor-pointer"
-                >
-                  {prefLoading ? 'Saving...' : 'Save Preference'}
-                </button>
-              </div>
-            </section>
-
-            <section className="bg-red-50 dark:bg-red-950/20 rounded-2xl border border-red-200 dark:border-red-900/50 p-6">
-              <h2 className="text-lg font-bold text-error mb-2">Danger Zone</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Permanently delete your account and all associated data. Requiring OTP verification sent to your email.
-              </p>
-              <button
-                onClick={handleInitiateDelete}
-                disabled={otpSending}
-                className="px-5 py-2.5 rounded-xl bg-error text-white text-sm font-semibold hover:bg-red-700 transition disabled:opacity-60 flex items-center gap-2 cursor-pointer"
-              >
-                {otpSending && <Spinner size="sm" />}
-                {otpSending ? 'Sending OTP...' : '🗑️ Delete My Account'}
-              </button>
-            </section>
-          </div>
+          <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
+            <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
+              Profile Information
+            </h2>
+            {profile && (
+              <ProfileForm
+                initialData={profile}
+                onSubmit={handleProfileUpdate}
+                loading={profileLoading}
+                serverError={profileError}
+                submitLabel="Update Profile"
+              />
+            )}
+          </section>
         )}
 
         {/* Tab Content: Edit Expectations */}
@@ -366,7 +327,104 @@ const EditProfilePage = () => {
           </section>
         )}
 
+        {/* Independent Sections (Visible under both tabs when scrolling down) */}
+        <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
+          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
+            Profile Photos (Max 10)
+          </h2>
+          <PhotoUpload photos={photos} onPhotosChange={handlePhotosChange} />
+        </section>
+
+        <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
+          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">
+            Partner Gender Preference
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Which profiles would you like to see on the Discover page?
+          </p>
+          <div className="flex items-center gap-4">
+            <select
+              value={preference || 'ANY'}
+              onChange={(e) => setPreference(e.target.value)}
+              className={selectClass}
+            >
+              <option value="ANY">Any (Both Genders)</option>
+              <option value="FEMALE">Female Profiles Only</option>
+              <option value="MALE">Male Profiles Only</option>
+            </select>
+            <button
+              onClick={handlePrefUpdate}
+              disabled={prefLoading}
+              className="px-5 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary-light transition disabled:opacity-60 cursor-pointer"
+            >
+              {prefLoading ? 'Saving...' : 'Save Preference'}
+            </button>
+          </div>
+        </section>
+
+        <section className="bg-red-50 dark:bg-red-950/20 rounded-2xl border border-red-200 dark:border-red-900/50 p-6">
+          <h2 className="text-lg font-bold text-error mb-2">Danger Zone</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Permanently delete your account and all associated data. Requiring OTP verification sent to your email.
+          </p>
+          <button
+            onClick={handleOpenConfirmDelete}
+            disabled={otpSending}
+            className="px-5 py-2.5 rounded-xl bg-error text-white text-sm font-semibold hover:bg-red-700 transition disabled:opacity-60 flex items-center gap-2 cursor-pointer"
+          >
+            {otpSending && <Spinner size="sm" />}
+            {otpSending ? 'Sending OTP...' : '🗑️ Delete My Account'}
+          </button>
+        </section>
+
       </div>
+
+      {/* Are You Sure? Confirmation Modal before sending email OTP */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="w-full max-w-md bg-white dark:bg-card-dark rounded-2xl shadow-2xl border border-border dark:border-gray-700 overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border dark:border-gray-700 bg-red-50/50 dark:bg-red-950/20">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">⚠️</span>
+                <h2 className="text-lg font-bold text-error">Are you sure?</h2>
+              </div>
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl font-bold p-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                Are you sure you want to delete your account? This action cannot be undone and will permanently erase all your profile information, photos, and match history.
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                When you click <strong className="text-error">&quot;Yes, Delete Account&quot;</strong>, a 6-digit verification code will be sent to your email (<strong className="text-gray-800 dark:text-gray-200">{user?.email}</strong>) to confirm account deletion.
+              </p>
+
+              <div className="flex gap-3 pt-4 border-t border-border dark:border-gray-700">
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmModal(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-border dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer"
+                >
+                  No, Keep Account
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmInitiateDelete}
+                  disabled={otpSending}
+                  className="flex-1 py-2.5 rounded-xl bg-error text-white font-semibold text-sm hover:bg-red-700 transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                >
+                  {otpSending ? 'Sending OTP...' : 'Yes, Delete Account'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Account OTP Modal */}
       {showDeleteModal && (
