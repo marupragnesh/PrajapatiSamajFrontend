@@ -153,24 +153,25 @@ const ProfileDetailPage = () => {
             )}
           </div>
 
-          {/* Thumbnail gallery — click to switch large photo */}
+          {/* Thumbnail gallery — click to switch large photo (wrapped, no scrollbar) */}
           {photos.length > 1 && (
-            <div className="flex gap-2 px-4 py-3 overflow-x-auto">
+            <div className="flex flex-wrap gap-2.5 px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border-t border-b border-border/50">
               {photos.map((photo) => (
                 <img
                   key={photo.photoId}
                   src={resolveImageUrl(photo.photoUrl)}
                   alt={`Photo ${photo.photoId}`}
                   onClick={() => setSelectedPhotoUrl(photo.photoUrl)}
-                  className={`h-14 w-14 object-cover rounded-lg cursor-pointer border-2 flex-shrink-0 transition ${
+                  className={`h-14 w-14 object-cover rounded-lg cursor-pointer border-2 transition ${
                     selectedPhotoUrl === photo.photoUrl
-                      ? 'border-primary'
+                      ? 'border-primary ring-2 ring-primary/30'
                       : 'border-transparent hover:border-primary-light'
                   }`}
                 />
               ))}
             </div>
           )}
+
 
           <div className="p-6 space-y-5">
 

@@ -1,46 +1,50 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Navbar from '../components/common/Navbar';
 import ProfileForm from '../components/profile/ProfileForm';
+import ExpectationsForm from '../components/profile/ExpectationsForm';
 import PhotoUpload from '../components/profile/PhotoUpload';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import Spinner from '../components/common/Spinner';
-import { getMyProfile, updateProfile, getPreference, updatePreference } from '../api/profileApi';
+import {
+  getMyProfile,
+  updateProfile,
+  getPreference,
+  updatePreference,
+  getMyExpectations,
+  saveExpectations,
+} from '../api/profileApi';
 import useAuth from '../hooks/useAuth';
+import { resolveImageUrl } from '../utils/imageHelper';
 import logger from '../utils/logger';
 
 /**
  * EditProfilePage — /profile/edit
  *
- * Sections:
- *   1. Profile Information  — update name, age, gender, maritalStatus, etc.
- *   2. Partner Expectations — button navigates to /profile/expectations
- *   3. Partner Preference   — which gender to show in discovery
- *   4. Photos               — upload, delete, set primary
- *   5. Danger Zone          — delete account
- *
- * Backend PhotoDto shape (confirmed):
- *   { photoId: 6, photoUrl: "/uploads/photos/5/uuid.jpg", isPrimary: true }
+ * Instagram-style profile header layout:
+ *   - DP Avatar on left
+ *   - User Full Name & Email on right
+ *   - Edit Profile & Edit Expectation buttons
+ *   - Tab toggle: Profile Information form vs Expectations form
  */
 const EditProfilePage = () => {
-  const navigate = useNavigate();
-  const { deleteAccount } = useAuth();
+  const { user, deleteAccount } = useAuth();
 
+  const [activeTab, setActiveTab]         = useState('profile'); // 'profile' | 'expectations'
   const [profile, setProfile]             = useState(null);
+  const [expectations, setExpectations]   = useState(null);
   const [preference, setPreference]       = useState(null);
   const [photos, setPhotos]               = useState([]);
   const [pageLoading, setPageLoading]     = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [expLoading, setExpLoading]       = useState(false);
   const [prefLoading, setPrefLoading]     = useState(false);
   const [profileError, setProfileError]   = useState('');
+  const [expError, setExpError]           = useState('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  /**
-   * Maps backend photos[] → { id, url, isPrimary } for PhotoUpload component.
-   * Backend: photo.photoId → id, photo.photoUrl → url
-   */
+  /** Maps backend photos[] → { id, url, isPrimary } */
   const mapPhotos = (backendPhotos = []) =>
     backendPhotos.map((p) => ({
       id: p.photoId,
@@ -48,22 +52,24 @@ const EditProfilePage = () => {
       isPrimary: p.isPrimary,
     }));
 
-  /** Load profile + preference in parallel on mount */
+  /** Load profile, expectations, and preference in parallel */
   const loadData = useCallback(async () => {
-    logger.info('EditProfilePage — loading profile and preferences');
+    logger.info('EditProfilePage — loading profile, expectations, and preferences');
     setPageLoading(true);
     try {
-      const [profileData, prefData] = await Promise.all([
+      const [profileData, prefData, expData] = await Promise.all([
         getMyProfile(),
         getPreference().catch(() => null),
+        getMyExpectations().catch(() => null),
       ]);
 
       logger.response('/api/profile/me', profileData);
       setProfile(profileData);
-      setPhotos(mapPhotos(profileData.photos));
+      setPhotos(mapPhotos(profileData?.photos));
       setPreference(prefData?.preferredGender || 'ANY');
+      setExpectations(expData || {});
     } catch (error) {
-      logger.error('Failed to load profile/preferences', error);
+      logger.error('Failed to load profile data', error);
       toast.error('Could not load your profile. Please refresh.');
     } finally {
       setPageLoading(false);
@@ -94,7 +100,26 @@ const EditProfilePage = () => {
     }
   };
 
-  /** Save partner preference (which gender to show in discovery) */
+  /** Save updated expectations info */
+  const handleExpectationsUpdate = async (expPayload) => {
+    setExpLoading(true);
+    setExpError('');
+    try {
+      logger.api('POST', '/api/profile/expectations', expPayload);
+      const updatedExp = await saveExpectations(expPayload);
+      setExpectations(updatedExp);
+      toast.success('Partner expectations saved successfully!');
+    } catch (error) {
+      logger.error('Expectations update failed', error);
+      const msg = error.response?.data?.message || 'Could not save expectations. Please try again.';
+      setExpError(msg);
+      toast.error(msg);
+    } finally {
+      setExpLoading(false);
+    }
+  };
+
+  /** Save partner preference */
   const handlePrefUpdate = async () => {
     setPrefLoading(true);
     try {
@@ -109,20 +134,15 @@ const EditProfilePage = () => {
     }
   };
 
-  /**
-   * Called by PhotoUpload after upload or delete.
-   * If backend returns updated profile → use it directly.
-   * If no arg (delete path) → reload from API.
-   */
   const handlePhotosChange = async (updatedProfile) => {
     if (updatedProfile) {
+      setProfile(updatedProfile);
       setPhotos(mapPhotos(updatedProfile.photos));
     } else {
       await loadData();
     }
   };
 
-  /** Permanently delete account — called after confirm dialog */
   const handleDeleteAccount = async () => {
     setDeleteLoading(true);
     try {
@@ -153,91 +173,155 @@ const EditProfilePage = () => {
     <div className="min-h-screen bg-background-light dark:bg-background-dark">
       <Navbar />
 
-      <div className="max-w-2xl mx-auto px-4 py-8 space-y-8">
+      <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
 
-        {/* ── Section 1: Profile Information ── */}
-        <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
-          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
-            Profile Information
-          </h2>
-          {profile && (
-            <ProfileForm
-              initialData={profile}
-              onSubmit={handleProfileUpdate}
-              loading={profileLoading}
-              serverError={profileError}
-              submitLabel="Update Profile"
-            />
-          )}
-        </section>
+        {/* ── Instagram-Style Header Card ── */}
+        <div className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
+          <div className="flex items-center gap-6">
 
-        {/* ── Section 2: Partner Expectations ── */}
-        <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
-          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
-            Partner Expectations
-          </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            Tell others what you are looking for in a partner. All fields are optional.
-          </p>
-          <button
-            onClick={() => navigate('/profile/expectations')}
-            className="px-5 py-2.5 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary-light transition"
-          >
-            ✏️ Edit Expectations
-          </button>
-        </section>
+            {/* Circular DP Avatar */}
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-primary/20 overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-gray-800 flex items-center justify-center shadow-inner">
+              {profile?.primaryPhotoUrl ? (
+                <img
+                  src={resolveImageUrl(profile.primaryPhotoUrl)}
+                  alt={profile?.fullName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-4xl text-gray-400">👤</span>
+              )}
+            </div>
 
-        {/* ── Section 3: Partner Preference ── */}
-        <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
-          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
-            Partner Preference
-          </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            Discover page will show profiles matching your preference.
-          </p>
-          <div className="flex items-center gap-4">
-            <select
-              value={preference || 'ANY'}
-              onChange={(e) => setPreference(e.target.value)}
-              className={selectClass}
-            >
-              <option value="MALE">Male</option>
-              <option value="FEMALE">Female</option>
-              <option value="ANY">Any</option>
-            </select>
+            {/* User Full Name & Login Email */}
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 truncate">
+                {profile?.fullName || user?.fullName || 'User Profile'}
+              </h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
+                {user?.email}
+              </p>
+              {profile?.city && (
+                <p className="text-xs text-primary font-medium mt-1">📍 {profile.city}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Action Buttons — Edit Profile & Edit Expectation */}
+          <div className="flex gap-3 mt-6 pt-4 border-t border-border/60 dark:border-gray-700/60">
             <button
-              onClick={handlePrefUpdate}
-              disabled={prefLoading}
-              className="px-5 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary-light transition disabled:opacity-60 flex items-center gap-2"
+              onClick={() => setActiveTab('profile')}
+              className={`flex-1 py-2.5 px-4 rounded-xl font-semibold text-sm transition flex items-center justify-center gap-2 ${
+                activeTab === 'profile'
+                  ? 'bg-primary text-white shadow-md'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
             >
-              {prefLoading && <Spinner />}
-              {prefLoading ? 'Saving...' : 'Save Preference'}
+              ✏️ Edit Profile
+            </button>
+            <button
+              onClick={() => setActiveTab('expectations')}
+              className={`flex-1 py-2.5 px-4 rounded-xl font-semibold text-sm transition flex items-center justify-center gap-2 ${
+                activeTab === 'expectations'
+                  ? 'bg-primary text-white shadow-md'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              💍 Edit Expectation
             </button>
           </div>
-        </section>
+        </div>
 
-        {/* ── Section 4: Photos ── */}
-        <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
-          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
-            Photos
-          </h2>
-          <PhotoUpload photos={photos} onPhotosChange={handlePhotosChange} />
-        </section>
+        {/* ── Tab Content: Edit Profile ── */}
+        {activeTab === 'profile' && (
+          <div className="space-y-6">
+            {/* Profile Form */}
+            <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
+              <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
+                Profile Information
+              </h2>
+              {profile && (
+                <ProfileForm
+                  initialData={profile}
+                  onSubmit={handleProfileUpdate}
+                  loading={profileLoading}
+                  serverError={profileError}
+                  submitLabel="Update Profile"
+                />
+              )}
+            </section>
 
-        {/* ── Section 5: Danger Zone ── */}
-        <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6 border border-error/30">
-          <h2 className="text-lg font-bold text-error mb-1">Danger Zone</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            Deleting your account is permanent. All your data, photos, likes, and matches
-            will be removed and cannot be recovered.
-          </p>
-          <button
-            onClick={() => setShowDeleteDialog(true)}
-            className="px-5 py-2 rounded-lg border border-error text-error text-sm font-semibold hover:bg-error hover:text-white transition"
-          >
-            🗑️ Delete My Account
-          </button>
-        </section>
+            {/* Photos Upload */}
+            <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
+              <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
+                Photos
+              </h2>
+              <PhotoUpload photos={photos} onPhotosChange={handlePhotosChange} />
+            </section>
+
+            {/* Partner Preference */}
+            <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
+              <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
+                Partner Preference
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                Discover page will show profiles matching your preference.
+              </p>
+              <div className="flex items-center gap-4">
+                <select
+                  value={preference || 'ANY'}
+                  onChange={(e) => setPreference(e.target.value)}
+                  className={selectClass}
+                >
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                  <option value="ANY">Any</option>
+                </select>
+                <button
+                  onClick={handlePrefUpdate}
+                  disabled={prefLoading}
+                  className="px-5 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary-light transition disabled:opacity-60 flex items-center gap-2"
+                >
+                  {prefLoading && <Spinner />}
+                  {prefLoading ? 'Saving...' : 'Save Preference'}
+                </button>
+              </div>
+            </section>
+
+            {/* Danger Zone */}
+            <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6 border border-error/30">
+              <h2 className="text-lg font-bold text-error mb-1">Danger Zone</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                Deleting your account is permanent. All your data, photos, likes, and matches
+                will be removed and cannot be recovered.
+              </p>
+              <button
+                onClick={() => setShowDeleteDialog(true)}
+                className="px-5 py-2 rounded-lg border border-error text-error text-sm font-semibold hover:bg-error hover:text-white transition"
+              >
+                🗑️ Delete My Account
+              </button>
+            </section>
+          </div>
+        )}
+
+        {/* ── Tab Content: Edit Expectations ── */}
+        {activeTab === 'expectations' && (
+          <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
+            <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
+              Partner Expectations
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              Tell others what you are looking for in a partner. All fields are optional.
+            </p>
+            <ExpectationsForm
+              initialData={expectations || {}}
+              onSubmit={handleExpectationsUpdate}
+              loading={expLoading}
+              serverError={expError}
+              submitLabel="Save Expectations"
+            />
+          </section>
+        )}
 
       </div>
 
