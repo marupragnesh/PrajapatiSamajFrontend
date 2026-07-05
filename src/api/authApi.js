@@ -1,11 +1,27 @@
 import axiosInstance from './axiosInstance';
 import logger from '../utils/logger';
 
-/** POST /api/auth/register — register a new user */
+/** POST /api/auth/register — initiate registration and send OTP */
 export const registerUser = async (email, password) => {
   logger.api('POST', '/api/auth/register', { email });
   const response = await axiosInstance.post('/api/auth/register', { email, password });
   logger.response('/api/auth/register', response.data);
+  return response.data;
+};
+
+/** POST /api/auth/register/resend-otp — resend registration OTP */
+export const resendRegistrationOtp = async (email) => {
+  logger.api('POST', '/api/auth/register/resend-otp', { email });
+  const response = await axiosInstance.post('/api/auth/register/resend-otp', { email });
+  logger.response('/api/auth/register/resend-otp', response.data);
+  return response.data;
+};
+
+/** POST /api/auth/register/verify-otp — verify OTP, activate user, and return JWT */
+export const verifyRegistrationOtp = async (email, otp) => {
+  logger.api('POST', '/api/auth/register/verify-otp', { email });
+  const response = await axiosInstance.post('/api/auth/register/verify-otp', { email, otpCode: otp });
+  logger.response('/api/auth/register/verify-otp', response.data);
   return response.data;
 };
 
