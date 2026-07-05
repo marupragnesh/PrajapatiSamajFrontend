@@ -48,9 +48,9 @@ export const AuthProvider = ({ children }) => {
    * Redirects to /account-deleted goodbye page.
    * Throws on API error so the caller can show a toast.
    */
-  const deleteAccount = async () => {
-    logger.info('User requested account deletion');
-    await deleteAccountApi(); // throws on failure — caller handles it
+  const deleteAccount = async (otpCode) => {
+    logger.info('User requested account deletion with OTP');
+    await deleteAccountApi(otpCode); // throws on failure — caller handles it
     clearAuth();
     setToken(null);
     setUser(null);
