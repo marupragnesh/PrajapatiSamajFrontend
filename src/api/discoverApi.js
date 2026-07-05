@@ -1,10 +1,22 @@
 import axiosInstance from './axiosInstance';
 import logger from '../utils/logger';
 
-/** GET /api/discover?page=&size= — browse profiles by gender preference */
-export const discoverProfiles = async (page = 0, size = 10) => {
-  logger.api('GET', '/api/discover', { page, size });
-  const response = await axiosInstance.get('/api/discover', { params: { page, size } });
+/** GET /api/discover?page=&size=&minAge=... — browse profiles by preference and optional filters */
+export const discoverProfiles = async (page = 0, size = 10, filters = {}) => {
+  const params = { page, size };
+
+  if (filters.minAge) filters.minAge = Number(filters.minAge);
+  if (filters.maxAge) filters.maxAge = Number(filters.maxAge);
+
+  // Strip empty/null filter values
+  Object.keys(filters).forEach((key) => {
+    if (filters[key] !== null && filters[key] !== undefined && filters[key] !== '') {
+      params[key] = filters[key];
+    }
+  });
+
+  logger.api('GET', '/api/discover', params);
+  const response = await axiosInstance.get('/api/discover', { params });
   logger.response('/api/discover', { count: response.data.length, page });
   return response.data;
 };
