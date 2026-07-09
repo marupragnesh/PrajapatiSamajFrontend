@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import ProfileForm from '../components/profile/ProfileForm';
 import { createProfile } from '../api/profileApi';
+import useAuth from '../hooks/useAuth';
 import logger from '../utils/logger';
 
 /**
@@ -12,6 +13,7 @@ import logger from '../utils/logger';
  */
 const ProfileSetupPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState('');
 
@@ -52,6 +54,7 @@ const ProfileSetupPage = () => {
         {/* Shared profile form — no initial data (new profile) */}
         <ProfileForm
           onSubmit={handleCreateProfile}
+          initialData={user || {}}
           loading={loading}
           serverError={serverError}
           submitLabel="Save & Continue"

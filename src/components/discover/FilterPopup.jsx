@@ -41,6 +41,7 @@ const DEFAULT_FILTERS = {
   minHeight: '',
   maxHeight: '',
   diet: '',
+  surname: '',
 };
 
 const FilterPopup = ({ isOpen, onClose, appliedFilters = DEFAULT_FILTERS, onApply, onClearAll }) => {
@@ -106,8 +107,9 @@ const FilterPopup = ({ isOpen, onClose, appliedFilters = DEFAULT_FILTERS, onAppl
   const isMaritalStatusActive = Boolean(localFilters.maritalStatus);
   const isHeightActive = localFilters.minHeight || localFilters.maxHeight;
   const isDietActive = Boolean(localFilters.diet);
+  const isSurnameActive = Boolean(localFilters.surname);
 
-  const hasAnyActiveFilter = isAgeActive || isMaritalStatusActive || isHeightActive || isDietActive;
+  const hasAnyActiveFilter = isAgeActive || isMaritalStatusActive || isHeightActive || isDietActive || isSurnameActive;
 
   const inputClass =
     'w-full px-3 py-1.5 rounded-lg border border-border dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary';
@@ -310,6 +312,31 @@ const FilterPopup = ({ isOpen, onClose, appliedFilters = DEFAULT_FILTERS, onAppl
                 );
               })}
             </div>
+          </div>
+
+          {/* 5. Surname Filter */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Surname
+              </label>
+              {isSurnameActive && (
+                <button
+                  type="button"
+                  onClick={() => handleClearField('surname')}
+                  className="text-xs text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  ✕ Clear
+                </button>
+              )}
+            </div>
+            <input
+              type="text"
+              placeholder="e.g. Prajapati"
+              value={localFilters.surname || ''}
+              onChange={(e) => handleFieldChange('surname', e.target.value)}
+              className={inputClass}
+            />
           </div>
 
         </div>

@@ -32,7 +32,8 @@ const ProfileForm = ({
   submitLabel = 'Save Profile',
 }) => {
   const [form, setForm] = useState({
-    fullName:      initialData.fullName      || '',
+    name:          initialData.name          || (initialData.fullName ? initialData.fullName.split(' ')[0] : ''),
+    surname:       initialData.surname       || (initialData.fullName ? initialData.fullName.substring(initialData.fullName.indexOf(' ') + 1) : ''),
     age:           initialData.age           || '',
     gender:        initialData.gender        || '',
     maritalStatus: initialData.maritalStatus || '',
@@ -61,8 +62,11 @@ const ProfileForm = ({
   const validate = () => {
     const newErrors = {};
 
-    if (!form.fullName.trim()) newErrors.fullName = 'Full name is required';
-    else if (form.fullName.length > 100) newErrors.fullName = 'Max 100 characters';
+    if (!form.name.trim()) newErrors.name = 'First name is required';
+    else if (form.name.length > 50) newErrors.name = 'Max 50 characters';
+
+    if (!form.surname.trim()) newErrors.surname = 'Surname is required';
+    else if (form.surname.length > 50) newErrors.surname = 'Max 50 characters';
 
     if (!form.age) newErrors.age = 'Age is required';
     else if (Number(form.age) < 18 || Number(form.age) > 80) newErrors.age = 'Age must be between 18 and 80';
@@ -105,7 +109,9 @@ const ProfileForm = ({
     setErrors({});
 
     onSubmit({
-      fullName:         form.fullName.trim(),
+      name:             form.name.trim(),
+      surname:          form.surname.trim(),
+      fullName:         `${form.name.trim()} ${form.surname.trim()}`,
       age:              Number(form.age),
       gender:           form.gender,
       maritalStatus:    form.maritalStatus,
@@ -139,10 +145,17 @@ const ProfileForm = ({
       {/* ── Personal Info ── */}
       <SectionTitle>Personal Information</SectionTitle>
 
-      <Field label="Full Name *" error={errors.fullName}>
-        <input name="fullName" value={form.fullName} onChange={handleChange}
-          placeholder="Rahul Prajapati" className={inputClass} />
-      </Field>
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="First Name *" error={errors.name}>
+          <input name="name" value={form.name} onChange={handleChange}
+            placeholder="Rahul" className={inputClass} />
+        </Field>
+
+        <Field label="Surname *" error={errors.surname}>
+          <input name="surname" value={form.surname} onChange={handleChange}
+            placeholder="Prajapati" className={inputClass} />
+        </Field>
+      </div>
 
       <div className="grid grid-cols-2 gap-4">
         <Field label="Age *" error={errors.age}>

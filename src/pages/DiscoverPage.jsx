@@ -27,6 +27,7 @@ const DEFAULT_FILTERS = {
   minHeight: '',
   maxHeight: '',
   diet: '',
+  surname: '',
 };
 
 const DiscoverPage = () => {
@@ -58,6 +59,7 @@ const DiscoverPage = () => {
     filters.maritalStatus,
     filters.minHeight || filters.maxHeight,
     filters.diet,
+    filters.surname,
   ].filter(Boolean).length;
 
   // ── Browse helpers ──
@@ -317,6 +319,13 @@ const DiscoverPage = () => {
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/10 text-primary dark:text-primary-light">
                 Diet: {filters.diet}
                 <button onClick={() => handleFilterChange({ ...filters, diet: '' })} className="hover:text-red-500 ml-1">✕</button>
+              </span>
+            )}
+
+            {filters.surname && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/10 text-primary dark:text-primary-light">
+                Surname: {filters.surname}
+                <button onClick={() => handleFilterChange({ ...filters, surname: '' })} className="hover:text-red-500 ml-1">✕</button>
               </span>
             )}
 
