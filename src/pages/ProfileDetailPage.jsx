@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Navbar from '../components/common/Navbar';
 import Spinner from '../components/common/Spinner';
+import UnlockContactButton from '../components/payment/UnlockContactButton';
 import { getProfileById } from '../api/profileApi';
 import { likeProfile } from '../api/likeApi';
 import { sendInterest } from '../api/interestApi';
@@ -20,10 +21,12 @@ import logger from '../utils/logger';
  *   - Like + Send Interest action buttons
  *
  * Backend contract:
- *   photos[]     — [{ photoId, photoUrl, isPrimary }]
- *   expectations — null if user has not filled them in, else ExpectationResponse object
- *
- * Phase 1 — no contact info shown.
+ *   photos[]           — [{ photoId, photoUrl, isPrimary }]
+ *   expectations       — null if user has not filled them in, else ExpectationResponse object
+ *   mobileNo           — masked ("98********") unless isMobileUnlocked is true
+ *   isMobileUnlocked   — true if viewer is the owner OR has paid to unlock
+ *                        CONTACT_UNLOCK; controls whether the real number or
+ *                        the UnlockContactButton is shown
  */
 
 /** Human-readable labels for enum values */
@@ -55,33 +58,44 @@ const ProfileDetailPage = () => {
   const [likeLoading, setLikeLoading] = useState(false);
   const [interestLoading, setInterestLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      logger.info('ProfileDetailPage loaded', { profileId });
-      setLoading(true);
-      try {
-        logger.api('GET', `/api/profiles/${profileId}`);
-        const data = await getProfileById(profileId);
-        logger.response(`/api/profiles/${profileId}`, data);
-        setProfile(data);
+  /**
+   * Fetch the profile being viewed. Pulled out of useEffect so it can also
+   * be called from UnlockContactButton's onUnlocked callback — after a
+   * successful contact unlock, this re-fetches so isMobileUnlocked flips to
+   * true and the real mobile number appears without a full page reload.
+   *
+   * @param isRefetch - true when called after unlock (skips the full-page
+   *                    spinner so the unlock button doesn't flicker/disappear
+   *                    mid-toast; false on initial mount)
+   */
+  const fetchProfile = async (isRefetch = false) => {
+    logger.info('ProfileDetailPage loaded', { profileId, isRefetch });
+    if (!isRefetch) setLoading(true);
+    try {
+      logger.api('GET', `/api/profiles/${profileId}`);
+      const data = await getProfileById(profileId);
+      logger.response(`/api/profiles/${profileId}`, data);
+      setProfile(data);
 
-        // Start with primaryPhotoUrl; fall back to first photo in array
-        const primary = data.primaryPhotoUrl || (data.photos?.[0]?.photoUrl ?? null);
-        setSelectedPhotoUrl(primary);
-      } catch (error) {
-        logger.error('Failed to load profile', error.response?.data);
-        if (error.response?.status === 404) {
-          toast.error('Profile not found.');
-          navigate('/discover');
-        } else {
-          toast.error('Could not load profile. Please try again.');
-        }
-      } finally {
-        setLoading(false);
+      // Start with primaryPhotoUrl; fall back to first photo in array
+      const primary = data.primaryPhotoUrl || (data.photos?.[0]?.photoUrl ?? null);
+      setSelectedPhotoUrl(primary);
+    } catch (error) {
+      logger.error('Failed to load profile', error.response?.data);
+      if (error.response?.status === 404) {
+        toast.error('Profile not found.');
+        navigate('/discover');
+      } else {
+        toast.error('Could not load profile. Please try again.');
       }
-    };
+    } finally {
+      if (!isRefetch) setLoading(false);
+    }
+  };
 
-    fetchProfile();
+  useEffect(() => {
+    fetchProfile(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileId, navigate]);
 
   const handleLike = async () => {
@@ -216,11 +230,24 @@ const ProfileDetailPage = () => {
             </Section>
 
             {/* ── Contact Info ── */}
+            {/* profile.mobileNo is masked ("98********") server-side unless
+                isMobileUnlocked is true (viewer is the owner, or has paid to
+                unlock CONTACT_UNLOCK). Show the Unlock button instead of the
+                masked string so the user has a clear path to see the real number. */}
             {profile.mobileNo && (
               <Section title="Contact Information">
-                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                  <DetailRow label="Mobile Number" value={profile.mobileNo} />
-                </div>
+                {profile.isMobileUnlocked ? (
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                    <DetailRow label="Mobile Number" value={profile.mobileNo} />
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                      {profile.mobileNo}
+                    </p>
+                    <UnlockContactButton onUnlocked={() => fetchProfile(true)} />
+                  </div>
+                )}
               </Section>
             )}
 
