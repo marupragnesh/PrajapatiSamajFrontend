@@ -17,6 +17,7 @@ import logger from '../utils/logger';
  *   - Links to all 5 Legal policies copied from Razorpay site
  */
 const AboutDeveloperPage = () => {
+  const [totalUsers, setTotalUsers]   = useState(null);
   const [todayCount, setTodayCount]   = useState(null);
   const [loading, setLoading]         = useState(true);
   const [refreshing, setRefreshing]   = useState(false);
@@ -30,13 +31,14 @@ const AboutDeveloperPage = () => {
       logger.api('GET', '/api/stats/today-registrations');
       const res = await getTodayRegistrationsCount();
       logger.response('/api/stats/today-registrations', res);
+      setTotalUsers(res?.totalUsersCount ?? res?.data?.totalUsersCount ?? 0);
       setTodayCount(res?.todayRegistrationsCount ?? res?.data?.todayRegistrationsCount ?? 0);
       if (isManualRefresh) {
-        toast.success('Registration count updated!');
+        toast.success('Registration counts updated!');
       }
     } catch (error) {
-      logger.error('Failed to fetch today registration count', error);
-      toast.error('Could not load today\'s registration count.');
+      logger.error('Failed to fetch registration counts', error);
+      toast.error('Could not load registration counts.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -87,79 +89,56 @@ const AboutDeveloperPage = () => {
           </a>
         </div>
 
-        {/* ── Today's Registrations Counter ── */}
+        {/* ── Platform Stats Counter (Total Users & Today New Users) ── */}
         <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-card-dark border border-primary/20 rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center text-2xl font-bold shadow-md">
-              📊
-            </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                Live Community Growth
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-gray-100 flex items-center gap-3 mt-0.5">
-                {loading ? (
-                  <Spinner size="md" />
-                ) : (
-                  <span className="text-primary text-3xl font-extrabold">
-                    {todayCount !== null ? todayCount : 0}
-                  </span>
-                )}
-                <span className="text-base font-semibold text-gray-700 dark:text-gray-300">
-                  User Profiles Created Today
-                </span>
-              </h2>
+          <div className="space-y-3 w-full sm:w-auto">
+            <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Live Community Growth
+            </p>
+            <div className="flex flex-wrap items-center gap-6">
+              {/* Total Users */}
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-xl font-bold">
+                  👥
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-primary">
+                    {loading ? <Spinner size="sm" /> : (totalUsers !== null ? totalUsers : 0)}
+                  </div>
+                  <div className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+                    Total Registered Users
+                  </div>
+                </div>
+              </div>
+
+              {/* Today Users */}
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-xl font-bold">
+                  🚀
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                    {loading ? <Spinner size="sm" /> : (todayCount !== null ? todayCount : 0)}
+                  </div>
+                  <div className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+                    Created Today
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
           <button
             onClick={() => fetchTodayCount(true)}
             disabled={refreshing || loading}
-            className="px-4 py-2 rounded-xl bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-border dark:border-gray-600 font-semibold text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center gap-2 cursor-pointer shadow-sm disabled:opacity-50"
+            className="px-4 py-2.5 rounded-xl bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-border dark:border-gray-600 font-semibold text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center gap-2 cursor-pointer shadow-sm disabled:opacity-50 shrink-0 self-stretch sm:self-auto justify-center"
           >
             {refreshing ? <Spinner size="sm" /> : <span>🔄</span>}
             {refreshing ? 'Refreshing...' : 'Refresh Count'}
           </button>
         </div>
 
-        {/* ── About Me Description ── */}
-        <div className="bg-white dark:bg-card-dark rounded-2xl p-6 sm:p-8 shadow-md border border-border space-y-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 border-b border-border pb-3 flex items-center gap-2">
-            <span>💻</span> About Me &amp; Engineering Philosophy
-          </h2>
-          <div className="prose dark:prose-invert text-sm text-gray-600 dark:text-gray-300 leading-relaxed space-y-3">
-            <p>
-              I care about clean architecture as much as I care about the finished product — code that's organized into clear layers, easy to test, and easy for someone else (or future me) to pick up without a long explanation.
-            </p>
-            <p>
-              Every project starts with understanding what you actually need, not just what's technically interesting to build. That usually means a short conversation before any code gets written.
-            </p>
-          </div>
-
-          {/* 3 Core Values */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-            <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-border dark:border-gray-700">
-              <h3 className="font-bold text-gray-900 dark:text-gray-100 text-sm mb-1">📐 Clear Structure</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Controllers, services, and repositories stay strictly separated — no mixed responsibilities.
-              </p>
-            </div>
-            <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-border dark:border-gray-700">
-              <h3 className="font-bold text-gray-900 dark:text-gray-100 text-sm mb-1">📖 Readable Code</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Short, purposeful comments and clear naming, so the code explains itself.
-              </p>
-            </div>
-            <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-border dark:border-gray-700">
-              <h3 className="font-bold text-gray-900 dark:text-gray-100 text-sm mb-1">🤝 Honest Communication</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                If something isn't a good fit, I'll say so early before it costs you time or money.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Project Idea Proposal Box ── */}
+        {/* ── Project Idea Proposal Box (Placed UP for easy access) ── */}
         <div className="bg-white dark:bg-card-dark rounded-2xl p-6 sm:p-8 shadow-md border border-border space-y-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center text-xl">
@@ -195,6 +174,43 @@ const AboutDeveloperPage = () => {
               </button>
             </div>
           </form>
+        </div>
+
+        {/* ── About Me & Engineering Philosophy (Placed AFTER Project Idea) ── */}
+        <div className="bg-white dark:bg-card-dark rounded-2xl p-6 sm:p-8 shadow-md border border-border space-y-6">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 border-b border-border pb-3 flex items-center gap-2">
+            <span>💻</span> About Me &amp; Engineering Philosophy
+          </h2>
+          <div className="prose dark:prose-invert text-sm text-gray-600 dark:text-gray-300 leading-relaxed space-y-3">
+            <p>
+              I care about clean architecture as much as I care about the finished product — code that's organized into clear layers, easy to test, and easy for someone else (or future me) to pick up without a long explanation.
+            </p>
+            <p>
+              Every project starts with understanding what you actually need, not just what's technically interesting to build. That usually means a short conversation before any code gets written.
+            </p>
+          </div>
+
+          {/* 3 Core Values */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+            <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-border dark:border-gray-700">
+              <h3 className="font-bold text-gray-900 dark:text-gray-100 text-sm mb-1">📐 Clear Structure</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Controllers, services, and repositories stay strictly separated — no mixed responsibilities.
+              </p>
+            </div>
+            <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-border dark:border-gray-700">
+              <h3 className="font-bold text-gray-900 dark:text-gray-100 text-sm mb-1">📖 Readable Code</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Short, purposeful comments and clear naming, so the code explains itself.
+              </p>
+            </div>
+            <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-border dark:border-gray-700">
+              <h3 className="font-bold text-gray-900 dark:text-gray-100 text-sm mb-1">🤝 Honest Communication</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                If something isn't a good fit, I'll say so early before it costs you time or money.
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* ── Legal Policies Quick Links ── */}

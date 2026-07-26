@@ -32,7 +32,12 @@ const ExpectationsForm = ({
     preferredMaritalStatus: initialData.preferredMaritalStatus ?? '',
     preferredMinHeight:     initialData.preferredMinHeight     ?? '',
     preferredMaxHeight:     initialData.preferredMaxHeight     ?? '',
+    preferredMinWeight:     initialData.preferredMinWeight     ?? '',
+    preferredMaxWeight:     initialData.preferredMaxWeight     ?? '',
     preferredCity:          initialData.preferredCity          ?? '',
+    preferredState:         initialData.preferredState         ?? '',
+    preferredHasMangal:     initialData.preferredHasMangal === true ? 'true' : initialData.preferredHasMangal === false ? 'false' : '',
+    preferredHasSani:       initialData.preferredHasSani === true ? 'true' : initialData.preferredHasSani === false ? 'false' : '',
     preferredEducation:     initialData.preferredEducation     ?? '',
     preferredProfession:    initialData.preferredProfession    ?? '',
     preferredIncome:        initialData.preferredIncome        ?? '',
@@ -50,7 +55,12 @@ const ExpectationsForm = ({
         preferredMaritalStatus: initialData.preferredMaritalStatus ?? '',
         preferredMinHeight:     initialData.preferredMinHeight     ?? '',
         preferredMaxHeight:     initialData.preferredMaxHeight     ?? '',
+        preferredMinWeight:     initialData.preferredMinWeight     ?? '',
+        preferredMaxWeight:     initialData.preferredMaxWeight     ?? '',
         preferredCity:          initialData.preferredCity          ?? '',
+        preferredState:         initialData.preferredState         ?? '',
+        preferredHasMangal:     initialData.preferredHasMangal === true ? 'true' : initialData.preferredHasMangal === false ? 'false' : '',
+        preferredHasSani:       initialData.preferredHasSani === true ? 'true' : initialData.preferredHasSani === false ? 'false' : '',
         preferredEducation:     initialData.preferredEducation     ?? '',
         preferredProfession:    initialData.preferredProfession    ?? '',
         preferredIncome:        initialData.preferredIncome        ?? '',
@@ -97,7 +107,12 @@ const ExpectationsForm = ({
       preferredMaritalStatus: form.preferredMaritalStatus || null,
       preferredMinHeight:     form.preferredMinHeight     || null,
       preferredMaxHeight:     form.preferredMaxHeight     || null,
+      preferredMinWeight:     form.preferredMinWeight !== '' ? Number(form.preferredMinWeight) : null,
+      preferredMaxWeight:     form.preferredMaxWeight !== '' ? Number(form.preferredMaxWeight) : null,
       preferredCity:          form.preferredCity.trim()   || null,
+      preferredState:         form.preferredState.trim()  || null,
+      preferredHasMangal:     form.preferredHasMangal === 'true' ? true : form.preferredHasMangal === 'false' ? false : null,
+      preferredHasSani:       form.preferredHasSani === 'true' ? true : form.preferredHasSani === 'false' ? false : null,
       preferredEducation:     form.preferredEducation.trim() || null,
       preferredProfession:    form.preferredProfession.trim() || null,
       preferredIncome:        form.preferredIncome.trim()  || null,
@@ -114,8 +129,8 @@ const ExpectationsForm = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
 
-      {/* Age preference */}
-      <SectionTitle>Age &amp; Marital Status</SectionTitle>
+      {/* Age & Physical preference */}
+      <SectionTitle>Age, Height &amp; Weight Preference</SectionTitle>
       <div className="grid grid-cols-2 gap-4">
         <Field label="Min Age" error={errors.minAge}>
           <input type="number" name="minAge" value={form.minAge} onChange={handleChange}
@@ -135,8 +150,6 @@ const ExpectationsForm = ({
         </select>
       </Field>
 
-      {/* Height preference */}
-      <SectionTitle>Height Preference</SectionTitle>
       <div className="grid grid-cols-2 gap-4">
         <Field label="Min Height">
           <input name="preferredMinHeight" value={form.preferredMinHeight} onChange={handleChange}
@@ -148,12 +161,29 @@ const ExpectationsForm = ({
         </Field>
       </div>
 
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="Min Weight (kg)">
+          <input type="number" name="preferredMinWeight" value={form.preferredMinWeight} onChange={handleChange}
+            placeholder="e.g. 45" className={inputClass} />
+        </Field>
+        <Field label="Max Weight (kg)">
+          <input type="number" name="preferredMaxWeight" value={form.preferredMaxWeight} onChange={handleChange}
+            placeholder="e.g. 75" className={inputClass} />
+        </Field>
+      </div>
+
       {/* Professional & Location */}
       <SectionTitle>Education, Profession &amp; Location</SectionTitle>
-      <Field label="Preferred City">
-        <input name="preferredCity" value={form.preferredCity} onChange={handleChange}
-          placeholder="e.g. Ahmedabad, Surat" className={inputClass} />
-      </Field>
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="Preferred City">
+          <input name="preferredCity" value={form.preferredCity} onChange={handleChange}
+            placeholder="e.g. Ahmedabad, Surat" className={inputClass} />
+        </Field>
+        <Field label="Preferred State">
+          <input name="preferredState" value={form.preferredState} onChange={handleChange}
+            placeholder="e.g. Gujarat, Maharashtra" className={inputClass} />
+        </Field>
+      </div>
 
       <div className="grid grid-cols-2 gap-4">
         <Field label="Preferred Education">
@@ -170,6 +200,26 @@ const ExpectationsForm = ({
         <input name="preferredIncome" value={form.preferredIncome} onChange={handleChange}
           placeholder="e.g. 40,000+/month" className={inputClass} />
       </Field>
+
+      {/* Horoscope & Mangal / Shani */}
+      <SectionTitle>Horoscope &amp; Dosha Preferences</SectionTitle>
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="મંગળ (Mangal) Preference">
+          <select name="preferredHasMangal" value={form.preferredHasMangal} onChange={handleChange} className={inputClass}>
+            <option value="">Doesn't Matter / Any (કોઈ વાંધો નથી)</option>
+            <option value="true">Mangal Only (મંગળ હોવું જોઈએ)</option>
+            <option value="false">Non-Mangal Only (મંગળ ન હોવું જોઈએ)</option>
+          </select>
+        </Field>
+
+        <Field label="શનિ (Shani) Preference">
+          <select name="preferredHasSani" value={form.preferredHasSani} onChange={handleChange} className={inputClass}>
+            <option value="">Doesn't Matter / Any (કોઈ વાંધો નથી)</option>
+            <option value="true">Shani Only (શનિ હોવું જોઈએ)</option>
+            <option value="false">Non-Shani Only (શનિ ન હોવું જોઈએ)</option>
+          </select>
+        </Field>
+      </div>
 
       {/* Community & Personal */}
       <SectionTitle>Community &amp; Lifestyle</SectionTitle>

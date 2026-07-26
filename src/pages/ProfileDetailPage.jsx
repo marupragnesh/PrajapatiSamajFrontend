@@ -198,8 +198,36 @@ const ProfileDetailPage = () => {
               <p className="text-primary font-medium mt-1">📍 {profile.city}</p>
             </div>
 
-            {/* ── Personal Info ── */}
-            <Section title="Personal Information">
+            {/* ── Quick Navigation Pills ── */}
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-border/50">
+              <a href="#sec-personal" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer">
+                👤 Personal Details
+              </a>
+              <a href="#sec-education" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer">
+                🎓 Education &amp; Job
+              </a>
+              <a href="#sec-family" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer">
+                👨‍👩‍👧 Family Details
+              </a>
+              {(profile.dateOfBirth || profile.birthTime || profile.birthPlace || profile.hasMangal !== undefined || profile.hasSani !== undefined) && (
+                <a href="#sec-birth" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer">
+                  📜 Birth &amp; Horoscope
+                </a>
+              )}
+              {profile.mobileNo && (
+                <a href="#sec-contact" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer">
+                  📞 Contact Info
+                </a>
+              )}
+              {hasExpectations && (
+                <a href="#sec-expectations" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer">
+                  💑 Expectations
+                </a>
+              )}
+            </div>
+
+            {/* ── Personal Info Collapsible Wrap ── */}
+            <Section title="Personal Information" icon="👤" id="sec-personal">
               <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                 {profile.gender && (
                   <DetailRow label="Gender" value={GENDER_LABELS[profile.gender] || profile.gender} />
@@ -225,20 +253,49 @@ const ProfileDetailPage = () => {
                 {profile.religion && (
                   <DetailRow label="Religion" value={profile.religion} />
                 )}
-                {profile.income && (
-                  <DetailRow label="Income" value={profile.income} />
+                {profile.city && (
+                  <DetailRow label="City / Location" value={`${profile.city}${profile.state ? ', ' + profile.state : ''}`} />
+                )}
+                {profile.addressLine && (
+                  <DetailRow label="Address" value={profile.addressLine} />
                 )}
                 {profile.hobbies && (
                   <div className="col-span-2">
                     <DetailRow label="Hobbies" value={profile.hobbies} />
                   </div>
                 )}
+                {profile.description && (
+                  <div className="col-span-2 pt-1 border-t border-border/40">
+                    <DetailRow label="About Me" value={profile.description} />
+                  </div>
+                )}
               </div>
             </Section>
 
-            {/* ── Birth & Horoscope Details ── */}
+            {/* ── Education, Job & Salary Collapsible Wrap ── */}
+            <Section title="Education, Job &amp; Salary" icon="🎓" id="sec-education">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                <DetailRow label="Education"  value={profile.education || 'Not specified'} />
+                <DetailRow label="Profession / Occupation" value={profile.profession || 'Not specified'} />
+                {profile.income && (
+                  <DetailRow label="Annual Income / Salary" value={profile.income} />
+                )}
+              </div>
+            </Section>
+
+            {/* ── Family Details Collapsible Wrap ── */}
+            <Section title="Family Details" icon="👨‍👩‍👧" id="sec-family">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                <DetailRow label="Father's Name" value={profile.fatherName || 'Not specified'} />
+                <DetailRow label="Father's Occupation" value={profile.fatherOccupation || 'Not specified'} />
+                <DetailRow label="Mother's Name" value={profile.motherName || 'Not specified'} />
+                <DetailRow label="Mother's Occupation" value={profile.motherOccupation || 'Not specified'} />
+              </div>
+            </Section>
+
+            {/* ── Birth & Horoscope Details Collapsible Wrap ── */}
             {(profile.dateOfBirth || profile.birthTime || profile.birthPlace || profile.hasMangal !== undefined || profile.hasSani !== undefined) && (
-              <Section title="Birth &amp; Horoscope Details">
+              <Section title="Birth &amp; Horoscope Details" icon="📜" id="sec-birth">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                   {profile.dateOfBirth && (
                     <DetailRow label="Date of Birth" value={profile.dateOfBirth} />
@@ -259,9 +316,9 @@ const ProfileDetailPage = () => {
               </Section>
             )}
 
-            {/* ── Contact Info ── */}
+            {/* ── Contact Info Collapsible Wrap ── */}
             {profile.mobileNo && (
-              <Section title="Contact Information">
+              <Section title="Contact Information" icon="📞" id="sec-contact">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3 items-center">
                   <div>
                     <span className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide block mb-0.5">
@@ -307,50 +364,12 @@ const ProfileDetailPage = () => {
               </Section>
             )}
 
-            {/* ── Family Details ── */}
-            {(profile.fatherName || profile.motherName) && (
-              <Section title="Family Details">
-                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                  {profile.fatherName && (
-                    <DetailRow label="Father's Name" value={profile.fatherName} />
-                  )}
-                  {profile.fatherOccupation && (
-                    <DetailRow label="Father's Occupation" value={profile.fatherOccupation} />
-                  )}
-                  {profile.motherName && (
-                    <DetailRow label="Mother's Name" value={profile.motherName} />
-                  )}
-                  {profile.motherOccupation && (
-                    <DetailRow label="Mother's Occupation" value={profile.motherOccupation} />
-                  )}
-                </div>
-              </Section>
-            )}
-
-            {/* ── Description / About Me ── */}
-            {profile.description && (
-              <Section title="About Me / Description">
-                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 whitespace-pre-line">
-                  {profile.description}
-                </p>
-              </Section>
-            )}
-
-            {/* ── Professional Info ── */}
-            <Section title="Professional Information">
-              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                <DetailRow label="Education"  value={profile.education} />
-                <DetailRow label="Profession" value={profile.profession} />
-              </div>
-            </Section>
-
-
             {/* ── Action Buttons ── */}
             <div className="flex gap-3 pt-1">
               <button
                 onClick={handleLike}
                 disabled={likeLoading}
-                className="flex-1 py-3 rounded-xl bg-error text-white font-semibold hover:bg-red-700 transition disabled:opacity-60 flex items-center justify-center gap-2"
+                className="flex-1 py-3 rounded-xl bg-error text-white font-semibold hover:bg-red-700 transition disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
               >
                 {likeLoading ? <Spinner /> : '❤️'}
                 {likeLoading ? 'Liking...' : 'Like'}
@@ -358,7 +377,7 @@ const ProfileDetailPage = () => {
               <button
                 onClick={handleSendInterest}
                 disabled={interestLoading}
-                className="flex-1 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primary-light transition disabled:opacity-60 flex items-center justify-center gap-2"
+                className="flex-1 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primary-light transition disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
               >
                 {interestLoading ? <Spinner /> : '💌'}
                 {interestLoading ? 'Sending...' : 'Send Interest'}
@@ -368,12 +387,9 @@ const ProfileDetailPage = () => {
           </div>
         </div>
 
-        {/* ── Card: Partner Expectations (only if filled in) ── */}
+        {/* ── Partner Expectations Collapsible Wrap ── */}
         {hasExpectations && (
-          <div className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
-            <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
-              💍 Partner Expectations
-            </h2>
+          <Section title="Partner Expectations" icon="💍" id="sec-expectations" defaultOpen={true}>
             <div className="grid grid-cols-2 gap-x-4 gap-y-3">
 
               {/* Age range */}
@@ -398,6 +414,20 @@ const ProfileDetailPage = () => {
                     exp.preferredMinHeight && exp.preferredMaxHeight
                       ? `${exp.preferredMinHeight} – ${exp.preferredMaxHeight}`
                       : exp.preferredMinHeight || exp.preferredMaxHeight
+                  }
+                />
+              )}
+
+              {/* Weight range */}
+              {(exp.preferredMinWeight || exp.preferredMaxWeight) && (
+                <DetailRow
+                  label="Weight Range"
+                  value={
+                    exp.preferredMinWeight && exp.preferredMaxWeight
+                      ? `${exp.preferredMinWeight} – ${exp.preferredMaxWeight} kg`
+                      : exp.preferredMinWeight
+                      ? `${exp.preferredMinWeight}+ kg`
+                      : `Up to ${exp.preferredMaxWeight} kg`
                   }
                 />
               )}
@@ -440,6 +470,18 @@ const ProfileDetailPage = () => {
                 <DetailRow label="Preferred City" value={exp.preferredCity} />
               )}
 
+              {exp.preferredState && (
+                <DetailRow label="Preferred State" value={exp.preferredState} />
+              )}
+
+              {exp.preferredHasMangal !== undefined && exp.preferredHasMangal !== null && (
+                <DetailRow label="મંગળ (Mangal) Preference" value={exp.preferredHasMangal ? 'મંગળ હોવું જોઈએ (Mangal Only)' : 'કોઈ વાંધો નથી / સાદું (Non-Mangal / Any)'} />
+              )}
+
+              {exp.preferredHasSani !== undefined && exp.preferredHasSani !== null && (
+                <DetailRow label="શનિ (Shani) Preference" value={exp.preferredHasSani ? 'શનિ હોવું જોઈએ (Shani Only)' : 'કોઈ વાંધો નથી (Any)'} />
+              )}
+
               {/* About expectations — full width */}
               {exp.aboutExpectations && (
                 <div className="col-span-2">
@@ -448,12 +490,12 @@ const ProfileDetailPage = () => {
               )}
 
             </div>
-          </div>
+          </Section>
         )}
 
         <button
           onClick={() => navigate(-1)}
-          className="text-sm text-gray-500 dark:text-gray-400 hover:underline"
+          className="text-sm font-semibold text-primary hover:underline cursor-pointer flex items-center gap-1"
         >
           ← Go Back
         </button>
@@ -493,21 +535,39 @@ const ProfileDetailPage = () => {
   );
 };
 
-/** Section wrapper with a title */
-const Section = ({ title, children }) => (
-  <div>
-    <h2 className="text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">
-      {title}
-    </h2>
-    {children}
-  </div>
-);
+/** Section wrapper with collapsible accordion toggle (dropdown chevron icon) */
+const Section = ({ title, icon, defaultOpen = true, id, children }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div id={id} className="border border-border/80 dark:border-gray-700/80 rounded-2xl overflow-hidden bg-white dark:bg-card-dark shadow-sm transition">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-5 py-4 bg-gray-50/80 dark:bg-gray-800/60 flex items-center justify-between font-bold text-gray-900 dark:text-gray-100 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer select-none border-b border-border/50 dark:border-gray-700/50"
+      >
+        <span className="flex items-center gap-2.5">
+          {icon && <span className="text-base">{icon}</span>}
+          <span className="tracking-wide">{title}</span>
+        </span>
+        <span className={`text-xs text-gray-500 transform transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}>
+          ▼
+        </span>
+      </button>
+      {isOpen && (
+        <div className="p-5">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
 
 /** Single label + value row */
 const DetailRow = ({ label, value }) => (
   <div>
-    <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">{label}</p>
-    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mt-0.5">{value}</p>
+    <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide font-medium">{label}</p>
+    <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-0.5">{value}</p>
   </div>
 );
 
