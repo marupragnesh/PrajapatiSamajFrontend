@@ -16,6 +16,11 @@ import { useEffect, useRef, useState } from 'react';
  *   - Backdrop click / ESC key to close modal
  */
 
+const GENDER_OPTIONS = [
+  { value: 'FEMALE', label: 'Female' },
+  { value: 'MALE', label: 'Male' },
+];
+
 const MARITAL_STATUS_OPTIONS = [
   { value: 'SINGLE', label: 'Single' },
   { value: 'DIVORCED', label: 'Divorced' },
@@ -24,6 +29,7 @@ const MARITAL_STATUS_OPTIONS = [
 
 const DIET_OPTIONS = [
   { value: 'VEG', label: 'Vegetarian' },
+  { value: 'VEG_EGG', label: 'Veg + Egg Only' },
   { value: 'NON_VEG', label: 'Non-Vegetarian' },
   { value: 'VEGAN', label: 'Vegan' },
 ];
@@ -35,6 +41,7 @@ const HEIGHT_OPTIONS = [
 ];
 
 const DEFAULT_FILTERS = {
+  gender: '',
   minAge: '',
   maxAge: '',
   maritalStatus: '',
@@ -44,7 +51,15 @@ const DEFAULT_FILTERS = {
   surname: '',
 };
 
-const FilterPopup = ({ isOpen, onClose, appliedFilters = DEFAULT_FILTERS, onApply, onClearAll }) => {
+const FilterPopup = ({
+  isOpen,
+  onClose,
+  appliedFilters = DEFAULT_FILTERS,
+  onApply,
+  onClearAll,
+  isUnlocked = true,
+  onUpgrade,
+}) => {
   const modalRef = useRef(null);
   const [localFilters, setLocalFilters] = useState(appliedFilters);
 
@@ -103,13 +118,14 @@ const FilterPopup = ({ isOpen, onClose, appliedFilters = DEFAULT_FILTERS, onAppl
     onClose();
   };
 
+  const isGenderActive = Boolean(localFilters.gender);
   const isAgeActive = localFilters.minAge || localFilters.maxAge;
   const isMaritalStatusActive = Boolean(localFilters.maritalStatus);
   const isHeightActive = localFilters.minHeight || localFilters.maxHeight;
   const isDietActive = Boolean(localFilters.diet);
   const isSurnameActive = Boolean(localFilters.surname);
 
-  const hasAnyActiveFilter = isAgeActive || isMaritalStatusActive || isHeightActive || isDietActive || isSurnameActive;
+  const hasAnyActiveFilter = isGenderActive || isAgeActive || isMaritalStatusActive || isHeightActive || isDietActive || isSurnameActive;
 
   const inputClass =
     'w-full px-3 py-1.5 rounded-lg border border-border dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary';
@@ -148,7 +164,61 @@ const FilterPopup = ({ isOpen, onClose, appliedFilters = DEFAULT_FILTERS, onAppl
         </div>
 
         {/* Modal Body — Scrollable */}
-        <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
+        <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar relative">
+          {!isUnlocked && (
+            <div className="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm mb-2">
+              <div className="space-y-0.5 text-center sm:text-left">
+                <p className="text-sm font-bold text-amber-900 dark:text-amber-200">🔒 Premium Feature Locked</p>
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  Discover filters require a one-time ₹99 Premium Unlock.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => { onClose(); if (onUpgrade) onUpgrade(); }}
+                className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-primary-light transition cursor-pointer shadow whitespace-nowrap"
+              >
+                Upgrade to Unlock (₹99)
+              </button>
+            </div>
+          )}
+
+          {/* 1. Gender Filter */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Partner Gender Preference
+              </label>
+              {isGenderActive && (
+                <button
+                  type="button"
+                  onClick={() => handleClearField('gender')}
+                  className="text-xs text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  ✕ Clear
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {GENDER_OPTIONS.map((opt) => {
+                const isSelected = localFilters.gender === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => handleFieldChange('gender', isSelected ? '' : opt.value)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer border ${
+                      isSelected
+                        ? 'bg-primary text-white border-primary shadow-sm'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-border dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           {/* 1. Age Range Filter */}
           <div className="space-y-2">

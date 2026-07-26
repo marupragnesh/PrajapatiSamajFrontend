@@ -7,6 +7,7 @@ import SkeletonCard from '../components/common/SkeletonCard';
 import EmptyState from '../components/common/EmptyState';
 import FilterPopup from '../components/discover/FilterPopup';
 import { discoverProfiles, searchProfiles } from '../api/discoverApi';
+import { getPaymentStatus } from '../api/paymentApi';
 import { resolveImageUrl } from '../utils/imageHelper';
 import logger from '../utils/logger';
 
@@ -17,10 +18,12 @@ import logger from '../utils/logger';
  *   - Search bar at the top: type a name → dropdown shows matching profiles
  *     (name + DP). Search fires 400ms after user stops typing (debounce).
  *   - Filter popup: Filter button opens modal to filter profiles live by
- *     Age Range, Marital Status, Height Range, and Diet.
+ *     Age Range, Marital Status, Height Range, Diet, and Surname.
+ *   - Premium check: Discover filters require DISCOVER_FILTERS payment unlock.
  *   - Browse grid below: paginated card list filtered by partner preference + active filters.
  */
 const DEFAULT_FILTERS = {
+  gender: '',
   minAge: '',
   maxAge: '',
   maritalStatus: '',
@@ -42,6 +45,7 @@ const DiscoverPage = () => {
 
   const [filters, setFilters]         = useState(DEFAULT_FILTERS);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [filtersUnlocked, setFiltersUnlocked] = useState(true);
 
   // ── Search state ──
   const [keyword, setKeyword]             = useState('');
@@ -53,8 +57,22 @@ const DiscoverPage = () => {
 
   const PAGE_SIZE = 10;
 
+  // Load payment status on mount
+  useEffect(() => {
+    const loadStatus = async () => {
+      try {
+        const data = await getPaymentStatus();
+        setFiltersUnlocked(data.filtersUnlocked);
+      } catch (err) {
+        logger.error('Failed to load payment status on discover page', err);
+      }
+    };
+    loadStatus();
+  }, []);
+
   // Active filter count logic
   const activeFilterCount = [
+    filters.gender,
     filters.minAge || filters.maxAge,
     filters.maritalStatus,
     filters.minHeight || filters.maxHeight,
@@ -186,7 +204,7 @@ const DiscoverPage = () => {
         {/* ── Header + Filter + Search Bar ── */}
         <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">🔍 Discover</h1>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">🧭 Discover</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Showing profiles based on your partner preference
               {activeFilterCount > 0 && ` • ${activeFilterCount} filter${activeFilterCount > 1 ? 's' : ''} applied`}
@@ -203,7 +221,7 @@ const DiscoverPage = () => {
                   : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
               }`}
             >
-              <span>⚙️ Filter</span>
+              <span>{filtersUnlocked ? '⚙️ Filter' : '🔒 Filter (Premium)'}</span>
               {activeFilterCount > 0 && (
                 <span className="w-5 h-5 rounded-full bg-white text-primary font-bold text-xs flex items-center justify-center">
                   {activeFilterCount}
@@ -402,6 +420,8 @@ const DiscoverPage = () => {
         appliedFilters={filters}
         onApply={handleFilterChange}
         onClearAll={handleClearAllFilters}
+        isUnlocked={filtersUnlocked}
+        onUpgrade={() => navigate('/payment')}
       />
     </div>
   );

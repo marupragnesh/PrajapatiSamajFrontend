@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import RegisterForm from '../components/auth/RegisterForm';
 import Spinner from '../components/common/Spinner';
+import ThemeToggle from '../components/common/ThemeToggle';
 import { registerUser, verifyRegistrationOtp, resendRegistrationOtp } from '../api/authApi';
 import useAuth from '../hooks/useAuth';
 import logger from '../utils/logger';
@@ -115,7 +116,12 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background-light dark:bg-background-dark flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-background-light dark:bg-background-dark flex flex-col items-center justify-center px-4 relative">
+      {/* Top right theme toggle */}
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+
       <div className="w-full max-w-md bg-white dark:bg-card-dark rounded-2xl shadow-lg p-8">
         <h1 className="text-2xl font-bold text-primary mb-1">🪷 PrajapatiSamaj</h1>
 

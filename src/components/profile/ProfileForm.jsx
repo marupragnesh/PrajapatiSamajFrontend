@@ -18,8 +18,9 @@ const MARITAL_STATUS_OPTIONS = [
 ];
 
 const DIET_OPTIONS = [
-  { value: '', label: 'Select diet (optional)' },
+  { value: '', label: 'Select dietary preference' },
   { value: 'VEG', label: 'Vegetarian' },
+  { value: 'VEG_EGG', label: 'Veg + Egg Only' },
   { value: 'NON_VEG', label: 'Non-Vegetarian' },
   { value: 'VEGAN', label: 'Vegan' },
 ];
@@ -84,8 +85,7 @@ const ProfileForm = ({
     if (!form.pincode.trim()) newErrors.pincode = 'Pincode is required';
     else if (!/^[0-9]{6}$/.test(form.pincode)) newErrors.pincode = 'Enter a valid 6-digit pincode';
 
-    if (!form.education.trim()) newErrors.education = 'Education is required';
-    if (!form.profession.trim()) newErrors.profession = 'Profession is required';
+    if (!form.diet) newErrors.diet = 'Dietary preference is required';
 
     if (!form.fatherName.trim()) newErrors.fatherName = 'Father name is required';
     if (!form.motherName.trim()) newErrors.motherName = 'Mother name is required';
@@ -120,8 +120,8 @@ const ProfileForm = ({
       addressLine:      form.addressLine.trim(),
       state:            form.state.trim(),
       pincode:          form.pincode.trim(),
-      education:        form.education.trim(),
-      profession:       form.profession.trim(),
+      education:        form.education.trim()     || null,
+      profession:       form.profession.trim()    || null,
       fatherName:       form.fatherName.trim(),
       fatherOccupation: form.fatherOccupation.trim() || null,
       motherName:       form.motherName.trim(),
@@ -130,7 +130,7 @@ const ProfileForm = ({
       height:           form.height   || null,
       income:           form.income   || null,
       gotra:            form.gotra    || null,
-      diet:             form.diet     || null,
+      diet:             form.diet,
       religion:         form.religion || null,
       hobbies:          form.hobbies  || null,
     });
@@ -235,14 +235,14 @@ const ProfileForm = ({
       </Field>
 
       {/* ── Education & Profession ── */}
-      <SectionTitle>Education &amp; Profession</SectionTitle>
+      <SectionTitle>Education &amp; Profession (Optional)</SectionTitle>
 
-      <Field label="Education *" error={errors.education}>
+      <Field label="Education (Optional)">
         <input name="education" value={form.education} onChange={handleChange}
           placeholder="B.Tech CS" className={inputClass} />
       </Field>
 
-      <Field label="Profession *" error={errors.profession}>
+      <Field label="Profession (Optional)">
         <input name="profession" value={form.profession} onChange={handleChange}
           placeholder="Software Engineer" className={inputClass} />
       </Field>
@@ -254,26 +254,26 @@ const ProfileForm = ({
           rows={4} placeholder="Write something about yourself, your background, and family..." className={inputClass} />
       </Field>
 
-      {/* ── Optional Fields ── */}
-      <SectionTitle>Additional Details (Optional)</SectionTitle>
+      {/* ── Additional Details ── */}
+      <SectionTitle>Additional Details</SectionTitle>
 
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Height">
+        <Field label="Height (Optional)">
           <input name="height" value={form.height} onChange={handleChange}
             placeholder="e.g. 5'8&quot;" className={inputClass} />
         </Field>
-        <Field label="Monthly Income">
+        <Field label="Monthly Salary (Optional)">
           <input name="income" value={form.income} onChange={handleChange}
-            placeholder="e.g. 50,000/month" className={inputClass} />
+            placeholder="25000" className={inputClass} />
         </Field>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Gotra">
+        <Field label="Gotra (Optional)">
           <input name="gotra" value={form.gotra} onChange={handleChange}
             placeholder="e.g. Kashyap" className={inputClass} />
         </Field>
-        <Field label="Diet">
+        <Field label="Diet *" error={errors.diet}>
           <select name="diet" value={form.diet} onChange={handleChange} className={inputClass}>
             {DIET_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>

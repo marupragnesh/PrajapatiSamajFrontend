@@ -20,7 +20,7 @@
  */
 
 const BACKEND_ORIGIN = 'http://localhost:8080';
-// const BACKEND_ORIGIN = 'http://10.175.97.209:8080';
+// const BACKEND_ORIGIN = 'http://10.219.45.209:8080';
 
 
 /**

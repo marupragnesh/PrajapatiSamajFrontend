@@ -38,3 +38,15 @@ export const verifyPayment = async (payload) => {
   logger.response('/api/payments/verify', response.data);
   return response.data;
 };
+
+/**
+ * GET /api/payments/status — get feature unlock status for logged in user.
+ * @returns {Promise<{contactUnlocked: boolean, filtersUnlocked: boolean}>}
+ */
+export const getPaymentStatus = async () => {
+  logger.api('GET', '/api/payments/status');
+  const response = await axiosInstance.get('/api/payments/status');
+  logger.response('/api/payments/status', response.data);
+  return response.data;
+};
+

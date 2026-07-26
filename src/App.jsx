@@ -20,6 +20,7 @@ const ProfileDetailPage     = lazy(() => import('./pages/ProfileDetailPage'));
 const LikesReceivedPage     = lazy(() => import('./pages/LikesReceivedPage'));
 const InterestsReceivedPage = lazy(() => import('./pages/InterestsReceivedPage'));
 const MatchesPage           = lazy(() => import('./pages/MatchesPage'));
+const PaymentPage           = lazy(() => import('./pages/PaymentPage'));
 
 /** Redirects to /login if user is not authenticated. */
 const ProtectedRoute = ({ children }) => {
@@ -64,6 +65,7 @@ const App = () => {
         <Route path="/likes"                element={<ProtectedRoute><LikesReceivedPage /></ProtectedRoute>} />
         <Route path="/interests"            element={<ProtectedRoute><InterestsReceivedPage /></ProtectedRoute>} />
         <Route path="/matches"              element={<ProtectedRoute><MatchesPage /></ProtectedRoute>} />
+        <Route path="/payment"              element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
 
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />

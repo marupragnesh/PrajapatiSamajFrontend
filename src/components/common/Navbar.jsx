@@ -88,15 +88,22 @@ const Navbar = () => {
     <nav className="sticky top-0 z-40 bg-white dark:bg-card-dark border-b border-border shadow-sm">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
 
-        {/* Brand */}
-        <span className="text-primary font-bold text-lg">🪷 PrajapatiSamaj</span>
+        {/* Brand Link (Navigates to /discover) */}
+        <NavLink
+          to="/discover"
+          className="flex items-center gap-2 text-primary font-bold text-lg hover:opacity-90 transition cursor-pointer"
+        >
+          <span className="text-xl">🌸</span>
+          <span>PrajapatiSamaj</span>
+        </NavLink>
 
         {/* Nav links */}
         <div className="flex items-center gap-1 flex-wrap">
-          <NavLink to="/discover"  className={linkClass}>🔍 Discover</NavLink>
+          <NavLink to="/discover"  className={linkClass}>🧭 Discover</NavLink>
           <NavLink to="/likes"     className={linkClass}>❤️ Likes</NavLink>
           <NavLink to="/interests" className={linkClass}>💌 Interests</NavLink>
           <NavLink to="/matches"   className={linkClass}>🎉 Matches</NavLink>
+          <NavLink to="/payment"   className={linkClass}>💎 Premium</NavLink>
 
           {/* ── Profile avatar button ── */}
           <button

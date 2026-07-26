@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Navbar from '../components/common/Navbar';
 import Spinner from '../components/common/Spinner';
-import UnlockContactButton from '../components/payment/UnlockContactButton';
 import { getProfileById } from '../api/profileApi';
 import { likeProfile } from '../api/likeApi';
 import { sendInterest } from '../api/interestApi';
@@ -38,6 +37,7 @@ const MARITAL_STATUS_LABELS = {
 
 const DIET_LABELS = {
   VEG: 'Vegetarian',
+  VEG_EGG: 'Veg + Egg Only',
   NON_VEG: 'Non-Vegetarian',
   VEGAN: 'Vegan',
 };
@@ -57,6 +57,7 @@ const ProfileDetailPage = () => {
   const [selectedPhotoUrl, setSelectedPhotoUrl] = useState(null);
   const [likeLoading, setLikeLoading] = useState(false);
   const [interestLoading, setInterestLoading] = useState(false);
+  const [showContactInfoModal, setShowContactInfoModal] = useState(false);
 
   /**
    * Fetch the profile being viewed. Pulled out of useEffect so it can also
@@ -230,24 +231,34 @@ const ProfileDetailPage = () => {
             </Section>
 
             {/* ── Contact Info ── */}
-            {/* profile.mobileNo is masked ("98********") server-side unless
-                isMobileUnlocked is true (viewer is the owner, or has paid to
-                unlock CONTACT_UNLOCK). Show the Unlock button instead of the
-                masked string so the user has a clear path to see the real number. */}
             {profile.mobileNo && (
               <Section title="Contact Information">
-                {profile.isMobileUnlocked ? (
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                    <DetailRow label="Mobile Number" value={profile.mobileNo} />
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3 items-center">
+                  <div>
+                    <span className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide block mb-0.5">
+                      Mobile Number
+                    </span>
+                    {profile.isMobileUnlocked ? (
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                        {profile.mobileNo}
+                      </span>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-100 tracking-wider">
+                          {profile.mobileNo ? profile.mobileNo.substring(0, 2) + '********' : '99********'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowContactInfoModal(true)}
+                          className="w-5 h-5 rounded-full bg-primary/10 text-primary dark:bg-primary/20 text-xs font-bold flex items-center justify-center hover:bg-primary hover:text-white transition cursor-pointer"
+                          title="Click for information"
+                        >
+                          i
+                        </button>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="flex items-center gap-3">
-                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
-                      {profile.mobileNo}
-                    </p>
-                    <UnlockContactButton onUnlocked={() => fetchProfile(true)} />
-                  </div>
-                )}
+                </div>
               </Section>
             )}
 
@@ -403,6 +414,36 @@ const ProfileDetailPage = () => {
         </button>
 
       </div>
+      {/* Contact Info Modal */}
+      {showContactInfoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="w-full max-w-sm bg-white dark:bg-card-dark rounded-2xl shadow-2xl border border-border dark:border-gray-700 p-6 text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-primary/10 text-primary text-2xl flex items-center justify-center mx-auto">
+              🔒
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-gray-800 dark:text-gray-100">Premium Contact Access</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Full mobile numbers are visible to Premium members only. Upgrade to unlock contact details for all profiles!
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowContactInfoModal(false)}
+                className="flex-1 py-2 rounded-xl border border-border dark:border-gray-700 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => { setShowContactInfoModal(false); navigate('/payment'); }}
+                className="flex-1 py-2 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-primary-light transition cursor-pointer shadow"
+              >
+                Upgrade (₹99)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

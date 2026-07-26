@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import LoginForm from '../components/auth/LoginForm';
+import ThemeToggle from '../components/common/ThemeToggle';
 import { loginUser } from '../api/authApi';
 import { getMyProfile } from '../api/profileApi';
 import useAuth from '../hooks/useAuth';
@@ -49,7 +50,12 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark flex flex-col
-                    items-center justify-center px-4">
+                    items-center justify-center px-4 relative">
+      {/* Top right theme toggle */}
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+
       <div className="w-full max-w-md bg-white dark:bg-card-dark rounded-2xl shadow-lg p-8">
         <h1 className="text-2xl font-bold text-primary mb-1">🪷 PrajapatiSamaj</h1>
         <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Welcome back</p>

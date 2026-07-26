@@ -10,7 +10,7 @@ export default defineConfig({
       // Forward /uploads/* requests to Spring Boot (images served by backend)
       '/uploads': {
         target: 'http://localhost:8080',
-        // target: 'http://10.175.97.209:8080',
+        // target: 'http://10.219.45.209:8080',
         changeOrigin: true,
       },
     },

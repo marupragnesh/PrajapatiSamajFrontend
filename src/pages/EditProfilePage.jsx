@@ -335,33 +335,6 @@ const EditProfilePage = () => {
           <PhotoUpload photos={photos} onPhotosChange={handlePhotosChange} />
         </section>
 
-        <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
-          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">
-            Partner Gender Preference
-          </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            Which profiles would you like to see on the Discover page?
-          </p>
-          <div className="flex items-center gap-4">
-            <select
-              value={preference || 'ANY'}
-              onChange={(e) => setPreference(e.target.value)}
-              className={selectClass}
-            >
-              <option value="ANY">Any (Both Genders)</option>
-              <option value="FEMALE">Female Profiles Only</option>
-              <option value="MALE">Male Profiles Only</option>
-            </select>
-            <button
-              onClick={handlePrefUpdate}
-              disabled={prefLoading}
-              className="px-5 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary-light transition disabled:opacity-60 cursor-pointer"
-            >
-              {prefLoading ? 'Saving...' : 'Save Preference'}
-            </button>
-          </div>
-        </section>
-
         <section className="bg-red-50 dark:bg-red-950/20 rounded-2xl border border-red-200 dark:border-red-900/50 p-6">
           <h2 className="text-lg font-bold text-error mb-2">Danger Zone</h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
