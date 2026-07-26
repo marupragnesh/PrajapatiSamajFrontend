@@ -99,11 +99,12 @@ const Navbar = () => {
 
         {/* Nav links */}
         <div className="flex items-center gap-1 flex-wrap">
-          <NavLink to="/discover"  className={linkClass}>🧭 Discover</NavLink>
-          <NavLink to="/likes"     className={linkClass}>❤️ Likes</NavLink>
-          <NavLink to="/interests" className={linkClass}>💌 Interests</NavLink>
-          <NavLink to="/matches"   className={linkClass}>🎉 Matches</NavLink>
-          <NavLink to="/payment"   className={linkClass}>💎 Premium</NavLink>
+          <NavLink to="/discover"        className={linkClass}>🧭 Discover</NavLink>
+          <NavLink to="/likes"           className={linkClass}>❤️ Likes</NavLink>
+          <NavLink to="/interests"       className={linkClass}>💌 Interests</NavLink>
+          <NavLink to="/matches"         className={linkClass}>🎉 Matches</NavLink>
+          <NavLink to="/payment"         className={linkClass}>💎 Premium</NavLink>
+          <NavLink to="/about-developer" className={linkClass}>👨‍💻 About / Stats</NavLink>
 
           {/* ── Profile avatar button ── */}
           <button

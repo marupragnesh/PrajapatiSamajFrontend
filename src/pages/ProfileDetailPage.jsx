@@ -210,6 +210,12 @@ const ProfileDetailPage = () => {
                 {profile.height && (
                   <DetailRow label="Height" value={profile.height} />
                 )}
+                {profile.weight && (
+                  <DetailRow label="Weight" value={`${profile.weight} kg`} />
+                )}
+                {profile.bloodGroup && (
+                  <DetailRow label="Blood Group" value={profile.bloodGroup} />
+                )}
                 {profile.diet && (
                   <DetailRow label="Diet" value={DIET_LABELS[profile.diet] || profile.diet} />
                 )}
@@ -229,6 +235,29 @@ const ProfileDetailPage = () => {
                 )}
               </div>
             </Section>
+
+            {/* ── Birth & Horoscope Details ── */}
+            {(profile.dateOfBirth || profile.birthTime || profile.birthPlace || profile.hasMangal !== undefined || profile.hasSani !== undefined) && (
+              <Section title="Birth &amp; Horoscope Details">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                  {profile.dateOfBirth && (
+                    <DetailRow label="Date of Birth" value={profile.dateOfBirth} />
+                  )}
+                  {profile.birthTime && (
+                    <DetailRow label="Birth Time" value={profile.birthTime} />
+                  )}
+                  {profile.birthPlace && (
+                    <DetailRow label="Place of Birth" value={profile.birthPlace} />
+                  )}
+                  {profile.hasMangal !== undefined && profile.hasMangal !== null && (
+                    <DetailRow label="મંગળ (Mangal)" value={profile.hasMangal ? 'હા (Yes)' : 'ના (No)'} />
+                  )}
+                  {profile.hasSani !== undefined && profile.hasSani !== null && (
+                    <DetailRow label="શનિ (Shani)" value={profile.hasSani ? 'હા (Yes)' : 'ના (No)'} />
+                  )}
+                </div>
+              </Section>
+            )}
 
             {/* ── Contact Info ── */}
             {profile.mobileNo && (
@@ -258,6 +287,22 @@ const ProfileDetailPage = () => {
                       </div>
                     )}
                   </div>
+                  {profile.alternateMobileNo && (
+                    <div>
+                      <span className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide block mb-0.5">
+                        Alternate Number
+                      </span>
+                      {profile.isMobileUnlocked ? (
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                          {profile.alternateMobileNo}
+                        </span>
+                      ) : (
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-100 tracking-wider">
+                          {profile.alternateMobileNo.substring(0, 2) + '********'}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </Section>
             )}

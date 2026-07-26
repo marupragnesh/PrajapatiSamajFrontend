@@ -21,6 +21,14 @@ const LikesReceivedPage     = lazy(() => import('./pages/LikesReceivedPage'));
 const InterestsReceivedPage = lazy(() => import('./pages/InterestsReceivedPage'));
 const MatchesPage           = lazy(() => import('./pages/MatchesPage'));
 const PaymentPage           = lazy(() => import('./pages/PaymentPage'));
+const AboutDeveloperPage    = lazy(() => import('./pages/AboutDeveloperPage'));
+
+// Legal pages
+const PrivacyPolicyPage      = lazy(() => import('./pages/legal/PrivacyPolicyPage'));
+const TermsConditionsPage    = lazy(() => import('./pages/legal/TermsConditionsPage'));
+const DisclaimerPage         = lazy(() => import('./pages/legal/DisclaimerPage'));
+const CancellationRefundPage = lazy(() => import('./pages/legal/CancellationRefundPage'));
+const ShippingPolicyPage     = lazy(() => import('./pages/legal/ShippingPolicyPage'));
 
 /** Redirects to /login if user is not authenticated. */
 const ProtectedRoute = ({ children }) => {
@@ -38,7 +46,7 @@ const PageLoader = () => (
 
 /**
  * App — defines all routes.
- * Public:    register, login, forgot-password, verify-otp, reset-password, account-deleted
+ * Public:    register, login, forgot-password, verify-otp, reset-password, account-deleted, legal pages
  * Protected: everything else (requires valid JWT in AuthContext)
  */
 const App = () => {
@@ -55,6 +63,18 @@ const App = () => {
         <Route path="/verify-otp"       element={<VerifyOtpPage />} />
         <Route path="/reset-password"   element={<ResetPasswordPage />} />
         <Route path="/account-deleted"  element={<AccountDeletedPage />} />
+
+        {/* ── Legal & About Public Routes ── */}
+        <Route path="/about"                            element={<AboutDeveloperPage />} />
+        <Route path="/about-developer font"             element={<AboutDeveloperPage />} />
+        <Route path="/about-developer"                  element={<AboutDeveloperPage />} />
+        <Route path="/legal/privacy-policy font"        element={<PrivacyPolicyPage />} />
+        <Route path="/legal/privacy-policy"             element={<PrivacyPolicyPage />} />
+        <Route path="/legal/terms-and-conditions"       element={<TermsConditionsPage />} />
+        <Route path="/legal/disclaimer"                 element={<DisclaimerPage />} />
+        <Route path="/legal/cancellation-refund-policy" element={<CancellationRefundPage />} />
+        <Route path="/legal/shipping-policy font"       element={<ShippingPolicyPage />} />
+        <Route path="/legal/shipping-policy"            element={<ShippingPolicyPage />} />
 
         {/* ── Protected routes ── */}
         <Route path="/profile/setup"        element={<ProtectedRoute><ProfileSetupPage /></ProtectedRoute>} />

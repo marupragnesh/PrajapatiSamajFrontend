@@ -90,3 +90,11 @@ export const updatePreference = async (preferredGender) => {
   logger.response('/api/preferences', response.data);
   return response.data;
 };
+
+/** GET /api/stats/today-registrations — fetch count of user profiles created today */
+export const getTodayRegistrationsCount = async () => {
+  logger.api('GET', '/api/stats/today-registrations');
+  const response = await axiosInstance.get('/api/stats/today-registrations');
+  logger.response('/api/stats/today-registrations', response.data);
+  return response.data;
+};
