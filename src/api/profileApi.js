@@ -98,3 +98,19 @@ export const getTodayRegistrationsCount = async () => {
   logger.response('/api/stats/today-registrations', response.data);
   return response.data;
 };
+
+/** GET /api/profile/notification-settings — fetch user email notification preferences */
+export const getNotificationSettings = async () => {
+  logger.api('GET', '/api/profile/notification-settings');
+  const response = await axiosInstance.get('/api/profile/notification-settings');
+  logger.response('/api/profile/notification-settings', response.data);
+  return response.data;
+};
+
+/** PUT /api/profile/notification-settings — update user email notification preferences */
+export const updateNotificationSettings = async (settingsData) => {
+  logger.api('PUT', '/api/profile/notification-settings', settingsData);
+  const response = await axiosInstance.put('/api/profile/notification-settings', settingsData);
+  logger.response('/api/profile/notification-settings', response.data);
+  return response.data;
+};

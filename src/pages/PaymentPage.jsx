@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Navbar from '../components/common/Navbar';
 import Spinner from '../components/common/Spinner';
@@ -171,7 +172,18 @@ const PaymentPage = () => {
                 </button>
               )}
             </div>
+
+            {/* Secondary About & Community Stats Button (Subtle, non-highlighted) */}
+            <div className="pt-2 border-t border-border/50 dark:border-gray-800 text-center">
+              <Link
+                to="/about"
+                className="inline-flex items-center justify-center gap-2 text-xs font-medium text-gray-500 hover:text-primary dark:text-gray-400 dark:hover:text-primary transition py-1.5 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800/80 cursor-pointer"
+              >
+                <span>ℹ️</span> About Platform &amp; Community Stats
+              </Link>
+            </div>
           </div>
+
         )}
       </div>
     </div>

@@ -104,6 +104,7 @@ const ProfileDetailPage = () => {
     try {
       const data = await likeProfile(profileId);
       toast.success(data.message || 'Profile liked!');
+      setProfile((prev) => (prev ? { ...prev, isLikedByMe: true } : prev));
     } catch (error) {
       toast.error(error.response?.data?.message || 'Could not like profile.');
     } finally {
@@ -116,6 +117,7 @@ const ProfileDetailPage = () => {
     try {
       const data = await sendInterest(profileId);
       toast.success(data.message || 'Interest request sent!');
+      setProfile((prev) => (prev ? { ...prev, interestStatus: 'PENDING_SENT' } : prev));
     } catch (error) {
       toast.error(error.response?.data?.message || 'Could not send interest.');
     } finally {
@@ -366,23 +368,68 @@ const ProfileDetailPage = () => {
 
             {/* ── Action Buttons ── */}
             <div className="flex gap-3 pt-1">
-              <button
-                onClick={handleLike}
-                disabled={likeLoading}
-                className="flex-1 py-3 rounded-xl bg-error text-white font-semibold hover:bg-red-700 transition disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-              >
-                {likeLoading ? <Spinner /> : '❤️'}
-                {likeLoading ? 'Liking...' : 'Like'}
-              </button>
-              <button
-                onClick={handleSendInterest}
-                disabled={interestLoading}
-                className="flex-1 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primary-light transition disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-              >
-                {interestLoading ? <Spinner /> : '💌'}
-                {interestLoading ? 'Sending...' : 'Send Interest'}
-              </button>
+              {/* Like Button */}
+              {profile.isLikedByMe ? (
+                <button
+                  disabled
+                  className="flex-1 py-3 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-300 font-semibold border border-red-200 dark:border-red-800/60 flex items-center justify-center gap-2 cursor-default shadow-sm"
+                >
+                  ❤️ Liked
+                </button>
+              ) : (
+                <button
+                  onClick={handleLike}
+                  disabled={likeLoading}
+                  className="flex-1 py-3 rounded-xl bg-error text-white font-semibold hover:bg-red-700 transition disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                >
+                  {likeLoading ? <Spinner /> : '❤️'}
+                  {likeLoading ? 'Liking...' : 'Like Profile'}
+                </button>
+              )}
+
+              {/* Interest Button */}
+              {profile.interestStatus === 'PENDING_SENT' ? (
+                <button
+                  disabled
+                  className="flex-1 py-3 rounded-xl bg-primary/10 dark:bg-primary/20 text-primary dark:text-orange-300 font-semibold border border-primary/30 flex items-center justify-center gap-2 cursor-default shadow-sm"
+                >
+                  📩 Interest Sent
+                </button>
+              ) : profile.interestStatus === 'ACCEPTED' ? (
+                <button
+                  disabled
+                  className="flex-1 py-3 rounded-xl bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 font-semibold border border-green-200 dark:border-green-800 flex items-center justify-center gap-2 cursor-default shadow-sm"
+                >
+                  🤝 Mutual Match
+                </button>
+              ) : profile.interestStatus === 'PENDING_RECEIVED' ? (
+                <button
+                  onClick={() => navigate('/interests')}
+                  className="flex-1 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primary-light transition flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                >
+                  📬 View Received Interest
+                </button>
+              ) : profile.interestStatus === 'DECLINED' ? (
+                <button
+                  onClick={handleSendInterest}
+                  disabled={interestLoading}
+                  className="flex-1 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primary-light transition disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                >
+                  {interestLoading ? <Spinner /> : '💌'}
+                  {interestLoading ? 'Sending...' : 'Resend Interest'}
+                </button>
+              ) : (
+                <button
+                  onClick={handleSendInterest}
+                  disabled={interestLoading}
+                  className="flex-1 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primary-light transition disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                >
+                  {interestLoading ? <Spinner /> : '💌'}
+                  {interestLoading ? 'Sending...' : 'Send Interest'}
+                </button>
+              )}
             </div>
+
 
           </div>
         </div>

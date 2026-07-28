@@ -12,6 +12,8 @@ import {
   updatePreference,
   getMyExpectations,
   saveExpectations,
+  getNotificationSettings,
+  updateNotificationSettings,
 } from '../api/profileApi';
 import { requestDeleteAccountOtp } from '../api/accountApi';
 import useAuth from '../hooks/useAuth';
@@ -37,6 +39,13 @@ const EditProfilePage = () => {
   const [prefLoading, setPrefLoading]     = useState(false);
   const [profileError, setProfileError]   = useState('');
   const [expError, setExpError]           = useState('');
+
+  const [notifSettings, setNotifSettings] = useState({
+    emailOnLike: true,
+    emailOnInterest: true,
+    emailOnAcceptInterest: true,
+  });
+  const [notifUpdating, setNotifUpdating] = useState(false);
 
   // Account Deletion OTP Modal State
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -64,13 +73,14 @@ const EditProfilePage = () => {
     }));
 
   const loadData = useCallback(async () => {
-    logger.info('EditProfilePage — loading profile, expectations, and preferences');
+    logger.info('EditProfilePage — loading profile, expectations, preferences, and notification settings');
     setPageLoading(true);
     try {
-      const [profileData, prefData, expData] = await Promise.all([
+      const [profileData, prefData, expData, notifData] = await Promise.all([
         getMyProfile(),
         getPreference().catch(() => null),
         getMyExpectations().catch(() => null),
+        getNotificationSettings().catch(() => null),
       ]);
 
       logger.response('/api/profile/me', profileData);
@@ -78,6 +88,9 @@ const EditProfilePage = () => {
       setPhotos(mapPhotos(profileData?.photos));
       setPreference(prefData?.preferredGender || 'ANY');
       setExpectations(expData || {});
+      if (notifData) {
+        setNotifSettings(notifData);
+      }
     } catch (error) {
       logger.error('Failed to load profile data', error);
       toast.error('Could not load your profile. Please refresh.');
@@ -85,6 +98,23 @@ const EditProfilePage = () => {
       setPageLoading(false);
     }
   }, []);
+
+  const handleToggleNotification = async (field, currentValue) => {
+    const updated = { ...notifSettings, [field]: !currentValue };
+    setNotifSettings(updated);
+    setNotifUpdating(true);
+    try {
+      const res = await updateNotificationSettings(updated);
+      setNotifSettings(res);
+      toast.success('Email preferences updated!');
+    } catch (error) {
+      logger.error('Failed to update notification settings', error);
+      toast.error('Could not save email preference.');
+      setNotifSettings(notifSettings);
+    } finally {
+      setNotifUpdating(false);
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -333,6 +363,86 @@ const EditProfilePage = () => {
             Profile Photos (Max 10)
           </h2>
           <PhotoUpload photos={photos} onPhotosChange={handlePhotosChange} />
+        </section>
+
+        {/* Email Notification Preferences Section */}
+        <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6 space-y-4">
+          <div>
+            <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+              <span>🔔</span> Email Notification Preferences
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Control which automated email notifications you receive from Prajapati Samaj.
+            </p>
+          </div>
+
+          <div className="space-y-3 pt-1">
+            {/* Email on Like */}
+            <div className="flex items-center justify-between p-3.5 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-border/50">
+              <div>
+                <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                  Profile Like Emails
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Receive an email when someone likes your profile.
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={Boolean(notifSettings.emailOnLike)}
+                  onChange={() => handleToggleNotification('emailOnLike', notifSettings.emailOnLike)}
+                  disabled={notifUpdating}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
+
+            {/* Email on Interest */}
+            <div className="flex items-center justify-between p-3.5 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-border/50">
+              <div>
+                <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                  Interest Request Emails
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Receive an email when someone sends you an interest request.
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={Boolean(notifSettings.emailOnInterest)}
+                  onChange={() => handleToggleNotification('emailOnInterest', notifSettings.emailOnInterest)}
+                  disabled={notifUpdating}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
+
+            {/* Email on Accept Interest */}
+            <div className="flex items-center justify-between p-3.5 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-border/50">
+              <div>
+                <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                  Interest Acceptance Emails
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Receive an email when your sent interest is accepted.
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={Boolean(notifSettings.emailOnAcceptInterest)}
+                  onChange={() => handleToggleNotification('emailOnAcceptInterest', notifSettings.emailOnAcceptInterest)}
+                  disabled={notifUpdating}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
+          </div>
         </section>
 
         <section className="bg-red-50 dark:bg-red-950/20 rounded-2xl border border-red-200 dark:border-red-900/50 p-6">
