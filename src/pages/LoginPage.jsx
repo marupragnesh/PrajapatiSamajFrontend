@@ -8,6 +8,8 @@ import { getMyProfile } from '../api/profileApi';
 import useAuth from '../hooks/useAuth';
 import logger from '../utils/logger';
 
+import LogoIcon from '../components/common/LogoIcon';
+
 /**
  * LoginPage — after login, checks if profile exists.
  * Redirects to /discover (profile complete) or /profile/setup (no profile).
@@ -57,7 +59,10 @@ const LoginPage = () => {
       </div>
 
       <div className="w-full max-w-md bg-white dark:bg-card-dark rounded-2xl shadow-lg p-8">
-        <h1 className="text-2xl font-bold text-primary mb-1">🪷 PrajapatiSamaj</h1>
+        <h1 className="text-2xl font-bold text-primary mb-1 flex items-center gap-2">
+          <LogoIcon className="w-7 h-7 text-primary" />
+          <span>PrajapatiSamaj</span>
+        </h1>
         <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Welcome back</p>
         <LoginForm onSubmit={handleLogin} loading={loading} serverError={serverError} />
       </div>

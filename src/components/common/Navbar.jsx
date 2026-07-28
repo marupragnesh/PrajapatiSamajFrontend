@@ -3,21 +3,12 @@ import { useEffect, useState } from 'react';
 import useAuth from '../../hooks/useAuth';
 import { getMyProfile } from '../../api/profileApi';
 import { resolveImageUrl } from '../../utils/imageHelper';
+import LogoIcon from './LogoIcon';
 import logger from '../../utils/logger';
 
 /**
- * Navbar — sticky top bar shown on all protected pages.
- *
- * Profile avatar behaviour:
- *   - Shows user's primary photo as a circular DP once loaded
- *   - Falls back to 👤 icon if no photo uploaded yet
- *   - Shows a red ❗ badge on the avatar when expectations are completely
- *     empty (zero fields filled) — hints the user to fill them in
- *   - Badge disappears as soon as at least 1 expectation field is filled
- *   - Clicking the avatar navigates to /profile/edit
- *
- * Profile data is fetched once on mount and cached in local state.
- * Only fetches once per Navbar mount — no polling.
+ * Navbar — sticky top bar and mobile bottom navigation tab bar.
+ * Optimized for mobile-first responsive experience.
  */
 const Navbar = () => {
   const { logout } = useAuth();
@@ -44,8 +35,6 @@ const Navbar = () => {
    * Load profile once on mount to get:
    *   - primaryPhotoUrl → display as avatar
    *   - expectations    → decide whether to show ❗ badge
-   *
-   * Silently ignores errors (e.g. profile not created yet).
    */
   useEffect(() => {
     const loadProfileForNavbar = async () => {
@@ -53,7 +42,6 @@ const Navbar = () => {
         const profile = await getMyProfile();
         setPrimaryPhotoUrl(profile.primaryPhotoUrl || null);
 
-        // Show ❗ only when ZERO expectation fields are filled
         const exp = profile.expectations;
         const hasAnyExpectation = exp && Object.values(exp).some(
           (v) => v !== null && v !== undefined && v !== ''
@@ -84,80 +72,117 @@ const Navbar = () => {
         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
     }`;
 
+  const mobileTabClass = ({ isActive }) =>
+    `flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition text-[11px] font-semibold ${
+      isActive
+        ? 'text-primary bg-primary/10 dark:bg-primary/20'
+        : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+    }`;
+
   return (
-    <nav className="sticky top-0 z-40 bg-white dark:bg-card-dark border-b border-border shadow-sm">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+    <>
+      {/* Top Navbar */}
+      <nav className="sticky top-0 z-40 bg-white dark:bg-card-dark border-b border-border shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 py-2.5 sm:py-3 flex items-center justify-between">
 
-        {/* Brand Link (Navigates to /discover) */}
-        <NavLink
-          to="/discover"
-          className="flex items-center gap-2 text-primary font-bold text-lg hover:opacity-90 transition cursor-pointer"
-        >
-          <span className="text-xl">🌸</span>
-          <span>PrajapatiSamaj</span>
-        </NavLink>
-
-        {/* Nav links */}
-        <div className="flex items-center gap-1 flex-wrap">
-          <NavLink to="/discover"        className={linkClass}>🧭 Discover</NavLink>
-          <NavLink to="/likes"           className={linkClass}>❤️ Likes</NavLink>
-          <NavLink to="/interests"       className={linkClass}>💌 Interests</NavLink>
-          <NavLink to="/matches"         className={linkClass}>🎉 Matches</NavLink>
-          <NavLink to="/payment"         className={linkClass}>💎 Premium</NavLink>
-          <NavLink to="/about-developer" className={linkClass}>👨‍💻 About / Stats</NavLink>
-
-          {/* ── Profile avatar button ── */}
-          <button
-            onClick={() => navigate('/profile/edit')}
-            title="My Profile"
-            className="relative ml-1 flex items-center justify-center w-9 h-9 rounded-full
-                       border-2 border-primary overflow-visible focus:outline-none
-                       hover:ring-2 hover:ring-primary-light transition"
+          {/* Brand Link */}
+          <NavLink
+            to="/discover"
+            className="flex items-center gap-2 text-primary font-bold text-lg hover:opacity-90 transition cursor-pointer"
           >
-            {primaryPhotoUrl ? (
-              <img
-                src={resolveImageUrl(primaryPhotoUrl)}
-                alt="My profile"
-                className="w-full h-full rounded-full object-cover"
-              />
-            ) : (
-              <span className="text-lg leading-none">👤</span>
-            )}
+            <LogoIcon className="w-6 h-6 text-primary" />
+            <span className="font-extrabold tracking-tight text-gray-900 dark:text-white">PrajapatiSamaj</span>
+          </NavLink>
 
-            {/* ❗ badge — shown only when expectations are completely empty */}
-            {showExclamation && (
-              <span
-                title="Your partner expectations are empty — tap to fill them in"
-                className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500
-                           flex items-center justify-center text-white text-xs font-bold
-                           shadow pointer-events-none select-none z-10"
-              >
-                !
-              </span>
-            )}
-          </button>
+          {/* Desktop Nav links (hidden on mobile, visible md+) */}
+          <div className="hidden md:flex items-center gap-1">
+            <NavLink to="/discover"        className={linkClass}>🧭 Discover</NavLink>
+            <NavLink to="/likes"           className={linkClass}>❤️ Likes</NavLink>
+            <NavLink to="/interests"       className={linkClass}>💌 Interests</NavLink>
+            <NavLink to="/matches"         className={linkClass}>🎉 Matches</NavLink>
+            <NavLink to="/payment"         className={linkClass}>💎 Premium</NavLink>
+          </div>
 
-          {/* Dark mode toggle */}
-          <button
-            onClick={toggleDark}
-            title="Toggle dark mode"
-            className="text-sm px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300
-                       hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-          >
-            {darkMode ? '☀️' : '🌙'}
-          </button>
+          {/* User actions (Profile Avatar, Theme Toggle, Logout) */}
+          <div className="flex items-center gap-2">
+            {/* Profile Avatar Button */}
+            <button
+              onClick={() => navigate('/profile/edit')}
+              title="My Profile"
+              className="relative flex items-center justify-center w-9 h-9 rounded-full
+                         border-2 border-primary overflow-visible focus:outline-none
+                         hover:ring-2 hover:ring-primary-light transition cursor-pointer"
+            >
+              {primaryPhotoUrl ? (
+                <img
+                  src={resolveImageUrl(primaryPhotoUrl)}
+                  alt="My profile"
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <span className="text-lg leading-none">👤</span>
+              )}
 
-          {/* Logout */}
-          <button
-            onClick={handleLogout}
-            className="text-sm px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300
-                       hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-          >
-            🚪 Logout
-          </button>
+              {/* ❗ badge */}
+              {showExclamation && (
+                <span
+                  title="Your partner expectations are empty — tap to fill them in"
+                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500
+                             flex items-center justify-center text-white text-[10px] font-bold
+                             shadow pointer-events-none select-none z-10"
+                >
+                  !
+                </span>
+              )}
+            </button>
+
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={toggleDark}
+              title="Toggle dark mode"
+              className="text-sm p-2 rounded-lg text-gray-700 dark:text-gray-300
+                         hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer"
+            >
+              {darkMode ? '☀️' : '🌙'}
+            </button>
+
+            {/* Logout (Desktop only) */}
+            <button
+              onClick={handleLogout}
+              title="Logout"
+              className="hidden md:block text-sm px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300
+                         hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer"
+            >
+              🚪 Logout
+            </button>
+          </div>
         </div>
+      </nav>
+
+      {/* Mobile Sticky Bottom Navigation Tab Bar (visible on screens < md) */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-card-dark/95 backdrop-blur border-t border-border px-1 py-1 flex items-center justify-around shadow-2xl">
+        <NavLink to="/discover" className={mobileTabClass}>
+          <span className="text-base leading-tight">🧭</span>
+          <span>Discover</span>
+        </NavLink>
+        <NavLink to="/likes" className={mobileTabClass}>
+          <span className="text-base leading-tight">❤️</span>
+          <span>Likes</span>
+        </NavLink>
+        <NavLink to="/interests" className={mobileTabClass}>
+          <span className="text-base leading-tight">💌</span>
+          <span>Interests</span>
+        </NavLink>
+        <NavLink to="/matches" className={mobileTabClass}>
+          <span className="text-base leading-tight">🎉</span>
+          <span>Matches</span>
+        </NavLink>
+        <NavLink to="/payment" className={mobileTabClass}>
+          <span className="text-base leading-tight">💎</span>
+          <span>Premium</span>
+        </NavLink>
       </div>
-    </nav>
+    </>
   );
 };
 

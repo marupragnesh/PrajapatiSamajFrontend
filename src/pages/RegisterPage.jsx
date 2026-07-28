@@ -7,6 +7,7 @@ import ThemeToggle from '../components/common/ThemeToggle';
 import { registerUser, verifyRegistrationOtp, resendRegistrationOtp } from '../api/authApi';
 import useAuth from '../hooks/useAuth';
 import logger from '../utils/logger';
+import LogoIcon from '../components/common/LogoIcon';
 
 /**
  * RegisterPage — Handles 2-step registration:
@@ -60,8 +61,8 @@ const RegisterPage = () => {
       toast.success('OTP sent to your email address.');
       logger.info('Registration initiated — switched to OTP verification step');
     } catch (error) {
-      logger.error('Registration initiation failed', error.response?.data);
-      const msg = error.response?.data?.message || 'Registration failed. Please try again.';
+      logger.error('Registration failed', error.response?.data);
+      const msg = error.response?.data?.message || 'Registration failed. Try again.';
       setServerError(msg);
       toast.error(msg);
     } finally {
@@ -70,24 +71,25 @@ const RegisterPage = () => {
   };
 
   // Step 2: Verify Registration OTP
-  const handleVerifyOtp = async (e) => {
+  const handleOtpSubmit = async (e) => {
     e.preventDefault();
-    if (!otpCode || otpCode.trim().length < 6) {
-      setServerError('Please enter the complete 6-digit OTP code.');
+    if (!otpCode || otpCode.length !== 6) {
+      toast.error('Please enter the 6-digit OTP.');
       return;
     }
     setVerifying(true);
     setServerError('');
     try {
-      logger.api('POST', '/api/auth/register/verify-otp', { email: regEmail });
-      const data = await verifyRegistrationOtp(regEmail, otpCode.trim());
+      logger.api('POST', '/api/auth/register/verify-otp', { email: regEmail, otp: otpCode });
+      const data = await verifyRegistrationOtp(regEmail, otpCode);
+      toast.success('Email verified successfully!');
+
+      // Auto-login user and redirect to Profile Setup
       login(data.token, { userId: data.userId, email: data.email });
-      logger.info('Registration verified & completed — redirecting to /profile/setup');
-      toast.success('Email verified! Set up your profile.');
       navigate('/profile/setup');
     } catch (error) {
       logger.error('Registration OTP verification failed', error.response?.data);
-      const msg = error.response?.data?.message || 'Invalid or expired OTP. Please try again.';
+      const msg = error.response?.data?.message || 'Invalid or expired OTP.';
       setServerError(msg);
       toast.error(msg);
     } finally {
@@ -123,7 +125,10 @@ const RegisterPage = () => {
       </div>
 
       <div className="w-full max-w-md bg-white dark:bg-card-dark rounded-2xl shadow-lg p-8">
-        <h1 className="text-2xl font-bold text-primary mb-1">🪷 PrajapatiSamaj</h1>
+        <h1 className="text-2xl font-bold text-primary mb-1 flex items-center gap-2">
+          <LogoIcon className="w-7 h-7 text-primary" />
+          <span>PrajapatiSamaj</span>
+        </h1>
 
         {step === 1 ? (
           <>

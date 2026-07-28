@@ -582,8 +582,8 @@ const ProfileDetailPage = () => {
   );
 };
 
-/** Section wrapper with collapsible accordion toggle (dropdown chevron icon) */
-const Section = ({ title, icon, defaultOpen = true, id, children }) => {
+/** Section wrapper with collapsible accordion toggle (dropdown chevron icon) — closed by default */
+const Section = ({ title, icon, defaultOpen = false, id, children }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (

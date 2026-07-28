@@ -3,11 +3,8 @@ import Spinner from '../common/Spinner';
 
 /**
  * Reusable profile form — used on ProfileSetupPage and EditProfilePage.
- *
- * Required fields: fullName, age, gender, maritalStatus, city,
- *                  mobileNo, addressLine, state, pincode,
- *                  education, profession
- * Optional fields: height, income, gotra, diet, religion, hobbies
+ * Organized into default-closed collapsible accordions (group wise).
+ * Auto-expands accordion sections containing validation errors upon form submit.
  */
 
 const MARITAL_STATUS_OPTIONS = [
@@ -80,6 +77,20 @@ const ProfileForm = ({
 
   const [errors, setErrors] = useState({});
 
+  // Accordions state — default closed for every group
+  const [openSections, setOpenSections] = useState({
+    personal: false,
+    birth: false,
+    family: false,
+    contact: false,
+    education: false,
+    about: false,
+  });
+
+  const toggleSection = (key) => {
+    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
   const validate = () => {
     const newErrors = {};
 
@@ -150,6 +161,22 @@ const ProfileForm = ({
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+
+      // Auto-expand any accordion sections that have errors
+      const personalErr  = ['name', 'surname', 'age', 'gender', 'maritalStatus'].some((k) => validationErrors[k]);
+      const birthErr     = ['dateOfBirth', 'birthTime', 'weight', 'bloodGroup', 'birthPlace'].some((k) => validationErrors[k]);
+      const familyErr    = ['fatherName', 'motherName'].some((k) => validationErrors[k]);
+      const contactErr   = ['mobileNo', 'alternateMobileNo', 'addressLine', 'state', 'city', 'pincode'].some((k) => validationErrors[k]);
+      const educationErr = ['education', 'profession', 'diet'].some((k) => validationErrors[k]);
+
+      setOpenSections((prev) => ({
+        ...prev,
+        personal:  personalErr  || prev.personal,
+        birth:     birthErr     || prev.birth,
+        family:    familyErr    || prev.family,
+        contact:   contactErr   || prev.contact,
+        education: educationErr || prev.education,
+      }));
       return;
     }
     setErrors({});
@@ -191,277 +218,333 @@ const ProfileForm = ({
   };
 
   const inputClass =
-    'w-full px-4 py-2 rounded-lg border border-border dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary';
+    'w-full px-4 py-2 rounded-lg border border-border dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary text-sm';
+
+  // Section error counts helper
+  const getSectionErrorCount = (fieldKeys) => {
+    return fieldKeys.reduce((count, key) => (errors[key] ? count + 1 : count), 0);
+  };
+
+  const personalErrorCount  = getSectionErrorCount(['name', 'surname', 'age', 'gender', 'maritalStatus']);
+  const birthErrorCount     = getSectionErrorCount(['dateOfBirth', 'birthTime', 'weight', 'bloodGroup', 'birthPlace']);
+  const familyErrorCount    = getSectionErrorCount(['fatherName', 'motherName']);
+  const contactErrorCount   = getSectionErrorCount(['mobileNo', 'alternateMobileNo', 'addressLine', 'state', 'city', 'pincode']);
+  const educationErrorCount = getSectionErrorCount(['education', 'profession', 'diet']);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
 
-      {/* ── Personal Info ── */}
-      <SectionTitle>Personal Information</SectionTitle>
+      {/* ── 1. Personal Information Accordion ── */}
+      <AccordionSection
+        title="Personal Information"
+        icon="👤"
+        sectionKey="personal"
+        isOpen={openSections.personal}
+        onToggle={toggleSection}
+        hasError={personalErrorCount > 0}
+        errorCount={personalErrorCount}
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="First Name *" error={errors.name}>
+            <input name="name" value={form.name} onChange={handleChange}
+              placeholder="Rahul" className={inputClass} />
+          </Field>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="First Name *" error={errors.name}>
-          <input name="name" value={form.name} onChange={handleChange}
-            placeholder="Rahul" className={inputClass} />
-        </Field>
+          <Field label="Surname *" error={errors.surname}>
+            <input name="surname" value={form.surname} onChange={handleChange}
+              placeholder="Prajapati" className={inputClass} />
+          </Field>
+        </div>
 
-        <Field label="Surname *" error={errors.surname}>
-          <input name="surname" value={form.surname} onChange={handleChange}
-            placeholder="Prajapati" className={inputClass} />
-        </Field>
-      </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Age *" error={errors.age}>
+            <input type="number" name="age" value={form.age} onChange={handleChange}
+              min={18} max={80} placeholder="25" className={inputClass} />
+          </Field>
+          <Field label="Gender *" error={errors.gender}>
+            <select name="gender" value={form.gender} onChange={handleChange} className={inputClass}>
+              <option value="">Select gender</option>
+              <option value="MALE">Male</option>
+              <option value="FEMALE">Female</option>
+              <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
+            </select>
+          </Field>
+        </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="Age *" error={errors.age}>
-          <input type="number" name="age" value={form.age} onChange={handleChange}
-            min={18} max={80} placeholder="25" className={inputClass} />
-        </Field>
-        <Field label="Gender *" error={errors.gender}>
-          <select name="gender" value={form.gender} onChange={handleChange} className={inputClass}>
-            <option value="">Select gender</option>
-            <option value="MALE">Male</option>
-            <option value="FEMALE">Female</option>
-            <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
-          </select>
-        </Field>
-      </div>
-
-      <Field label="Marital Status *" error={errors.maritalStatus}>
-        <select name="maritalStatus" value={form.maritalStatus} onChange={handleChange} className={inputClass}>
-          {MARITAL_STATUS_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
-      </Field>
-
-      {/* ── Birth & Horoscope Details ── */}
-      <SectionTitle>Birth &amp; Horoscope Details</SectionTitle>
-
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="Date of Birth *" error={errors.dateOfBirth}>
-          <input type="date" name="dateOfBirth" value={form.dateOfBirth} onChange={handleChange}
-            className={inputClass} />
-        </Field>
-        <Field label="Birth Time (AM/PM) *" error={errors.birthTime}>
-          <input type="text" name="birthTime" value={form.birthTime} onChange={handleChange}
-            placeholder="e.g. 10:30 AM" className={inputClass} />
-        </Field>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="Weight (kg - Integer only) *" error={errors.weight}>
-          <input type="number" name="weight" value={form.weight}
-            onChange={(e) => {
-              const val = e.target.value.replace(/\D/g, '');
-              setForm((prev) => ({ ...prev, weight: val }));
-              if (errors.weight) setErrors((prev) => ({ ...prev, weight: '' }));
-            }}
-            placeholder="65" className={inputClass} />
-        </Field>
-        <Field label="Blood Group (Optional)" error={errors.bloodGroup}>
-          <select name="bloodGroup" value={form.bloodGroup} onChange={handleChange} className={inputClass}>
-            {BLOOD_GROUP_OPTIONS.map((opt) => (
+        <Field label="Marital Status *" error={errors.maritalStatus}>
+          <select name="maritalStatus" value={form.maritalStatus} onChange={handleChange} className={inputClass}>
+            {MARITAL_STATUS_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>
         </Field>
-      </div>
+      </AccordionSection>
 
-      <Field label="Place Where You Born *" error={errors.birthPlace}>
-        <input name="birthPlace" value={form.birthPlace} onChange={handleChange}
-          placeholder="e.g. Ahmedabad, Gujarat" className={inputClass} />
-      </Field>
-
-      {/* 2 Gujarati Toggle Buttons */}
-      <div className="grid grid-cols-2 gap-4 pt-1">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            તમને મંગળ છે? *
-          </label>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setToggleValue('hasMangal', true)}
-              className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold border transition cursor-pointer ${
-                form.hasMangal
-                  ? 'bg-primary text-white border-primary'
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-border dark:border-gray-600'
-              }`}
-            >
-              હા (Yes)
-            </button>
-            <button
-              type="button"
-              onClick={() => setToggleValue('hasMangal', false)}
-              className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold border transition cursor-pointer ${
-                !form.hasMangal
-                  ? 'bg-primary text-white border-primary'
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-border dark:border-gray-600'
-              }`}
-            >
-              ના (No)
-            </button>
-          </div>
+      {/* ── 2. Birth & Horoscope Details Accordion ── */}
+      <AccordionSection
+        title="Birth & Horoscope Details"
+        icon="📜"
+        sectionKey="birth"
+        isOpen={openSections.birth}
+        onToggle={toggleSection}
+        hasError={birthErrorCount > 0}
+        errorCount={birthErrorCount}
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Date of Birth *" error={errors.dateOfBirth}>
+            <input type="date" name="dateOfBirth" value={form.dateOfBirth} onChange={handleChange}
+              className={inputClass} />
+          </Field>
+          <Field label="Birth Time (AM/PM) *" error={errors.birthTime}>
+            <input type="text" name="birthTime" value={form.birthTime} onChange={handleChange}
+              placeholder="e.g. 10:30 AM" className={inputClass} />
+          </Field>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            તમને શનિ છે? *
-          </label>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setToggleValue('hasSani', true)}
-              className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold border transition cursor-pointer ${
-                form.hasSani
-                  ? 'bg-primary text-white border-primary'
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-border dark:border-gray-600'
-              }`}
-            >
-              હા (Yes)
-            </button>
-            <button
-              type="button"
-              onClick={() => setToggleValue('hasSani', false)}
-              className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold border transition cursor-pointer ${
-                !form.hasSani
-                  ? 'bg-primary text-white border-primary'
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-border dark:border-gray-600'
-              }`}
-            >
-              ના (No)
-            </button>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Weight (kg - Integer only) *" error={errors.weight}>
+            <input type="number" name="weight" value={form.weight}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '');
+                setForm((prev) => ({ ...prev, weight: val }));
+                if (errors.weight) setErrors((prev) => ({ ...prev, weight: '' }));
+              }}
+              placeholder="65" className={inputClass} />
+          </Field>
+          <Field label="Blood Group (Optional)" error={errors.bloodGroup}>
+            <select name="bloodGroup" value={form.bloodGroup} onChange={handleChange} className={inputClass}>
+              {BLOOD_GROUP_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </Field>
+        </div>
+
+        <Field label="Place Where You Born *" error={errors.birthPlace}>
+          <input name="birthPlace" value={form.birthPlace} onChange={handleChange}
+            placeholder="e.g. Ahmedabad, Gujarat" className={inputClass} />
+        </Field>
+
+        {/* 2 Gujarati Toggle Buttons */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              તમને મંગળ છે? *
+            </label>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setToggleValue('hasMangal', true)}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold border transition cursor-pointer ${
+                  form.hasMangal
+                    ? 'bg-primary text-white border-primary'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-border dark:border-gray-600'
+                }`}
+              >
+                હા (Yes)
+              </button>
+              <button
+                type="button"
+                onClick={() => setToggleValue('hasMangal', false)}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold border transition cursor-pointer ${
+                  !form.hasMangal
+                    ? 'bg-primary text-white border-primary'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-border dark:border-gray-600'
+                }`}
+              >
+                ના (No)
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              તમને શનિ છે? *
+            </label>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setToggleValue('hasSani', true)}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold border transition cursor-pointer ${
+                  form.hasSani
+                    ? 'bg-primary text-white border-primary'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-border dark:border-gray-600'
+                }`}
+              >
+                હા (Yes)
+              </button>
+              <button
+                type="button"
+                onClick={() => setToggleValue('hasSani', false)}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold border transition cursor-pointer ${
+                  !form.hasSani
+                    ? 'bg-primary text-white border-primary'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-border dark:border-gray-600'
+                }`}
+              >
+                ના (No)
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </AccordionSection>
 
-      {/* ── Family Details ── */}
-      <SectionTitle>Family Details</SectionTitle>
+      {/* ── 3. Family Details Accordion ── */}
+      <AccordionSection
+        title="Family Details"
+        icon="👨‍👩‍👧"
+        sectionKey="family"
+        isOpen={openSections.family}
+        onToggle={toggleSection}
+        hasError={familyErrorCount > 0}
+        errorCount={familyErrorCount}
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Father's Name *" error={errors.fatherName}>
+            <input name="fatherName" value={form.fatherName} onChange={handleChange}
+              placeholder="Ramesh Prajapati" className={inputClass} />
+          </Field>
+          <Field label="Father's Occupation (Optional)">
+            <input name="fatherOccupation" value={form.fatherOccupation} onChange={handleChange}
+              placeholder="Business / Retired" className={inputClass} />
+          </Field>
+        </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="Father's Name *" error={errors.fatherName}>
-          <input name="fatherName" value={form.fatherName} onChange={handleChange}
-            placeholder="Ramesh Prajapati" className={inputClass} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Mother's Name *" error={errors.motherName}>
+            <input name="motherName" value={form.motherName} onChange={handleChange}
+              placeholder="Sunita Prajapati" className={inputClass} />
+          </Field>
+          <Field label="Mother's Occupation (Optional)">
+            <input name="motherOccupation" value={form.motherOccupation} onChange={handleChange}
+              placeholder="Homemaker / Teacher" className={inputClass} />
+          </Field>
+        </div>
+      </AccordionSection>
+
+      {/* ── 4. Contact & Address Accordion ── */}
+      <AccordionSection
+        title="Contact & Address"
+        icon="📞"
+        sectionKey="contact"
+        isOpen={openSections.contact}
+        onToggle={toggleSection}
+        hasError={contactErrorCount > 0}
+        errorCount={contactErrorCount}
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Mobile Number *" error={errors.mobileNo}>
+            <input name="mobileNo" value={form.mobileNo} onChange={handleChange}
+              placeholder="9876543210" maxLength={10} className={inputClass} />
+          </Field>
+          <Field label="Alternate Mobile Number (Optional)" error={errors.alternateMobileNo}>
+            <input name="alternateMobileNo" value={form.alternateMobileNo} onChange={handleChange}
+              placeholder="9876543211" maxLength={10} className={inputClass} />
+          </Field>
+        </div>
+
+        <Field label="Address *" error={errors.addressLine}>
+          <input name="addressLine" value={form.addressLine} onChange={handleChange}
+            placeholder="123, Ring Road" className={inputClass} />
         </Field>
-        <Field label="Father's Occupation (Optional)">
-          <input name="fatherOccupation" value={form.fatherOccupation} onChange={handleChange}
-            placeholder="Business / Retired" className={inputClass} />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="State *" error={errors.state}>
+            <input name="state" value={form.state} onChange={handleChange}
+              placeholder="Gujarat" className={inputClass} />
+          </Field>
+          <Field label="City *" error={errors.city}>
+            <input name="city" value={form.city} onChange={handleChange}
+              placeholder="Ahmedabad" className={inputClass} />
+          </Field>
+        </div>
+
+        <Field label="Pincode *" error={errors.pincode}>
+          <input name="pincode" value={form.pincode} onChange={handleChange}
+            placeholder="380001" maxLength={6} className={inputClass} />
         </Field>
-      </div>
+      </AccordionSection>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="Mother's Name *" error={errors.motherName}>
-          <input name="motherName" value={form.motherName} onChange={handleChange}
-            placeholder="Sunita Prajapati" className={inputClass} />
+      {/* ── 5. Education & Profession Accordion ── */}
+      <AccordionSection
+        title="Education & Profession"
+        icon="🎓"
+        sectionKey="education"
+        isOpen={openSections.education}
+        onToggle={toggleSection}
+        hasError={educationErrorCount > 0}
+        errorCount={educationErrorCount}
+      >
+        <Field label="Education *" error={errors.education}>
+          <input name="education" value={form.education} onChange={handleChange}
+            placeholder="B.Tech CS / M.Com" className={inputClass} />
         </Field>
-        <Field label="Mother's Occupation (Optional)">
-          <input name="motherOccupation" value={form.motherOccupation} onChange={handleChange}
-            placeholder="Homemaker / Teacher" className={inputClass} />
+
+        <Field label="Occupation / Profession *" error={errors.profession}>
+          <input name="profession" value={form.profession} onChange={handleChange}
+            placeholder="Software Engineer / Business" className={inputClass} />
         </Field>
-      </div>
 
-      {/* ── Contact & Address ── */}
-      <SectionTitle>Contact &amp; Address</SectionTitle>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Height (Optional)">
+            <input name="height" value={form.height} onChange={handleChange}
+              placeholder="e.g. 5'8&quot;" className={inputClass} />
+          </Field>
+          <Field label="Monthly Salary (Optional)">
+            <input name="income" value={form.income} onChange={handleChange}
+              placeholder="25000" className={inputClass} />
+          </Field>
+        </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="Mobile Number *" error={errors.mobileNo}>
-          <input name="mobileNo" value={form.mobileNo} onChange={handleChange}
-            placeholder="9876543210" maxLength={10} className={inputClass} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Gotra (Optional)">
+            <input name="gotra" value={form.gotra} onChange={handleChange}
+              placeholder="e.g. Kashyap" className={inputClass} />
+          </Field>
+          <Field label="Diet *" error={errors.diet}>
+            <select name="diet" value={form.diet} onChange={handleChange} className={inputClass}>
+              {DIET_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </Field>
+        </div>
+
+        <Field label="Religion">
+          <input name="religion" value={form.religion} onChange={handleChange}
+            placeholder="Hindu" className={inputClass} />
         </Field>
-        <Field label="Alternate Mobile Number (Optional)" error={errors.alternateMobileNo}>
-          <input name="alternateMobileNo" value={form.alternateMobileNo} onChange={handleChange}
-            placeholder="9876543211" maxLength={10} className={inputClass} />
+      </AccordionSection>
+
+      {/* ── 6. Description & Hobbies Accordion ── */}
+      <AccordionSection
+        title="Description & Hobbies (Optional)"
+        icon="📝"
+        sectionKey="about"
+        isOpen={openSections.about}
+        onToggle={toggleSection}
+        hasError={false}
+        errorCount={0}
+      >
+        <Field label="Description / About Me">
+          <textarea name="description" value={form.description} onChange={handleChange}
+            rows={4} placeholder="Write something about yourself, your background, and family..." className={inputClass} />
         </Field>
-      </div>
 
-      <Field label="Address *" error={errors.addressLine}>
-        <input name="addressLine" value={form.addressLine} onChange={handleChange}
-          placeholder="123, Ring Road" className={inputClass} />
-      </Field>
-
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="State *" error={errors.state}>
-          <input name="state" value={form.state} onChange={handleChange}
-            placeholder="Gujarat" className={inputClass} />
+        <Field label="Hobbies">
+          <textarea name="hobbies" value={form.hobbies} onChange={handleChange}
+            rows={3} placeholder="Cricket, Coding, Music..." className={inputClass} />
         </Field>
-        <Field label="City *" error={errors.city}>
-          <input name="city" value={form.city} onChange={handleChange}
-            placeholder="Ahmedabad" className={inputClass} />
-        </Field>
-      </div>
+      </AccordionSection>
 
-      <Field label="Pincode *" error={errors.pincode}>
-        <input name="pincode" value={form.pincode} onChange={handleChange}
-          placeholder="380001" maxLength={6} className={inputClass} />
-      </Field>
-
-      {/* ── Education & Profession ── */}
-      <SectionTitle>Education &amp; Profession</SectionTitle>
-
-      <Field label="Education *" error={errors.education}>
-        <input name="education" value={form.education} onChange={handleChange}
-          placeholder="B.Tech CS / M.Com" className={inputClass} />
-      </Field>
-
-      <Field label="Occupation / Profession *" error={errors.profession}>
-        <input name="profession" value={form.profession} onChange={handleChange}
-          placeholder="Software Engineer / Business" className={inputClass} />
-      </Field>
-
-      {/* ── Description / About Me ── */}
-      <SectionTitle>Description / About Me (Optional)</SectionTitle>
-      <Field label="Description">
-        <textarea name="description" value={form.description} onChange={handleChange}
-          rows={4} placeholder="Write something about yourself, your background, and family..." className={inputClass} />
-      </Field>
-
-      {/* ── Additional Details ── */}
-      <SectionTitle>Additional Details</SectionTitle>
-
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="Height (Optional)">
-          <input name="height" value={form.height} onChange={handleChange}
-            placeholder="e.g. 5'8&quot;" className={inputClass} />
-        </Field>
-        <Field label="Monthly Salary (Optional)">
-          <input name="income" value={form.income} onChange={handleChange}
-            placeholder="25000" className={inputClass} />
-        </Field>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="Gotra (Optional)">
-          <input name="gotra" value={form.gotra} onChange={handleChange}
-            placeholder="e.g. Kashyap" className={inputClass} />
-        </Field>
-        <Field label="Diet *" error={errors.diet}>
-          <select name="diet" value={form.diet} onChange={handleChange} className={inputClass}>
-            {DIET_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-        </Field>
-      </div>
-
-      <Field label="Religion">
-        <input name="religion" value={form.religion} onChange={handleChange}
-          placeholder="Hindu" className={inputClass} />
-      </Field>
-
-      <Field label="Hobbies">
-        <textarea name="hobbies" value={form.hobbies} onChange={handleChange}
-          rows={3} placeholder="Cricket, Coding, Music..." className={inputClass} />
-      </Field>
-
-
-      {serverError && <p className="text-error text-sm">{serverError}</p>}
+      {serverError && <p className="text-error text-sm pt-2">{serverError}</p>}
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-2.5 rounded-lg bg-primary text-white font-semibold
+        className="w-full py-3 rounded-xl bg-primary text-white font-bold text-sm
                    hover:bg-primary-light transition disabled:opacity-60
-                   flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                   flex items-center justify-center gap-2 cursor-pointer shadow-lg mt-4"
       >
         {loading && <Spinner />}
         {loading ? 'Saving...' : submitLabel}
@@ -470,11 +553,37 @@ const ProfileForm = ({
   );
 };
 
-/** Section label divider */
-const SectionTitle = ({ children }) => (
-  <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide pt-2">
-    {children}
-  </p>
+/** Reusable Collapsible Accordion Section */
+const AccordionSection = ({ title, icon, sectionKey, isOpen, onToggle, hasError, errorCount, children }) => (
+  <div className={`border rounded-2xl overflow-hidden transition-all duration-200 shadow-sm ${
+    hasError
+      ? 'border-red-400 dark:border-red-500/80 bg-red-50/20 dark:bg-red-950/10'
+      : 'border-border dark:border-gray-700 bg-white dark:bg-card-dark'
+  }`}>
+    <button
+      type="button"
+      onClick={() => onToggle(sectionKey)}
+      className="w-full px-5 py-4 flex items-center justify-between font-semibold text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition cursor-pointer select-none"
+    >
+      <div className="flex items-center gap-2.5">
+        <span className="text-lg leading-none">{icon}</span>
+        <span className="font-bold text-gray-900 dark:text-gray-100">{title}</span>
+        {hasError && (
+          <span className="px-2 py-0.5 rounded-full bg-red-500 text-white text-[11px] font-bold animate-pulse">
+            {errorCount} error{errorCount > 1 ? 's' : ''}
+          </span>
+        )}
+      </div>
+      <span className={`text-gray-400 transform transition-transform duration-200 text-xs font-bold ${isOpen ? 'rotate-180' : ''}`}>
+        ▼
+      </span>
+    </button>
+    {isOpen && (
+      <div className="p-4 sm:p-5 border-t border-border dark:border-gray-700/60 space-y-4 bg-gray-50/50 dark:bg-gray-900/30">
+        {children}
+      </div>
+    )}
+  </div>
 );
 
 /** Label + input + inline error wrapper */
