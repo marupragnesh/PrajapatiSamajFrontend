@@ -348,9 +348,21 @@ const ImageAdjustModal = ({ files = [], onClose, onConfirm, uploading = false })
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, exportW, exportH);
 
-        // Map panX and panY from preview canvas space to export canvas space
+        // Calculate exact preview crop frame dimensions to compute accurate scaleFactor
         const previewCanvas = canvasRef.current;
-        const scaleFactor = previewCanvas ? exportW / (previewCanvas.clientWidth || 360) : 3.3;
+        const containerWidth = previewCanvas?.clientWidth || 360;
+        const containerHeight = previewCanvas?.clientHeight || 300;
+
+        let cropW = containerWidth - 24;
+        let cropH = containerHeight - 24;
+        if (cropW / cropH > targetRatio) {
+          cropW = cropH * targetRatio;
+        } else {
+          cropH = cropW / targetRatio;
+        }
+
+        // Exact scale factor from preview crop box space to high-res export space
+        const scaleFactor = exportW / cropW;
 
         ctx.translate(exportW / 2 + panX * scaleFactor, exportH / 2 + panY * scaleFactor);
         ctx.rotate((rotation * Math.PI) / 180);

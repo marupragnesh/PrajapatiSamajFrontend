@@ -155,16 +155,16 @@ const ProfileDetailPage = () => {
         {/* ── Card: Photo + Profile Info + Actions ── */}
         <div className="bg-white dark:bg-card-dark rounded-2xl shadow-sm overflow-hidden">
 
-          {/* Large selected photo */}
-          <div className="h-80 bg-gray-100 dark:bg-gray-800">
+          {/* Large selected photo (renders exact cropped image without forced wide zooming) */}
+          <div className="w-full bg-gray-950 flex items-center justify-center min-h-[300px] max-h-[500px] sm:max-h-[550px] overflow-hidden">
             {selectedPhotoUrl ? (
               <img
                 src={resolveImageUrl(selectedPhotoUrl)}
                 alt={profile.fullName}
-                className="w-full h-full object-cover"
+                className="max-h-[500px] sm:max-h-[550px] w-auto max-w-full object-contain mx-auto transition-transform"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-6xl text-gray-300">
+              <div className="w-full h-72 flex items-center justify-center text-6xl text-gray-400">
                 👤
               </div>
             )}
