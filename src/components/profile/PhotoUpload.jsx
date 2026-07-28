@@ -4,65 +4,86 @@ import toast from 'react-hot-toast';
 import { uploadPhoto, deletePhoto, setPrimaryPhoto } from '../../api/profileApi';
 import ConfirmDialog from '../common/ConfirmDialog';
 import Spinner from '../common/Spinner';
+import ImageAdjustModal from './ImageAdjustModal';
 import { resolveImageUrl } from '../../utils/imageHelper';
 import logger from '../../utils/logger';
 
 /**
- * PhotoUpload — upload, delete, and set primary photo.
+ * PhotoUpload — upload, preview/adjust, delete, and set primary photo.
+ * Supports Instagram-style multi-photo selection, cropping, zoom, and aspect ratio adjustment.
  * Max 10 photos per profile (enforced in backend, reflected here in UI).
- *
- * Props:
- *   photos         — array of { id, url, isPrimary }
- *   onPhotosChange — callback(updatedProfile?) — called after upload, delete, or set-primary
  */
 const MAX_PHOTOS = 10;
 
 const PhotoUpload = ({ photos = [], onPhotosChange }) => {
-  const [uploading, setUploading]           = useState(false);
-  const [previewUrl, setPreviewUrl]         = useState(null);
-  const [deleteTarget, setDeleteTarget]     = useState(null);
-  const [deleting, setDeleting]             = useState(false);
+  const [uploading, setUploading]               = useState(false);
+  const [uploadProgress, setUploadProgress]     = useState('');
+  const [deleteTarget, setDeleteTarget]         = useState(null);
+  const [deleting, setDeleting]                 = useState(false);
   const [settingPrimaryId, setSettingPrimaryId] = useState(null);
-  const fileInputRef                        = useRef(null);
+  const [selectedFiles, setSelectedFiles]       = useState(null); // Files passed to ImageAdjustModal
+  const fileInputRef                            = useRef(null);
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const handleFileChange = (e) => {
+    const rawFiles = Array.from(e.target.files || []);
+    if (rawFiles.length === 0) return;
 
-    logger.info('Photo selected for upload', { fileName: file.name, size: file.size });
+    const remaining = MAX_PHOTOS - photos.length;
+    if (remaining <= 0) {
+      toast.error(`Maximum limit of ${MAX_PHOTOS} photos reached.`);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
 
-    const localPreview = URL.createObjectURL(file);
-    setPreviewUrl(localPreview);
+    let filesToProcess = rawFiles;
+    if (rawFiles.length > remaining) {
+      toast.error(`You can only upload ${remaining} more photo(s). Selecting first ${remaining}.`);
+      filesToProcess = rawFiles.slice(0, remaining);
+    }
+
+    logger.info(`${filesToProcess.length} photo(s) selected for adjustment modal`);
+    setSelectedFiles(filesToProcess);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleConfirmAdjustments = async (adjustedFiles) => {
+    setSelectedFiles(null);
+    if (!adjustedFiles || adjustedFiles.length === 0) return;
+
     setUploading(true);
+    let lastUpdatedProfile = null;
 
     try {
-      const compressed = await imageCompression(file, {
-        maxSizeMB: 1,
-        maxWidthOrHeight: 1024,
-        useWebWorker: true,
-      });
-      logger.info('Image compressed', {
-        originalKB: Math.round(file.size / 1024),
-        compressedKB: Math.round(compressed.size / 1024),
-      });
+      for (let i = 0; i < adjustedFiles.length; i++) {
+        const file = adjustedFiles[i];
+        setUploadProgress(`Uploading ${i + 1} of ${adjustedFiles.length}...`);
+        logger.info(`Processing & compressing photo ${i + 1}`, { fileName: file.name, size: file.size });
 
-      const formData = new FormData();
-      formData.append('photo', compressed, file.name);
+        const compressed = await imageCompression(file, {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1200,
+          useWebWorker: true,
+        });
 
-      const updatedProfile = await uploadPhoto(formData);
-      logger.info('Photo uploaded successfully');
-      toast.success('Photo uploaded!');
+        const formData = new FormData();
+        formData.append('photo', compressed, file.name || `photo_${Date.now()}.jpg`);
 
-      setPreviewUrl(null);
-      onPhotosChange(updatedProfile);
+        lastUpdatedProfile = await uploadPhoto(formData);
+        logger.info(`Photo ${i + 1} uploaded successfully`);
+      }
+
+      toast.success(
+        adjustedFiles.length > 1
+          ? `All ${adjustedFiles.length} photos uploaded successfully!`
+          : 'Photo uploaded successfully!'
+      );
+      if (onPhotosChange) onPhotosChange(lastUpdatedProfile);
     } catch (error) {
-      logger.error('Photo upload failed', error.response?.data);
-      setPreviewUrl(null);
+      logger.error('Batch photo upload failed', error.response?.data);
       toast.error(error.response?.data?.message || 'Upload failed. Please try again.');
     } finally {
-      URL.revokeObjectURL(localPreview);
       setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      setUploadProgress('');
     }
   };
 
@@ -97,7 +118,7 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
     }
   };
 
-  const totalCount = photos.length + (previewUrl ? 1 : 0);
+  const totalCount = photos.length;
 
   return (
     <div>
@@ -107,9 +128,8 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
       </p>
 
       {/* Photo grid */}
-      {(photos.length > 0 || previewUrl) && (
+      {photos.length > 0 && (
         <div className="grid grid-cols-3 gap-3 mb-4">
-
           {photos.map((photo) => {
             const isSettingThis = settingPrimaryId === photo.id;
             return (
@@ -149,23 +169,6 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
               </div>
             );
           })}
-
-          {/* Instant preview while uploading */}
-          {previewUrl && (
-            <div className="relative">
-              <img
-                src={previewUrl}
-                alt="Uploading..."
-                className="w-full h-28 object-cover rounded-lg border border-primary opacity-70"
-              />
-              <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg">
-                <Spinner color="white" />
-              </div>
-              <span className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
-                Uploading...
-              </span>
-            </div>
-          )}
         </div>
       )}
 
@@ -175,6 +178,7 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
           <input
             ref={fileInputRef}
             type="file"
+            multiple
             accept="image/jpeg,image/png,image/jpg"
             onChange={handleFileChange}
             className="hidden"
@@ -190,10 +194,10 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
               }`}
           >
             {uploading ? <Spinner color="primary" /> : '📷'}
-            {uploading ? 'Uploading...' : 'Upload Photo'}
+            {uploading ? uploadProgress || 'Uploading...' : 'Select Photo(s) to Upload'}
           </label>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-            Hover a photo and click ⭐ to set it as your primary display photo.
+            You can select multiple photos from file manager and adjust aspect ratio, crop &amp; zoom before uploading.
           </p>
         </>
       )}
@@ -202,6 +206,16 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
         <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
           Maximum {MAX_PHOTOS} photos reached. Delete one to upload a new photo.
         </p>
+      )}
+
+      {/* Instagram-style Photo Preview & Adjust Modal */}
+      {selectedFiles && (
+        <ImageAdjustModal
+          files={selectedFiles}
+          onClose={() => setSelectedFiles(null)}
+          onConfirm={handleConfirmAdjustments}
+          uploading={uploading}
+        />
       )}
 
       <ConfirmDialog
@@ -221,3 +235,4 @@ const PhotoUpload = ({ photos = [], onPhotosChange }) => {
 };
 
 export default PhotoUpload;
+
