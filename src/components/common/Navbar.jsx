@@ -85,22 +85,23 @@ const Navbar = () => {
       <nav className="sticky top-0 z-40 bg-white dark:bg-card-dark border-b border-border shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-2.5 sm:py-3 flex items-center justify-between">
 
-          {/* Brand Link */}
+          {/* Brand Link — Royal Heritage Emblem */}
           <NavLink
             to="/discover"
-            className="flex items-center gap-2 text-primary font-bold text-lg hover:opacity-90 transition cursor-pointer"
+            className="flex items-center gap-2 font-bold text-lg hover:opacity-90 transition cursor-pointer"
           >
-            <LogoIcon className="w-6 h-6 text-primary" />
-            <span className="font-extrabold tracking-tight text-gray-900 dark:text-white">PrajapatiSamaj</span>
+            <LogoIcon className="w-7 h-7" />
+            <span className="font-serif font-extrabold tracking-wide text-amber-700 dark:text-amber-400 drop-shadow-sm">PrajapatiSamaj</span>
           </NavLink>
 
           {/* Desktop Nav links (hidden on mobile, visible md+) */}
           <div className="hidden md:flex items-center gap-1">
-            <NavLink to="/discover"        className={linkClass}>🧭 Discover</NavLink>
-            <NavLink to="/likes"           className={linkClass}>❤️ Likes</NavLink>
-            <NavLink to="/interests"       className={linkClass}>💌 Interests</NavLink>
-            <NavLink to="/matches"         className={linkClass}>🎉 Matches</NavLink>
-            <NavLink to="/payment"         className={linkClass}>💎 Premium</NavLink>
+            <NavLink to="/discover" className={linkClass}>🔍 Discover</NavLink>
+            <NavLink to="/biodata" className={linkClass}>📜 Biodata</NavLink>
+            <NavLink to="/likes" className={linkClass}>❤️ Likes</NavLink>
+            <NavLink to="/interests" className={linkClass}>💌 Interests</NavLink>
+            <NavLink to="/matches" className={linkClass}>🎉 Matches</NavLink>
+            <NavLink to="/payment" className={linkClass}>💎 Premium</NavLink>
           </div>
 
           {/* User actions (Profile Avatar, Theme Toggle, Logout) */}
@@ -162,8 +163,12 @@ const Navbar = () => {
       {/* Mobile Sticky Bottom Navigation Tab Bar (visible on screens < md) */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-card-dark/95 backdrop-blur border-t border-border px-1 py-1 flex items-center justify-around shadow-2xl">
         <NavLink to="/discover" className={mobileTabClass}>
-          <span className="text-base leading-tight">🧭</span>
+          <span className="text-base leading-tight">🔍</span>
           <span>Discover</span>
+        </NavLink>
+        <NavLink to="/biodata" className={mobileTabClass}>
+          <span className="text-base leading-tight">📜</span>
+          <span>Biodata</span>
         </NavLink>
         <NavLink to="/likes" className={mobileTabClass}>
           <span className="text-base leading-tight">❤️</span>

@@ -3,27 +3,36 @@ import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Navbar from '../components/common/Navbar';
 import Spinner from '../components/common/Spinner';
+import PaymentResultModal from '../components/payment/PaymentResultModal';
 import { createOrder, verifyPayment, getPaymentStatus } from '../api/paymentApi';
+import { getMyProfile } from '../api/profileApi';
 import logger from '../utils/logger';
 
 /**
  * PaymentPage — Dedicated 6-Month Premium Membership Page.
- *
- * Single All-in-One Card (₹99 for 6 months):
- *   - Unlocks full mobile numbers account-wide
- *   - Unlocks premium Discover search filters
  */
 const PaymentPage = () => {
-  const [status, setStatus] = useState({ contactUnlocked: false, filtersUnlocked: false });
+  const [status, setStatus] = useState({ contactUnlocked: false, filtersUnlocked: false, biodataUnlocked: false, daysRemaining: null });
+  const [profile, setProfile] = useState(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
-  const [processing, setProcessing] = useState(false);
+  const [processingFeature, setProcessingFeature] = useState(null);
 
-  const isUnlocked = status.contactUnlocked || status.filtersUnlocked;
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    isSuccess: true,
+    title: '',
+    message: '',
+    details: {},
+  });
 
-  const fetchStatus = async () => {
+  const fetchData = async () => {
     try {
-      const data = await getPaymentStatus();
-      setStatus(data);
+      const [statusData, profileData] = await Promise.all([
+        getPaymentStatus(),
+        getMyProfile().catch(() => null),
+      ]);
+      setStatus(statusData);
+      setProfile(profileData);
     } catch (error) {
       logger.error('Failed to fetch payment status', error);
       toast.error('Could not load payment status.');
@@ -33,14 +42,13 @@ const PaymentPage = () => {
   };
 
   useEffect(() => {
-    fetchStatus();
+    fetchData();
   }, []);
 
-  const handlePay = async () => {
-    setProcessing(true);
+  const handlePay = async (featureName) => {
+    setProcessingFeature(featureName);
     try {
-      // Create order for CONTACT_UNLOCK feature (₹99)
-      const order = await createOrder('CONTACT_UNLOCK');
+      const order = await createOrder(featureName);
 
       const options = {
         key: order.keyId,
@@ -48,7 +56,9 @@ const PaymentPage = () => {
         currency: order.currency,
         order_id: order.orderId,
         name: 'Prajapati Samaj',
-        description: '6 Months All-in-One Premium Membership',
+        description: featureName === 'CONTACT_UNLOCK'
+          ? '6-Month Contact & Search Filter Pass (₹49)'
+          : '6-Month All-in-One + Biodata Pass (₹99)',
         handler: async (response) => {
           try {
             const result = await verifyPayment({
@@ -58,21 +68,49 @@ const PaymentPage = () => {
             });
 
             if (result.success) {
-              toast.success('Congratulations! 6-Month Premium Membership Activated!');
-              await fetchStatus();
+              toast.success('Congratulations! Membership Activated!');
+              await fetchData();
+              setModalState({
+                isOpen: true,
+                isSuccess: true,
+                title: '🎉 Premium Membership Activated!',
+                message: featureName === 'BIODATA_DOWNLOAD'
+                  ? 'Your All-in-One + Biodata Pass is active for 180 days! All mobile numbers, search filters, and A4 Biodata PDF downloads are unlocked.'
+                  : 'Your Contact & Search Filters Pass is active for 180 days! All mobile numbers and advanced discover filters are unlocked.',
+                details: {
+                  feature: featureName,
+                  paymentId: response.razorpay_payment_id,
+                  orderId: response.razorpay_order_id,
+                  amount: order.amount,
+                },
+              });
             } else {
               toast.error(result.message || 'Payment verification failed.');
+              setModalState({
+                isOpen: true,
+                isSuccess: false,
+                title: '❌ Verification Failed',
+                message: result.message || 'Could not verify payment signature. Contact support if money was deducted.',
+                details: { feature: featureName, orderId: response.razorpay_order_id, amount: order.amount },
+              });
             }
           } catch (error) {
             logger.error('Payment verification failed', error.response?.data);
             toast.error('Payment verification error. Contact support if deducted.');
+            setModalState({
+              isOpen: true,
+              isSuccess: false,
+              title: '❌ Payment Error',
+              message: 'Server error during payment verification. If money was deducted, please contact support.',
+              details: { feature: featureName, orderId: order.orderId, amount: order.amount },
+            });
           } finally {
-            setProcessing(false);
+            setProcessingFeature(null);
           }
         },
         modal: {
           ondismiss: () => {
-            setProcessing(false);
+            setProcessingFeature(null);
           },
         },
         theme: { color: '#B5451B' },
@@ -80,20 +118,27 @@ const PaymentPage = () => {
 
       if (!window.Razorpay) {
         toast.error('Payment gateway unavailable. Please refresh and try again.');
-        setProcessing(false);
+        setProcessingFeature(null);
         return;
       }
 
       const razorpay = new window.Razorpay(options);
-      razorpay.on('payment.failed', () => {
+      razorpay.on('payment.failed', (resp) => {
         toast.error('Payment failed. Please try again.');
-        setProcessing(false);
+        setModalState({
+          isOpen: true,
+          isSuccess: false,
+          title: '❌ Payment Failed',
+          message: resp?.error?.description || 'Transaction declined or cancelled. Please try again.',
+          details: { feature: featureName, orderId: order.orderId, amount: order.amount },
+        });
+        setProcessingFeature(null);
       });
       razorpay.open();
     } catch (error) {
       logger.error('Payment initialization failed', error.response?.data);
       toast.error(error.response?.data?.message || 'Could not initiate payment.');
-      setProcessing(false);
+      setProcessingFeature(null);
     }
   };
 
@@ -101,11 +146,12 @@ const PaymentPage = () => {
     <div className="min-h-screen bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100">
       <Navbar />
 
-      <div className="max-w-xl mx-auto px-4 py-10 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 py-10 space-y-10">
+
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-extrabold text-primary">💎 Premium Membership</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Get complete access to contact details and advanced search filters for 6 months.
+          <h1 className="text-3xl md:text-4xl font-extrabold text-primary">💎 Choose Your Premium Membership</h1>
+          <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
+            Select the membership plan that best fits your search needs. Both plans include full 6-month access.
           </p>
         </div>
 
@@ -114,80 +160,223 @@ const PaymentPage = () => {
             <Spinner size="lg" />
           </div>
         ) : (
-          <div className="bg-white dark:bg-card-dark rounded-3xl p-8 shadow-xl border border-border/80 dark:border-gray-700 space-y-6">
-            {/* Header Badge & Price */}
-            <div className="flex items-start justify-between border-b border-border/60 dark:border-gray-700 pb-6">
-              <div>
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">
-                  🌟 All-in-One Pass
-                </span>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-2">
-                  6-Month Premium Access
-                </h2>
-              </div>
-              <div className="text-right">
-                <p className="text-3xl font-extrabold text-primary">₹99</p>
-                <p className="text-xs text-gray-400 font-medium">Valid for 6 Months</p>
-              </div>
-            </div>
+          <>
+            {/* 3 Plan Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+              
+              {/* PLAN 0: ₹9 Single Profile Pass */}
+              <div className="bg-white dark:bg-card-dark rounded-3xl p-6 shadow-lg border border-emerald-200 dark:border-emerald-800/60 flex flex-col justify-between space-y-5 relative overflow-hidden">
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between border-b border-border/60 dark:border-gray-700 pb-4">
+                    <div>
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        🔓 Single Profile Pass
+                      </span>
+                      <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mt-2">
+                        Unlock 1 Profile Contact
+                      </h2>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">₹9</p>
+                      <p className="text-xs text-gray-400 font-medium">Per Profile</p>
+                    </div>
+                  </div>
 
-            {/* Included Benefits */}
-            <div className="space-y-3">
-              <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Included Benefits:</p>
-              <ul className="space-y-3 text-sm text-gray-700 dark:text-gray-200">
-                <li className="flex items-center gap-3">
-                  <span className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-300 flex items-center justify-center font-bold text-xs">
-                    ✓
-                  </span>
-                  <span><strong>Unlock All Contact Numbers:</strong> View full mobile numbers for every profile account-wide.</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-300 flex items-center justify-center font-bold text-xs">
-                    ✓
-                  </span>
-                  <span><strong>Premium Discover Filters:</strong> Filter candidates by Age, Height, Diet, Marital Status & Surname.</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-300 flex items-center justify-center font-bold text-xs">
-                    ✓
-                  </span>
-                  <span><strong>6 Months Validity:</strong> Enjoy full access for 6 complete months.</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Status & CTA Button */}
-            <div className="pt-2">
-              {isUnlocked ? (
-                <div className="w-full py-3.5 rounded-2xl bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 font-bold text-center text-sm flex items-center justify-center gap-2">
-                  <span>✅</span> Active 6-Month Premium Pass
+                  <ul className="space-y-2.5 text-xs text-gray-700 dark:text-gray-200">
+                    <li className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300 flex items-center justify-center font-bold text-[10px]">
+                        ✓
+                      </span>
+                      <span><strong>Instant Contact Reveal:</strong> Pay only for the exact profile you are interested in.</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300 flex items-center justify-center font-bold text-[10px]">
+                        ✓
+                      </span>
+                      <span><strong>Permanent Access:</strong> Once unlocked, view their mobile number anytime.</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300 flex items-center justify-center font-bold text-[10px]">
+                        ✓
+                      </span>
+                      <span><strong>Easy Direct Button:</strong> Available directly on any user's profile page.</span>
+                    </li>
+                  </ul>
                 </div>
-              ) : (
-                <button
-                  onClick={handlePay}
-                  disabled={processing}
-                  className="w-full py-3.5 rounded-2xl bg-primary text-white font-bold text-base hover:bg-primary-light transition flex items-center justify-center gap-2 shadow-lg cursor-pointer disabled:opacity-60"
-                >
-                  {processing ? <Spinner size="sm" /> : 'Pay & Activate Premium (₹99 for 6 Months)'}
-                </button>
-              )}
-            </div>
 
-            {/* Secondary About & Community Stats Button (Subtle, non-highlighted) */}
-            <div className="pt-2 border-t border-border/50 dark:border-gray-800 text-center">
-              <Link
-                to="/about"
-                className="inline-flex items-center justify-center gap-2 text-xs font-medium text-gray-500 hover:text-primary dark:text-gray-400 dark:hover:text-primary transition py-1.5 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800/80 cursor-pointer"
-              >
-                <span>ℹ️</span> About Platform &amp; Community Stats
-              </Link>
-            </div>
-          </div>
+                <div>
+                  <Link
+                    to="/discover"
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow cursor-pointer text-center block"
+                  >
+                    Browse Profiles &amp; Unlock for ₹9
+                  </Link>
+                </div>
+              </div>
 
+              {/* PLAN 1: ₹49 Pass */}
+              <div className="bg-white dark:bg-card-dark rounded-3xl p-6 shadow-lg border border-border/80 dark:border-gray-700 flex flex-col justify-between space-y-5 relative overflow-hidden">
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between border-b border-border/60 dark:border-gray-700 pb-4">
+                    <div>
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                        📞 All Contacts Pass
+                      </span>
+                      <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mt-2">
+                        All Contacts &amp; Filters
+                      </h2>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-3xl font-extrabold text-amber-600 dark:text-amber-400">₹49</p>
+                      <p className="text-xs text-gray-400 font-medium">Valid for 6 Months</p>
+                    </div>
+                  </div>
+
+                  <ul className="space-y-2.5 text-xs text-gray-700 dark:text-gray-200">
+                    <li className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-300 flex items-center justify-center font-bold text-[10px]">
+                        ✓
+                      </span>
+                      <span><strong>Unlock All Mobile Numbers:</strong> See phone numbers &amp; addresses account-wide.</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-300 flex items-center justify-center font-bold text-[10px]">
+                        ✓
+                      </span>
+                      <span><strong>Advanced Search Filters:</strong> Filter by Age, Height, Diet, Marital Status &amp; Surname.</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-300 flex items-center justify-center font-bold text-[10px]">
+                        ✓
+                      </span>
+                      <span><strong>6 Months Validity:</strong> 180 days uninterrupted access.</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div>
+                  {status.contactUnlocked ? (
+                    <div className="w-full py-2.5 rounded-xl bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 font-bold text-center text-xs flex flex-col items-center justify-center gap-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <span>✅</span> All Contacts Unlocked
+                      </div>
+                      {status.daysRemaining !== null && status.daysRemaining !== undefined && !status.biodataUnlocked && (
+                        <span className="text-[11px] font-semibold text-green-600 dark:text-green-400">
+                          ({status.daysRemaining} days remaining)
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handlePay('CONTACT_UNLOCK')}
+                      disabled={processingFeature !== null}
+                      className="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow cursor-pointer disabled:opacity-60"
+                    >
+                      {processingFeature === 'CONTACT_UNLOCK' ? <Spinner size="sm" /> : 'Pay & Unlock All Contacts (₹49)'}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* PLAN 2: ₹99 Pass */}
+              <div className="bg-white dark:bg-card-dark rounded-3xl p-6 shadow-xl border-2 border-primary/60 dark:border-primary/80 flex flex-col justify-between space-y-5 relative overflow-hidden ring-4 ring-primary/10">
+                <div className="absolute top-0 right-0 bg-primary text-white text-[9px] font-extrabold uppercase px-3 py-0.5 rounded-bl-lg tracking-wider">
+                  MOST POPULAR
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between border-b border-border/60 dark:border-gray-700 pb-4">
+                    <div>
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">
+                        🌟 All-in-One + Biodata
+                      </span>
+                      <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mt-2">
+                        Full Pass &amp; Biodata PDF
+                      </h2>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-3xl font-extrabold text-primary">₹99</p>
+                      <p className="text-xs text-gray-400 font-medium">Valid for 6 Months</p>
+                    </div>
+                  </div>
+
+                  <ul className="space-y-2.5 text-xs text-gray-700 dark:text-gray-200">
+                    <li className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-300 flex items-center justify-center font-bold text-[10px]">
+                        ✓
+                      </span>
+                      <span><strong>Unlock All Mobile Numbers:</strong> Full phone &amp; address access account-wide.</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-300 flex items-center justify-center font-bold text-[10px]">
+                        ✓
+                      </span>
+                      <span><strong>Advanced Discover Filters:</strong> Filter by Age, Height, Diet, Marital Status &amp; Surname.</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-300 flex items-center justify-center font-bold text-[10px]">
+                        ★
+                      </span>
+                      <span><strong>Marriage Biodata PDF Download:</strong> Download un-watermarked A4 PDF in all 6 traditional themes!</span>
+                    </li>
+                    {status.contactUnlocked && !status.biodataUnlocked && (
+                      <li className="flex items-center gap-2 text-primary font-bold">
+                        <span className="w-4 h-4 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px]">
+                          ⚡
+                        </span>
+                        <span>Upgrade from ₹49: Resets your membership to fresh 180 days!</span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+
+                <div>
+                  {status.biodataUnlocked ? (
+                    <div className="w-full py-2.5 rounded-xl bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 font-bold text-center text-xs flex flex-col items-center justify-center gap-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <span>✅</span> Full All-in-One Pass Active
+                      </div>
+                      {status.daysRemaining !== null && status.daysRemaining !== undefined && (
+                        <span className="text-[11px] font-semibold text-green-600 dark:text-green-400">
+                          ({status.daysRemaining} days remaining)
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handlePay('BIODATA_DOWNLOAD')}
+                      disabled={processingFeature !== null}
+                      className="w-full py-3 rounded-xl bg-primary text-white font-bold text-xs hover:bg-primary-light transition flex items-center justify-center gap-2 shadow cursor-pointer disabled:opacity-60"
+                    >
+                      {processingFeature === 'BIODATA_DOWNLOAD' ? (
+                        <Spinner size="sm" />
+                      ) : status.contactUnlocked ? (
+                        'Upgrade to All-in-One Pass (₹99) (Resets 6 Months)'
+                      ) : (
+                        'Pay & Unlock All-in-One Pass (₹99)'
+                      )}
+                    </button>
+                  )}
+                </div>
+
+              </div>
+            </div>
+          </>
         )}
       </div>
+
+      {/* Dedicated Payment Result Modal Popup */}
+      <PaymentResultModal
+        isOpen={modalState.isOpen}
+        isSuccess={modalState.isSuccess}
+        title={modalState.title}
+        message={modalState.message}
+        details={modalState.details}
+        onClose={() => setModalState((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };
+
 
 export default PaymentPage;

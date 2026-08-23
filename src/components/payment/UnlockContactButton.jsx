@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import Spinner from '../common/Spinner';
+import PaymentResultModal from './PaymentResultModal';
 import { createOrder, verifyPayment } from '../../api/paymentApi';
 import logger from '../../utils/logger';
 
@@ -25,14 +26,21 @@ import logger from '../../utils/logger';
  *                Parent page should use this to refresh the profile so the
  *                real mobile number appears without a full page reload.
  */
-const UnlockContactButton = ({ onUnlocked }) => {
+const UnlockContactButton = ({ targetProfileId = null, feature = 'SINGLE_PROFILE_UNLOCK', label = null, onUnlocked, customClass = "" }) => {
   const [loading, setLoading] = useState(false);
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    isSuccess: true,
+    title: '',
+    message: '',
+    details: {},
+  });
 
   const handleUnlock = async () => {
     setLoading(true);
     try {
       // Step 1: create the order — amount comes back from the backend
-      const order = await createOrder('CONTACT_UNLOCK');
+      const order = await createOrder(feature, targetProfileId);
 
       // Step 2: open Razorpay checkout modal
       const options = {
@@ -41,7 +49,7 @@ const UnlockContactButton = ({ onUnlocked }) => {
         currency: order.currency,
         order_id: order.orderId,
         name: 'Prajapati Samaj',
-        description: 'Unlock all contact numbers',
+        description: feature === 'SINGLE_PROFILE_UNLOCK' ? 'Unlock single profile contact' : 'Unlock all contact numbers',
         handler: async (response) => {
           // Step 3: verify the payment signature on the backend
           try {
@@ -53,14 +61,44 @@ const UnlockContactButton = ({ onUnlocked }) => {
 
             // Step 4: only treat as unlocked if the backend genuinely confirms it
             if (result.success) {
-              toast.success(result.message || 'Contact numbers unlocked!');
+              toast.success(result.message || 'Contact details unlocked!');
+              setModalState({
+                isOpen: true,
+                isSuccess: true,
+                title: '🎉 Payment Successful!',
+                message: 'You have successfully unlocked the contact details! Mobile number and address are now revealed.',
+                details: {
+                  feature,
+                  paymentId: response.razorpay_payment_id,
+                  orderId: response.razorpay_order_id,
+                  amount: order.amount,
+                },
+              });
               if (onUnlocked) onUnlocked();
             } else {
-              toast.error(result.message || 'Payment verification failed. Please contact support if money was deducted.');
+              toast.error(result.message || 'Payment verification failed.');
+              setModalState({
+                isOpen: true,
+                isSuccess: false,
+                title: '❌ Verification Failed',
+                message: result.message || 'Could not verify payment signature. Please contact support if money was deducted.',
+                details: {
+                  feature,
+                  orderId: response.razorpay_order_id,
+                  amount: order.amount,
+                },
+              });
             }
           } catch (error) {
             logger.error('Payment verification failed', error.response?.data);
             toast.error('Could not verify payment. Please contact support if money was deducted.');
+            setModalState({
+              isOpen: true,
+              isSuccess: false,
+              title: '❌ Payment Error',
+              message: 'Server error during payment verification. If money was deducted, please contact support.',
+              details: { feature, orderId: order.orderId, amount: order.amount },
+            });
           } finally {
             setLoading(false);
           }
@@ -84,8 +122,15 @@ const UnlockContactButton = ({ onUnlocked }) => {
 
       // Payment failed inside the modal (e.g. card declined) — Razorpay fires
       // this itself, separate from the success handler above.
-      razorpay.on('payment.failed', () => {
+      razorpay.on('payment.failed', (resp) => {
         toast.error('Payment failed. Please try again.');
+        setModalState({
+          isOpen: true,
+          isSuccess: false,
+          title: '❌ Payment Failed',
+          message: resp?.error?.description || 'Payment was declined or cancelled. Please try again.',
+          details: { feature, orderId: order.orderId, amount: order.amount },
+        });
         setLoading(false);
       });
 
@@ -97,15 +142,31 @@ const UnlockContactButton = ({ onUnlocked }) => {
     }
   };
 
+  const defaultText = feature === 'SINGLE_PROFILE_UNLOCK' 
+    ? '🔓 Unlock Profile for ₹9' 
+    : '🔓 Unlock Contact Number (₹49)';
+
   return (
-    <button
-      onClick={handleUnlock}
-      disabled={loading}
-      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-light transition disabled:opacity-60"
-    >
-      {loading ? <Spinner /> : '🔓'}
-      {loading ? 'Processing...' : 'Unlock Contact Number (₹99)'}
-    </button>
+    <>
+      <button
+        onClick={handleUnlock}
+        disabled={loading}
+        className={customClass || "inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-sm font-semibold shadow-md transition disabled:opacity-60 cursor-pointer"}
+      >
+        {loading ? <Spinner /> : null}
+        <span>{loading ? 'Processing...' : (label || defaultText)}</span>
+      </button>
+
+      {/* Dedicated Payment Result Modal Popup */}
+      <PaymentResultModal
+        isOpen={modalState.isOpen}
+        isSuccess={modalState.isSuccess}
+        title={modalState.title}
+        message={modalState.message}
+        details={modalState.details}
+        onClose={() => setModalState((prev) => ({ ...prev, isOpen: false }))}
+      />
+    </>
   );
 };
 

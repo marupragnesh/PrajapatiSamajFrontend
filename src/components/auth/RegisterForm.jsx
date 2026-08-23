@@ -11,6 +11,7 @@ const RegisterForm = ({ onSubmit, loading, serverError }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [agreeConsent, setAgreeConsent] = useState(false);
   const [errors, setErrors] = useState({});
 
   /** Frontend validation before calling API */
@@ -21,6 +22,7 @@ const RegisterForm = ({ onSubmit, loading, serverError }) => {
     if (!password) newErrors.password = 'Password is required';
     else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
     if (confirmPassword !== password) newErrors.confirmPassword = 'Passwords do not match';
+    if (!agreeConsent) newErrors.agreeConsent = 'You must agree to the mobile number & address consent to register.';
     return newErrors;
   };
 
@@ -93,6 +95,35 @@ const RegisterForm = ({ onSubmit, loading, serverError }) => {
         )}
       </div>
 
+      {/* Mandatory Contact & Address Sharing Consent Checkbox */}
+      <div className="p-3 bg-amber-500/5 dark:bg-amber-500/10 rounded-xl border border-amber-500/20 space-y-1.5">
+        <div className="flex items-start gap-2.5">
+          <input
+            type="checkbox"
+            id="agreeConsent"
+            checked={agreeConsent}
+            onChange={(e) => {
+              setAgreeConsent(e.target.checked);
+              if (errors.agreeConsent) setErrors((prev) => ({ ...prev, agreeConsent: '' }));
+            }}
+            className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer flex-shrink-0"
+          />
+          <label htmlFor="agreeConsent" className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed cursor-pointer font-medium">
+            I agree my mobile number and address will be shown to other verified paying members of Prajapati Samaj Matrimonial as specified in our{' '}
+            <Link to="/privacy-policy" target="_blank" className="text-primary font-bold underline hover:text-primary-light">
+              Privacy Policy
+            </Link>{' '}
+            and{' '}
+            <Link to="/terms-conditions" target="_blank" className="text-primary font-bold underline hover:text-primary-light">
+              Terms &amp; Conditions
+            </Link>.
+          </label>
+        </div>
+        {errors.agreeConsent && (
+          <p className="text-error text-xs font-semibold pl-6">{errors.agreeConsent}</p>
+        )}
+      </div>
+
       {/* Server error */}
       {serverError && <p className="text-error text-sm">{serverError}</p>}
 
@@ -113,6 +144,7 @@ const RegisterForm = ({ onSubmit, loading, serverError }) => {
         </Link>
       </p>
     </form>
+
   );
 };
 

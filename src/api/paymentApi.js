@@ -19,9 +19,9 @@ import logger from '../utils/logger';
  * @param {string} feature - one of the PaymentFeature enum values (e.g. 'CONTACT_UNLOCK')
  * @returns {Promise<{orderId, amount, currency, keyId}>}
  */
-export const createOrder = async (feature) => {
+export const createOrder = async (feature, targetProfileId = null) => {
   logger.api('POST', '/api/payments/create-order');
-  const response = await axiosInstance.post('/api/payments/create-order', { feature });
+  const response = await axiosInstance.post('/api/payments/create-order', { feature, targetProfileId });
   logger.response('/api/payments/create-order', response.data);
   return response.data;
 };

@@ -284,9 +284,16 @@ const EditProfilePage = () => {
             </div>
 
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 truncate">
-                {profile?.fullName || user?.fullName || 'User Profile'}
-              </h1>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 truncate">
+                  {profile?.fullName || user?.fullName || 'User Profile'}
+                </h1>
+                {(profile?.username || user?.username) && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-primary/10 dark:bg-primary/20 text-primary dark:text-orange-300 text-xs font-bold border border-primary/20">
+                    @{profile?.username || user?.username}
+                  </span>
+                )}
+              </div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
                 {user?.email}
               </p>

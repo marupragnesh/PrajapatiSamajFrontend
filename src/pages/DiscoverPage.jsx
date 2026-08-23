@@ -239,7 +239,7 @@ const DiscoverPage = () => {
                   type="text"
                   value={keyword}
                   onChange={handleSearchChange}
-                  placeholder="Search by name..."
+                  placeholder="Search name, @username, or ID..."
                   className="w-full pl-9 pr-4 py-2 rounded-xl border border-border dark:border-gray-600
                              bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm
                              focus:outline-none focus:ring-2 focus:ring-primary"
@@ -265,24 +265,33 @@ const DiscoverPage = () => {
                         <li
                           key={result.profileId}
                           onClick={() => handleSearchResultClick(result.profileId)}
-                          className="flex items-center gap-3 px-4 py-2.5 cursor-pointer
-                                     hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                          className="flex items-center justify-between gap-3 px-4 py-2.5 cursor-pointer
+                                     hover:bg-gray-50 dark:hover:bg-gray-700 transition border-b border-border/40 last:border-0"
                         >
-                          {result.primaryPhotoUrl ? (
-                            <img
-                              src={resolveImageUrl(result.primaryPhotoUrl)}
-                              alt={result.fullName}
-                              className="w-9 h-9 rounded-full object-cover flex-shrink-0 border border-border"
-                            />
-                          ) : (
-                            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center
-                                            flex-shrink-0 text-primary font-semibold text-sm">
-                              {result.fullName?.charAt(0)?.toUpperCase() || '?'}
+                          <div className="flex items-center gap-3 min-w-0">
+                            {result.primaryPhotoUrl ? (
+                              <img
+                                src={resolveImageUrl(result.primaryPhotoUrl)}
+                                alt={result.fullName}
+                                className="w-9 h-9 rounded-full object-cover flex-shrink-0 border border-border"
+                              />
+                            ) : (
+                              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center
+                                              flex-shrink-0 text-primary font-semibold text-sm">
+                                {result.fullName?.charAt(0)?.toUpperCase() || '?'}
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 block truncate">
+                                {result.fullName}
+                              </span>
+                              {result.username && (
+                                <span className="text-xs text-primary font-medium block truncate">
+                                  @{result.username}
+                                </span>
+                              )}
                             </div>
-                          )}
-                          <span className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
-                            {result.fullName}
-                          </span>
+                          </div>
                         </li>
                       ))}
                     </ul>

@@ -3,30 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Navbar from '../components/common/Navbar';
 import Spinner from '../components/common/Spinner';
+import UnlockContactButton from '../components/payment/UnlockContactButton';
 import { getProfileById } from '../api/profileApi';
 import { likeProfile } from '../api/likeApi';
 import { sendInterest } from '../api/interestApi';
 import { resolveImageUrl } from '../utils/imageHelper';
 import logger from '../utils/logger';
-
-/**
- * ProfileDetailPage — full profile view of another user.
- *
- * Displays:
- *   - Photo gallery (large view + thumbnails)
- *   - Personal info: name, age, city, gender, maritalStatus, height, diet, gotra, religion, income, hobbies
- *   - Professional info: education, profession
- *   - Partner Expectations section (shown only if the user has filled them in)
- *   - Like + Send Interest action buttons
- *
- * Backend contract:
- *   photos[]           — [{ photoId, photoUrl, isPrimary }]
- *   expectations       — null if user has not filled them in, else ExpectationResponse object
- *   mobileNo           — masked ("98********") unless isMobileUnlocked is true
- *   isMobileUnlocked   — true if viewer is the owner OR has paid to unlock
- *                        CONTACT_UNLOCK; controls whether the real number or
- *                        the UnlockContactButton is shown
- */
 
 /** Human-readable labels for enum values */
 const MARITAL_STATUS_LABELS = {
@@ -59,16 +41,6 @@ const ProfileDetailPage = () => {
   const [interestLoading, setInterestLoading] = useState(false);
   const [showContactInfoModal, setShowContactInfoModal] = useState(false);
 
-  /**
-   * Fetch the profile being viewed. Pulled out of useEffect so it can also
-   * be called from UnlockContactButton's onUnlocked callback — after a
-   * successful contact unlock, this re-fetches so isMobileUnlocked flips to
-   * true and the real mobile number appears without a full page reload.
-   *
-   * @param isRefetch - true when called after unlock (skips the full-page
-   *                    spinner so the unlock button doesn't flicker/disappear
-   *                    mid-toast; false on initial mount)
-   */
   const fetchProfile = async (isRefetch = false) => {
     logger.info('ProfileDetailPage loaded', { profileId, isRefetch });
     if (!isRefetch) setLoading(true);
@@ -78,7 +50,6 @@ const ProfileDetailPage = () => {
       logger.response(`/api/profiles/${profileId}`, data);
       setProfile(data);
 
-      // Start with primaryPhotoUrl; fall back to first photo in array
       const primary = data.primaryPhotoUrl || (data.photos?.[0]?.photoUrl ?? null);
       setSelectedPhotoUrl(primary);
     } catch (error) {
@@ -139,9 +110,8 @@ const ProfileDetailPage = () => {
   if (!profile) return null;
 
   const photos = profile.photos || [];
-  const exp = profile.expectations; // null if not filled in
+  const exp = profile.expectations;
 
-  // Check if expectations has at least one non-null field worth showing
   const hasExpectations = exp && Object.values(exp).some(
     (v) => v !== null && v !== undefined && v !== ''
   );
@@ -153,9 +123,9 @@ const ProfileDetailPage = () => {
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-4">
 
         {/* ── Card: Photo + Profile Info + Actions ── */}
-        <div className="bg-white dark:bg-card-dark rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-card-dark rounded-2xl shadow-sm overflow-hidden border border-border/60">
 
-          {/* Large selected photo (renders exact cropped image without forced wide zooming) */}
+          {/* Large selected photo */}
           <div className="w-full bg-gray-950 flex items-center justify-center min-h-[300px] max-h-[500px] sm:max-h-[550px] overflow-hidden">
             {selectedPhotoUrl ? (
               <img
@@ -170,7 +140,7 @@ const ProfileDetailPage = () => {
             )}
           </div>
 
-          {/* Thumbnail gallery — click to switch large photo (wrapped, no scrollbar) */}
+          {/* Thumbnail gallery */}
           {photos.length > 1 && (
             <div className="flex flex-wrap gap-2.5 px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border-t border-b border-border/50">
               {photos.map((photo) => (
@@ -189,14 +159,20 @@ const ProfileDetailPage = () => {
             </div>
           )}
 
-
           <div className="p-6 space-y-5">
 
-            {/* Name + City */}
+            {/* Name + Instagram Handle Badge + City */}
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                {profile.fullName}, {profile.age}
-              </h1>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  {profile.fullName}, {profile.age}
+                </h1>
+                {profile.username && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-primary/10 dark:bg-primary/20 text-primary dark:text-orange-300 text-xs font-bold tracking-wide border border-primary/20">
+                    @{profile.username}
+                  </span>
+                )}
+              </div>
               <p className="text-primary font-medium mt-1">📍 {profile.city}</p>
             </div>
 
@@ -218,7 +194,7 @@ const ProfileDetailPage = () => {
               )}
               {profile.mobileNo && (
                 <a href="#sec-contact" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer">
-                  📞 Contact Info
+                  📞 Contact Details
                 </a>
               )}
               {hasExpectations && (
@@ -228,7 +204,7 @@ const ProfileDetailPage = () => {
               )}
             </div>
 
-            {/* ── Personal Info Collapsible Wrap ── */}
+            {/* ── Personal Info ── */}
             <Section title="Personal Information" icon="👤" id="sec-personal">
               <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                 {profile.gender && (
@@ -256,7 +232,7 @@ const ProfileDetailPage = () => {
                   <DetailRow label="Religion" value={profile.religion} />
                 )}
                 {profile.city && (
-                  <DetailRow label="City / Location" value={`${profile.city}${profile.state ? ', ' + profile.state : ''}`} />
+                  <DetailRow label="City" value={`${profile.city}${profile.state ? ', ' + profile.state : ''}`} />
                 )}
                 {profile.addressLine && (
                   <DetailRow label="Address" value={profile.addressLine} />
@@ -274,19 +250,19 @@ const ProfileDetailPage = () => {
               </div>
             </Section>
 
-            {/* ── Education, Job & Salary Collapsible Wrap ── */}
-            <Section title="Education, Job &amp; Salary" icon="🎓" id="sec-education">
+            {/* ── Education, Job & Salary ── */}
+            <Section title="Education & Job" icon="🎓" id="sec-education">
               <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                <DetailRow label="Education"  value={profile.education || 'Not specified'} />
-                <DetailRow label="Profession / Occupation" value={profile.profession || 'Not specified'} />
+                <DetailRow label="Education" value={profile.education || 'Not specified'} />
+                <DetailRow label="Profession" value={profile.profession || 'Not specified'} />
                 {profile.income && (
-                  <DetailRow label="Annual Income / Salary" value={profile.income} />
+                  <DetailRow label="Annual Income" value={profile.income} />
                 )}
               </div>
             </Section>
 
-            {/* ── Family Details Collapsible Wrap ── */}
-            <Section title="Family Details" icon="👨‍👩‍👧" id="sec-family">
+            {/* ── Family Details ── */}
+            <Section title="Family Background" icon="👨‍👩‍👧" id="sec-family">
               <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                 <DetailRow label="Father's Name" value={profile.fatherName || 'Not specified'} />
                 <DetailRow label="Father's Occupation" value={profile.fatherOccupation || 'Not specified'} />
@@ -295,9 +271,9 @@ const ProfileDetailPage = () => {
               </div>
             </Section>
 
-            {/* ── Birth & Horoscope Details Collapsible Wrap ── */}
+            {/* ── Birth & Horoscope Details ── */}
             {(profile.dateOfBirth || profile.birthTime || profile.birthPlace || profile.hasMangal !== undefined || profile.hasSani !== undefined) && (
-              <Section title="Birth &amp; Horoscope Details" icon="📜" id="sec-birth">
+              <Section title="Birth & Horoscope Details" icon="📜" id="sec-birth">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                   {profile.dateOfBirth && (
                     <DetailRow label="Date of Birth" value={profile.dateOfBirth} />
@@ -306,13 +282,13 @@ const ProfileDetailPage = () => {
                     <DetailRow label="Birth Time" value={profile.birthTime} />
                   )}
                   {profile.birthPlace && (
-                    <DetailRow label="Place of Birth" value={profile.birthPlace} />
+                    <DetailRow label="Birth Place" value={profile.birthPlace} />
                   )}
                   {profile.hasMangal !== undefined && profile.hasMangal !== null && (
-                    <DetailRow label="મંગળ (Mangal)" value={profile.hasMangal ? 'હા (Yes)' : 'ના (No)'} />
+                    <DetailRow label="Mangal Dosh" value={profile.hasMangal ? 'Yes' : 'No'} />
                   )}
                   {profile.hasSani !== undefined && profile.hasSani !== null && (
-                    <DetailRow label="શનિ (Shani)" value={profile.hasSani ? 'હા (Yes)' : 'ના (No)'} />
+                    <DetailRow label="Sani Dosh" value={profile.hasSani ? 'Yes' : 'No'} />
                   )}
                 </div>
               </Section>
@@ -320,46 +296,64 @@ const ProfileDetailPage = () => {
 
             {/* ── Contact Info Collapsible Wrap ── */}
             {profile.mobileNo && (
-              <Section title="Contact Information" icon="📞" id="sec-contact">
-                <div className="grid grid-cols-2 gap-x-4 gap-y-3 items-center">
-                  <div>
-                    <span className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide block mb-0.5">
-                      Mobile Number
-                    </span>
-                    {profile.isMobileUnlocked ? (
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                        {profile.mobileNo}
-                      </span>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-100 tracking-wider">
-                          {profile.mobileNo ? profile.mobileNo.substring(0, 2) + '********' : '99********'}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setShowContactInfoModal(true)}
-                          className="w-5 h-5 rounded-full bg-primary/10 text-primary dark:bg-primary/20 text-xs font-bold flex items-center justify-center hover:bg-primary hover:text-white transition cursor-pointer"
-                          title="Click for information"
-                        >
-                          i
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  {profile.alternateMobileNo && (
+              <Section title="Contact Details" icon="📞" id="sec-contact">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3 items-center">
                     <div>
                       <span className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide block mb-0.5">
-                        Alternate Number
+                        Mobile Number
                       </span>
                       {profile.isMobileUnlocked ? (
                         <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                          {profile.alternateMobileNo}
+                          {profile.mobileNo}
                         </span>
                       ) : (
-                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-100 tracking-wider">
-                          {profile.alternateMobileNo.substring(0, 2) + '********'}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-gray-800 dark:text-gray-100 tracking-wider">
+                            {profile.mobileNo ? profile.mobileNo.substring(0, 2) + '********' : '99********'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setShowContactInfoModal(true)}
+                            className="w-5 h-5 rounded-full bg-primary/10 text-primary dark:bg-primary/20 text-xs font-bold flex items-center justify-center hover:bg-primary hover:text-white transition cursor-pointer"
+                            title="Click for info"
+                          >
+                            i
+                          </button>
+                        </div>
                       )}
+                    </div>
+                    {profile.alternateMobileNo && (
+                      <div>
+                        <span className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide block mb-0.5">
+                          Alternate Mobile
+                        </span>
+                        {profile.isMobileUnlocked ? (
+                          <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                            {profile.alternateMobileNo}
+                          </span>
+                        ) : (
+                          <span className="text-sm font-semibold text-gray-800 dark:text-gray-100 tracking-wider">
+                            {profile.alternateMobileNo.substring(0, 2) + '********'}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ₹9 Single Profile Unlock Action Button directly on contact section */}
+                  {!profile.isMobileUnlocked && (
+                    <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-200 dark:border-amber-800/50 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 mt-3">
+                      <div>
+                        <p className="text-xs font-bold text-amber-900 dark:text-amber-200">🔓 Unlock Contact for ₹9</p>
+                        <p className="text-[11px] text-amber-700 dark:text-amber-400">Pay only ₹9 to instantly reveal this specific user's mobile number!</p>
+                      </div>
+                      <UnlockContactButton 
+                        targetProfileId={profile.profileId} 
+                        feature="SINGLE_PROFILE_UNLOCK" 
+                        label="Unlock for ₹9" 
+                        onUnlocked={() => fetchProfile(true)}
+                      />
                     </div>
                   )}
                 </div>
@@ -368,7 +362,6 @@ const ProfileDetailPage = () => {
 
             {/* ── Action Buttons ── */}
             <div className="flex gap-3 pt-1">
-              {/* Like Button */}
               {profile.isLikedByMe ? (
                 <button
                   disabled
@@ -387,7 +380,6 @@ const ProfileDetailPage = () => {
                 </button>
               )}
 
-              {/* Interest Button */}
               {profile.interestStatus === 'PENDING_SENT' ? (
                 <button
                   disabled
@@ -409,15 +401,6 @@ const ProfileDetailPage = () => {
                 >
                   📬 View Received Interest
                 </button>
-              ) : profile.interestStatus === 'DECLINED' ? (
-                <button
-                  onClick={handleSendInterest}
-                  disabled={interestLoading}
-                  className="flex-1 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primary-light transition disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-                >
-                  {interestLoading ? <Spinner /> : '💌'}
-                  {interestLoading ? 'Sending...' : 'Resend Interest'}
-                </button>
               ) : (
                 <button
                   onClick={handleSendInterest}
@@ -430,7 +413,6 @@ const ProfileDetailPage = () => {
               )}
             </div>
 
-
           </div>
         </div>
 
@@ -438,8 +420,6 @@ const ProfileDetailPage = () => {
         {hasExpectations && (
           <Section title="Partner Expectations" icon="💍" id="sec-expectations" defaultOpen={true}>
             <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-
-              {/* Age range */}
               {(exp.minAge || exp.maxAge) && (
                 <DetailRow
                   label="Age Range"
@@ -453,10 +433,9 @@ const ProfileDetailPage = () => {
                 />
               )}
 
-              {/* Height range */}
               {(exp.preferredMinHeight || exp.preferredMaxHeight) && (
                 <DetailRow
-                  label="Height Range"
+                  label="Preferred Height"
                   value={
                     exp.preferredMinHeight && exp.preferredMaxHeight
                       ? `${exp.preferredMinHeight} – ${exp.preferredMaxHeight}`
@@ -465,36 +444,22 @@ const ProfileDetailPage = () => {
                 />
               )}
 
-              {/* Weight range */}
-              {(exp.preferredMinWeight || exp.preferredMaxWeight) && (
-                <DetailRow
-                  label="Weight Range"
-                  value={
-                    exp.preferredMinWeight && exp.preferredMaxWeight
-                      ? `${exp.preferredMinWeight} – ${exp.preferredMaxWeight} kg`
-                      : exp.preferredMinWeight
-                      ? `${exp.preferredMinWeight}+ kg`
-                      : `Up to ${exp.preferredMaxWeight} kg`
-                  }
-                />
-              )}
-
               {exp.preferredMaritalStatus && (
                 <DetailRow
-                  label="Marital Status"
+                  label="Preferred Marital Status"
                   value={MARITAL_STATUS_LABELS[exp.preferredMaritalStatus] || exp.preferredMaritalStatus}
                 />
               )}
 
               {exp.preferredDiet && (
                 <DetailRow
-                  label="Diet"
+                  label="Preferred Diet"
                   value={DIET_LABELS[exp.preferredDiet] || exp.preferredDiet}
                 />
               )}
 
               {exp.preferredGotra && (
-                <DetailRow label="Gotra" value={exp.preferredGotra} />
+                <DetailRow label="Preferred Gotra" value={exp.preferredGotra} />
               )}
 
               {exp.preferredReligion && (
@@ -502,40 +467,26 @@ const ProfileDetailPage = () => {
               )}
 
               {exp.preferredEducation && (
-                <DetailRow label="Education" value={exp.preferredEducation} />
+                <DetailRow label="Preferred Education" value={exp.preferredEducation} />
               )}
 
               {exp.preferredProfession && (
-                <DetailRow label="Profession" value={exp.preferredProfession} />
+                <DetailRow label="Preferred Profession" value={exp.preferredProfession} />
               )}
 
               {exp.preferredIncome && (
-                <DetailRow label="Income" value={exp.preferredIncome} />
+                <DetailRow label="Annual Income" value={exp.preferredIncome} />
               )}
 
               {exp.preferredCity && (
                 <DetailRow label="Preferred City" value={exp.preferredCity} />
               )}
 
-              {exp.preferredState && (
-                <DetailRow label="Preferred State" value={exp.preferredState} />
-              )}
-
-              {exp.preferredHasMangal !== undefined && exp.preferredHasMangal !== null && (
-                <DetailRow label="મંગળ (Mangal) Preference" value={exp.preferredHasMangal ? 'મંગળ હોવું જોઈએ (Mangal Only)' : 'કોઈ વાંધો નથી / સાદું (Non-Mangal / Any)'} />
-              )}
-
-              {exp.preferredHasSani !== undefined && exp.preferredHasSani !== null && (
-                <DetailRow label="શનિ (Shani) Preference" value={exp.preferredHasSani ? 'શનિ હોવું જોઈએ (Shani Only)' : 'કોઈ વાંધો નથી (Any)'} />
-              )}
-
-              {/* About expectations — full width */}
               {exp.aboutExpectations && (
                 <div className="col-span-2">
                   <DetailRow label="About Expectations" value={exp.aboutExpectations} />
                 </div>
               )}
-
             </div>
           </Section>
         )}
@@ -548,6 +499,7 @@ const ProfileDetailPage = () => {
         </button>
 
       </div>
+
       {/* Contact Info Modal */}
       {showContactInfoModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
@@ -556,23 +508,30 @@ const ProfileDetailPage = () => {
               🔒
             </div>
             <div>
-              <h3 className="text-base font-bold text-gray-800 dark:text-gray-100">Premium Contact Access</h3>
+              <h3 className="text-base font-bold text-gray-800 dark:text-gray-100">Unlock Mobile Number</h3>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Full mobile numbers are visible to Premium members only. Upgrade to unlock contact details for all profiles!
+                Choose options below: Unlock this single profile contact for ₹9, or get full unlimited contact access for ₹49.
               </p>
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowContactInfoModal(false)}
-                className="flex-1 py-2 rounded-xl border border-border dark:border-gray-700 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer"
-              >
-                Close
-              </button>
+            <div className="space-y-2 pt-1">
+              <UnlockContactButton 
+                targetProfileId={profile.profileId} 
+                feature="SINGLE_PROFILE_UNLOCK" 
+                label="Unlock This Profile (₹9)" 
+                onUnlocked={() => { setShowContactInfoModal(false); fetchProfile(true); }}
+                customClass="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs font-bold shadow transition cursor-pointer"
+              />
               <button
                 onClick={() => { setShowContactInfoModal(false); navigate('/payment'); }}
-                className="flex-1 py-2 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-primary-light transition cursor-pointer shadow"
+                className="w-full py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-light transition cursor-pointer shadow"
               >
-                Upgrade (₹99)
+                All Contacts Plan (₹49)
+              </button>
+              <button
+                onClick={() => setShowContactInfoModal(false)}
+                className="w-full py-2 rounded-xl border border-border dark:border-gray-700 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer"
+              >
+                Close
               </button>
             </div>
           </div>
@@ -582,7 +541,6 @@ const ProfileDetailPage = () => {
   );
 };
 
-/** Section wrapper with collapsible accordion toggle (dropdown chevron icon) — closed by default */
 const Section = ({ title, icon, defaultOpen = false, id, children }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
@@ -610,12 +568,13 @@ const Section = ({ title, icon, defaultOpen = false, id, children }) => {
   );
 };
 
-/** Single label + value row */
-const DetailRow = ({ label, value }) => (
-  <div>
-    <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide font-medium">{label}</p>
-    <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-0.5">{value}</p>
-  </div>
-);
+const DetailRow = ({ label, value }) => {
+  return (
+    <div>
+      <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide font-medium">{label}</p>
+      <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-0.5">{value}</p>
+    </div>
+  );
+};
 
 export default ProfileDetailPage;

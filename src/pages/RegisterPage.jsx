@@ -146,7 +146,7 @@ const RegisterPage = () => {
               </p>
             </div>
 
-            <form onSubmit={handleVerifyOtp} className="space-y-4 pt-2">
+            <form onSubmit={handleOtpSubmit} className="space-y-4 pt-2">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
                   6-Digit Verification OTP *

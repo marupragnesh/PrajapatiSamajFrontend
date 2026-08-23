@@ -21,6 +21,7 @@ const LikesReceivedPage     = lazy(() => import('./pages/LikesReceivedPage'));
 const InterestsReceivedPage = lazy(() => import('./pages/InterestsReceivedPage'));
 const MatchesPage           = lazy(() => import('./pages/MatchesPage'));
 const PaymentPage           = lazy(() => import('./pages/PaymentPage'));
+const BiodataPage           = lazy(() => import('./pages/BiodataPage'));
 const AboutDeveloperPage    = lazy(() => import('./pages/AboutDeveloperPage'));
 
 // Legal pages
@@ -86,6 +87,7 @@ const App = () => {
         <Route path="/interests"            element={<ProtectedRoute><InterestsReceivedPage /></ProtectedRoute>} />
         <Route path="/matches"              element={<ProtectedRoute><MatchesPage /></ProtectedRoute>} />
         <Route path="/payment"              element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
+        <Route path="/biodata"              element={<ProtectedRoute><BiodataPage /></ProtectedRoute>} />
 
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />

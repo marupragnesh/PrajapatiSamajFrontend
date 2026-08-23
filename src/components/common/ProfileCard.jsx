@@ -37,7 +37,14 @@ const ProfileCard = ({ profile }) => {
 
       {/* Profile info */}
       <div className="p-4">
-        <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{fullName}</h3>
+        <div className="flex items-center justify-between gap-1 truncate">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{fullName}</h3>
+          {profile.username && (
+            <span className="text-[11px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full flex-shrink-0">
+              @{profile.username}
+            </span>
+          )}
+        </div>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           {age} yrs · {city}
         </p>
