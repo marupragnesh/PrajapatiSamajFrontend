@@ -5,12 +5,12 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: true, // Exposes dev server on local network (e.g. http://192.168.x.x:5173 for mobile testing)
     port: 5173,
     proxy: {
       // Forward /uploads/* requests to Spring Boot (images served by backend)
       '/uploads': {
         target: 'http://localhost:8080',
-        // target: 'http://10.219.45.209:8080',
         changeOrigin: true,
       },
     },

@@ -6,8 +6,8 @@ import Spinner from '../common/Spinner';
  * Registration form — email, password, confirm password.
  * Props: onSubmit(email, password), loading, serverError
  */
-const RegisterForm = ({ onSubmit, loading, serverError }) => {
-  const [email, setEmail] = useState('');
+const RegisterForm = ({ initialEmail = '', onSubmit, loading, serverError }) => {
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);

@@ -11,10 +11,11 @@ export const AuthContext = createContext(null);
  * Wrap the entire <App /> with this provider.
  */
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(null);
-  const [user, setUser] = useState(null);
+  // Synchronously initialize state from localStorage to prevent redirecting to /login on page refresh
+  const [token, setToken] = useState(() => getToken());
+  const [user, setUser] = useState(() => getUser());
 
-  /** Restore auth session from localStorage on first load */
+  /** Restore auth session from localStorage on first load if missing in state */
   useEffect(() => {
     const storedToken = getToken();
     const storedUser = getUser();

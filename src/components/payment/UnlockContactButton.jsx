@@ -143,8 +143,8 @@ const UnlockContactButton = ({ targetProfileId = null, feature = 'SINGLE_PROFILE
   };
 
   const defaultText = feature === 'SINGLE_PROFILE_UNLOCK' 
-    ? '🔓 Unlock Profile for ₹9' 
-    : '🔓 Unlock Contact Number (₹49)';
+    ? '🔓 Unlock Profile for ₹9 (Incl. GST)' 
+    : '🔓 Unlock Contact Number (Incl. GST)';
 
   return (
     <>

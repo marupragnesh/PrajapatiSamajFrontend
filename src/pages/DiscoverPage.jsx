@@ -328,20 +328,6 @@ const DiscoverPage = () => {
               </span>
             )}
 
-            {filters.minHeight && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/10 text-primary dark:text-primary-light">
-                Min Height: {filters.minHeight}
-                <button onClick={() => handleFilterChange({ ...filters, minHeight: '' })} className="hover:text-red-500 ml-1">✕</button>
-              </span>
-            )}
-
-            {filters.maxHeight && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/10 text-primary dark:text-primary-light">
-                Max Height: {filters.maxHeight}
-                <button onClick={() => handleFilterChange({ ...filters, maxHeight: '' })} className="hover:text-red-500 ml-1">✕</button>
-              </span>
-            )}
-
             {filters.diet && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/10 text-primary dark:text-primary-light">
                 Diet: {filters.diet}

@@ -34,11 +34,7 @@ const DIET_OPTIONS = [
   { value: 'VEGAN', label: 'Vegan' },
 ];
 
-const HEIGHT_OPTIONS = [
-  "4'0\"", "4'1\"", "4'2\"", "4'3\"", "4'4\"", "4'5\"", "4'6\"", "4'7\"", "4'8\"", "4'9\"", "4'10\"", "4'11\"",
-  "5'0\"", "5'1\"", "5'2\"", "5'3\"", "5'4\"", "5'5\"", "5'6\"", "5'7\"", "5'8\"", "5'9\"", "5'10\"", "5'11\"",
-  "6'0\"", "6'1\"", "6'2\"", "6'3\"", "6'4\"", "6'5\"", "6'6\"", "6'7\"", "6'8\"", "6'9\"", "6'10\"", "6'11\"", "7'0\""
-];
+
 
 const DEFAULT_FILTERS = {
   gender: '',
@@ -121,11 +117,10 @@ const FilterPopup = ({
   const isGenderActive = Boolean(localFilters.gender);
   const isAgeActive = localFilters.minAge || localFilters.maxAge;
   const isMaritalStatusActive = Boolean(localFilters.maritalStatus);
-  const isHeightActive = localFilters.minHeight || localFilters.maxHeight;
   const isDietActive = Boolean(localFilters.diet);
   const isSurnameActive = Boolean(localFilters.surname);
 
-  const hasAnyActiveFilter = isGenderActive || isAgeActive || isMaritalStatusActive || isHeightActive || isDietActive || isSurnameActive;
+  const hasAnyActiveFilter = isGenderActive || isAgeActive || isMaritalStatusActive || isDietActive || isSurnameActive;
 
   const inputClass =
     'w-full px-3 py-1.5 rounded-lg border border-border dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary';
@@ -301,51 +296,7 @@ const FilterPopup = ({
             </div>
           </div>
 
-          {/* 3. Height Range Filter */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Height Range
-              </label>
-              {isHeightActive && (
-                <button
-                  type="button"
-                  onClick={() => handleClearField(['minHeight', 'maxHeight'])}
-                  className="text-xs text-primary hover:underline flex items-center gap-1 cursor-pointer"
-                >
-                  ✕ Clear
-                </button>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <span className="text-xs text-gray-400 dark:text-gray-500 mb-1 block">Min Height</span>
-                <select
-                  value={localFilters.minHeight || ''}
-                  onChange={(e) => handleFieldChange('minHeight', e.target.value)}
-                  className={inputClass}
-                >
-                  <option value="">Any Min</option>
-                  {HEIGHT_OPTIONS.map((h) => (
-                    <option key={`min-${h}`} value={h}>{h}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <span className="text-xs text-gray-400 dark:text-gray-500 mb-1 block">Max Height</span>
-                <select
-                  value={localFilters.maxHeight || ''}
-                  onChange={(e) => handleFieldChange('maxHeight', e.target.value)}
-                  className={inputClass}
-                >
-                  <option value="">Any Max</option>
-                  {HEIGHT_OPTIONS.map((h) => (
-                    <option key={`max-${h}`} value={h}>{h}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
+
 
           {/* 4. Diet Filter */}
           <div className="space-y-2">

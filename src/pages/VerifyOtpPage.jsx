@@ -77,9 +77,28 @@ const VerifyOtpPage = () => {
     <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white dark:bg-card-dark rounded-2xl shadow-lg p-8">
         <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-1">Enter OTP</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-          A 6-digit OTP was sent to <strong>{email}</strong>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          A 6-digit OTP was sent to your email address.
         </p>
+
+        {/* Change Email Banner */}
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 mb-6 flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold text-gray-900 dark:text-gray-100 truncate">
+              ✉️ {email}
+            </p>
+            <p className="text-[11px] text-amber-700 dark:text-amber-300 font-medium mt-0.5">
+              Wrong email address?
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/forgot-password')}
+            className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition whitespace-nowrap shadow cursor-pointer flex-shrink-0"
+          >
+            ✏️ Change Email
+          </button>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <div>

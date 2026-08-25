@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import useAuth from '../../hooks/useAuth';
 import { getMyProfile } from '../../api/profileApi';
 import { resolveImageUrl } from '../../utils/imageHelper';
@@ -11,32 +11,26 @@ import logger from '../../utils/logger';
  * Optimized for mobile-first responsive experience.
  */
 const Navbar = () => {
-  const { logout } = useAuth();
+  const { isLoggedIn, logout } = useAuth();
   const navigate   = useNavigate();
 
-  const [darkMode, setDarkMode] = useState(
-    () => localStorage.getItem('theme') === 'dark'
-  );
   const [primaryPhotoUrl, setPrimaryPhotoUrl] = useState(null);
   const [showExclamation, setShowExclamation] = useState(false);
 
-  /** Apply / remove dark class on <html> and save preference */
+  // Enforce permanent Dark Mode across entire platform
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [darkMode]);
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
+  }, []);
 
   /**
-   * Load profile once on mount to get:
+   * Load profile once on mount if logged in to get:
    *   - primaryPhotoUrl → display as avatar
    *   - expectations    → decide whether to show ❗ badge
    */
   useEffect(() => {
+    if (!isLoggedIn) return;
+
     const loadProfileForNavbar = async () => {
       try {
         const profile = await getMyProfile();
@@ -53,14 +47,24 @@ const Navbar = () => {
     };
 
     loadProfileForNavbar();
+  }, [isLoggedIn]);
+
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef(null);
+
+  // Close dropdown menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const toggleDark = () => {
-    setDarkMode((prev) => !prev);
-    logger.info('Dark mode toggled', { darkMode: !darkMode });
-  };
-
   const handleLogout = () => {
+    setShowMenu(false);
     logger.info('User clicked Logout');
     logout();
   };
@@ -82,7 +86,7 @@ const Navbar = () => {
   return (
     <>
       {/* Top Navbar */}
-      <nav className="sticky top-0 z-40 bg-white dark:bg-card-dark border-b border-border shadow-sm">
+      <nav className="sticky top-0 z-40 bg-white/95 dark:bg-card-dark/95 backdrop-blur border-b border-border shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-2.5 sm:py-3 flex items-center justify-between">
 
           {/* Brand Link — Royal Heritage Emblem */}
@@ -104,58 +108,70 @@ const Navbar = () => {
             <NavLink to="/payment" className={linkClass}>💎 Premium</NavLink>
           </div>
 
-          {/* User actions (Profile Avatar, Theme Toggle, Logout) */}
+          {/* User Profile Avatar Popover Menu (Logout accessible inside) */}
           <div className="flex items-center gap-2">
-            {/* Profile Avatar Button */}
-            <button
-              onClick={() => navigate('/profile/edit')}
-              title="My Profile"
-              className="relative flex items-center justify-center w-9 h-9 rounded-full
-                         border-2 border-primary overflow-visible focus:outline-none
-                         hover:ring-2 hover:ring-primary-light transition cursor-pointer"
-            >
-              {primaryPhotoUrl ? (
-                <img
-                  src={resolveImageUrl(primaryPhotoUrl)}
-                  alt="My profile"
-                  className="w-full h-full rounded-full object-cover"
-                />
-              ) : (
-                <span className="text-lg leading-none">👤</span>
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setShowMenu((prev) => !prev)}
+                title="My Account & Settings"
+                className="relative flex items-center justify-center w-9 h-9 rounded-full
+                           border-2 border-primary overflow-visible focus:outline-none
+                           hover:ring-2 hover:ring-primary-light transition cursor-pointer shadow-sm"
+              >
+                {primaryPhotoUrl ? (
+                  <img
+                    src={resolveImageUrl(primaryPhotoUrl)}
+                    alt="My profile"
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="text-lg leading-none">👤</span>
+                )}
+
+                {/* ❗ badge */}
+                {showExclamation && (
+                  <span
+                    title="Your partner expectations are empty — tap to fill them in"
+                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500
+                               flex items-center justify-center text-white text-[10px] font-bold
+                               shadow pointer-events-none select-none z-10"
+                  >
+                    !
+                  </span>
+                )}
+              </button>
+
+              {/* Avatar Popover Dropdown Menu */}
+              {showMenu && (
+                <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-card-dark rounded-2xl shadow-2xl border border-border dark:border-gray-700 py-2 z-50 animate-fade-in space-y-1">
+                  <button
+                    onClick={() => { setShowMenu(false); navigate('/profile/edit'); }}
+                    className="w-full px-4 py-2.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2.5 transition cursor-pointer"
+                  >
+                    <span>👤</span> My Profile &amp; Settings
+                  </button>
+                  <button
+                    onClick={() => { setShowMenu(false); navigate('/biodata'); }}
+                    className="w-full px-4 py-2.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2.5 transition cursor-pointer"
+                  >
+                    <span>📜</span> Marriage Biodata Studio
+                  </button>
+                  <button
+                    onClick={() => { setShowMenu(false); navigate('/profile/expectations'); }}
+                    className="w-full px-4 py-2.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2.5 transition cursor-pointer"
+                  >
+                    <span>⚙️</span> Partner Expectations
+                  </button>
+                  <div className="border-t border-border dark:border-gray-700 my-1"></div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full px-4 py-2.5 text-left text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center gap-2.5 transition cursor-pointer"
+                  >
+                    <span>🚪</span> Logout
+                  </button>
+                </div>
               )}
-
-              {/* ❗ badge */}
-              {showExclamation && (
-                <span
-                  title="Your partner expectations are empty — tap to fill them in"
-                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500
-                             flex items-center justify-center text-white text-[10px] font-bold
-                             shadow pointer-events-none select-none z-10"
-                >
-                  !
-                </span>
-              )}
-            </button>
-
-            {/* Dark Mode Toggle */}
-            <button
-              onClick={toggleDark}
-              title="Toggle dark mode"
-              className="text-sm p-2 rounded-lg text-gray-700 dark:text-gray-300
-                         hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer"
-            >
-              {darkMode ? '☀️' : '🌙'}
-            </button>
-
-            {/* Logout (Desktop only) */}
-            <button
-              onClick={handleLogout}
-              title="Logout"
-              className="hidden md:block text-sm px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300
-                         hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer"
-            >
-              🚪 Logout
-            </button>
+            </div>
           </div>
         </div>
       </nav>

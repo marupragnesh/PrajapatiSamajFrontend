@@ -5,11 +5,10 @@ import BiodataTemplates from './BiodataTemplates';
 /**
  * BiodataPreview Component
  * Renders protected preview of Marriage Biodata with 6 Traditional Themes.
- * Supports Eye button toggle for clean PDF preview (hides watermark & branding).
+ * Enforces anti-screenshot protection and security watermark for unpaid users.
  */
 const BiodataPreview = ({ profile, isUnlocked, onPayNow, userEmail }) => {
   const [selectedStyle, setSelectedStyle] = useState('royal');
-  const [isEyePreview, setIsEyePreview] = useState(false);
   const [isWindowBlurred, setIsWindowBlurred] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const templateRef = useRef(null);
@@ -22,9 +21,15 @@ const BiodataPreview = ({ profile, isUnlocked, onPayNow, userEmail }) => {
     window.addEventListener('blur', handleBlur);
     window.addEventListener('focus', handleFocus);
 
+    const handleVisibility = () => {
+      if (document.hidden) setIsWindowBlurred(true);
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
     return () => {
       window.removeEventListener('blur', handleBlur);
       window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, []);
 
@@ -69,10 +74,33 @@ const BiodataPreview = ({ profile, isUnlocked, onPayNow, userEmail }) => {
     };
   }, []);
 
-  // Download Action for Premium users
+  const [scale, setScale] = useState(0.5);
+  const previewContainerRef = useRef(null);
+
+  // Dynamic responsive auto-scaling for A4 preview based on container width
+  const updateScale = () => {
+    if (previewContainerRef.current) {
+      const containerWidth = previewContainerRef.current.clientWidth;
+      const targetWidth = Math.max(containerWidth - 24, 280);
+      const calculatedScale = targetWidth / 794;
+      setScale(Math.min(Math.max(calculatedScale, 0.35), 0.95));
+    }
+  };
+
+  useEffect(() => {
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    const observer = new ResizeObserver(() => updateScale());
+    if (previewContainerRef.current) observer.observe(previewContainerRef.current);
+    return () => {
+      window.removeEventListener('resize', updateScale);
+      observer.disconnect();
+    };
+  }, []);
+
+  // Download Action for Premium users / Direct Checkout trigger for unpaid users
   const handleDownload = () => {
     if (!isUnlocked) {
-      toast.error('₹99 Premium Pass required to download un-watermarked Biodata!');
       if (onPayNow) onPayNow();
       return;
     }
@@ -124,7 +152,6 @@ const BiodataPreview = ({ profile, isUnlocked, onPayNow, userEmail }) => {
     { id: 'vedic', label: '🛕 Vedic Shubh' },
     { id: 'kesari', label: '📙 Kesari Vintage' },
     { id: 'temple', label: '🪷 Temple Elegance' },
-    { id: 'maharaja', label: '👑 Royal Maharaja' },
     { id: 'emerald', label: '🌿 Vedic Gold' },
   ];
 
@@ -143,54 +170,40 @@ const BiodataPreview = ({ profile, isUnlocked, onPayNow, userEmail }) => {
       `}</style>
 
       {/* Header Controls: Traditional Themes, Icon-Only Eye Button & Download Button */}
-      <div className="bg-white dark:bg-card-dark rounded-2xl p-5 shadow-lg border border-border/80 dark:border-gray-700 space-y-4">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-border/60 dark:border-gray-700 pb-4">
+      <div className="bg-white dark:bg-card-dark rounded-2xl p-4 sm:p-5 shadow-lg border border-border/80 dark:border-gray-700 space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-border/60 dark:border-gray-700 pb-4">
           <div>
-            <h3 className="text-xl font-extrabold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <h3 className="text-lg sm:text-xl font-extrabold text-gray-900 dark:text-gray-100 flex items-center gap-2">
               <span>📜</span> Marriage Biodata Studio
             </h3>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Icon-Only Eye Button Toggle */}
-            <button
-              onClick={() => setIsEyePreview((prev) => !prev)}
-              className={`w-10 h-10 rounded-xl text-lg font-bold flex items-center justify-center transition cursor-pointer shadow-md border ${
-                isEyePreview
-                  ? 'bg-amber-600 text-white border-amber-700 ring-2 ring-amber-500/40'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-700 hover:bg-gray-200'
-              }`}
-              title="Toggle Clean PDF View"
-              aria-label="Toggle Clean View"
-            >
-              <span>👁️</span>
-            </button>
-
+          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
             {/* Download Button */}
             <button
               onClick={handleDownload}
               disabled={isExporting}
-              className={`px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition cursor-pointer shadow-md ${
+              className={`flex-1 sm:flex-initial px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition cursor-pointer shadow-md ${
                 isUnlocked
                   ? 'bg-green-600 hover:bg-green-700 text-white'
                   : 'bg-primary hover:bg-primary-light text-white'
               }`}
             >
               <span>{isUnlocked ? '📥' : '🔒'}</span>
-              <span>{isUnlocked ? 'Download Biodata PDF (Single A4)' : 'Unlock PDF Download (₹99)'}</span>
+              <span>{isUnlocked ? 'Download PDF (A4)' : 'Unlock PDF (₹99)'}</span>
             </button>
           </div>
         </div>
 
-        {/* 6 Traditional Theme Buttons Grid */}
+        {/* 6 Traditional Theme Buttons — responsive horizontal scroll on mobile, grid on sm+ */}
         <div>
           <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Traditional Marriage Themes:</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+          <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-none sm:grid sm:grid-cols-3 md:grid-cols-6">
             {themes.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setSelectedStyle(t.id)}
-                className={`py-2 px-3 text-xs font-bold rounded-xl border transition cursor-pointer text-center truncate ${
+                className={`py-2 px-3 text-xs font-bold rounded-xl border transition cursor-pointer text-center whitespace-nowrap sm:whitespace-normal flex-shrink-0 ${
                   selectedStyle === t.id
                     ? 'bg-amber-600 text-white border-amber-700 shadow-md ring-2 ring-amber-500/40'
                     : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -205,11 +218,13 @@ const BiodataPreview = ({ profile, isUnlocked, onPayNow, userEmail }) => {
 
       {/* Protected Preview Display Container */}
       <div
+        ref={previewContainerRef}
         onContextMenu={(e) => {
           e.preventDefault();
           toast.error('Right-click disabled during preview mode.', { id: 'no-right-click' });
         }}
-        className="biodata-protected-container relative overflow-hidden rounded-3xl border-4 border-dashed border-amber-500/40 bg-gray-950 p-4 sm:p-6 flex justify-center shadow-2xl min-h-[780px]"
+        className="biodata-protected-container relative overflow-hidden rounded-3xl border-2 border-amber-500/30 bg-gray-950 p-2 sm:p-6 flex justify-center items-center shadow-2xl transition-all"
+        style={{ minHeight: `${Math.round(1123 * scale + 24)}px` }}
       >
         {/* Anti-Screen Recording / Snipping Tool Focus Loss Overlay */}
         {isWindowBlurred && (
@@ -222,27 +237,49 @@ const BiodataPreview = ({ profile, isUnlocked, onPayNow, userEmail }) => {
           </div>
         )}
 
-        {/* Security Watermark Overlay (Hidden when unlocked OR Eye Preview active) */}
-        {!isUnlocked && !isEyePreview && (
-          <div className="absolute inset-0 z-40 pointer-events-none flex items-center justify-center overflow-hidden opacity-30 select-none">
-            <div className="transform -rotate-45 text-center space-y-4">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="text-2xl font-black tracking-widest text-amber-500 uppercase whitespace-nowrap">
-                  PREVIEW ONLY • DO NOT RECORD / COPY • {userEmail || 'MATRIMONIAL'}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Dynamic Responsive Auto-Scaling Wrapper */}
+        <div
+          className="relative transition-all"
+          style={{
+            width: `${Math.round(794 * scale)}px`,
+            height: `${Math.round(1123 * scale)}px`,
+            overflow: 'hidden',
+            margin: '0 auto',
+            borderRadius: '8px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.6)',
+          }}
+        >
+          <div
+            style={{
+              width: '794px',
+              height: '1123px',
+              transform: `scale(${scale})`,
+              transformOrigin: 'top left',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+            }}
+          >
+            <BiodataTemplates
+              ref={templateRef}
+              profile={profile}
+              styleName={selectedStyle}
+              hideBranding={isUnlocked}
+            />
 
-        {/* Scaling Wrapper to fit preview container */}
-        <div className="transform scale-[0.62] sm:scale-[0.72] md:scale-[0.82] lg:scale-[0.88] origin-top transition-transform">
-          <BiodataTemplates
-            ref={templateRef}
-            profile={profile}
-            styleName={selectedStyle}
-            hideBranding={isUnlocked || isEyePreview}
-          />
+            {/* Security Watermark Overlay directly inside Template Canvas */}
+            {!isUnlocked && (
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden opacity-25 select-none z-30">
+                <div className="transform -rotate-45 text-center space-y-12">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="text-3xl font-black tracking-widest text-amber-900 uppercase whitespace-nowrap">
+                      PREVIEW ONLY • DO NOT RECORD / COPY • {userEmail || 'MATRIMONIAL'}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

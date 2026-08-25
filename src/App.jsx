@@ -67,13 +67,20 @@ const App = () => {
 
         {/* ── Legal & About Public Routes ── */}
         <Route path="/about"                            element={<AboutDeveloperPage />} />
-        <Route path="/about-developer font"             element={<AboutDeveloperPage />} />
         <Route path="/about-developer"                  element={<AboutDeveloperPage />} />
+        <Route path="/privacy-policy font"              element={<PrivacyPolicyPage />} />
+        <Route path="/privacy-policy"                   element={<PrivacyPolicyPage />} />
         <Route path="/legal/privacy-policy font"        element={<PrivacyPolicyPage />} />
         <Route path="/legal/privacy-policy"             element={<PrivacyPolicyPage />} />
+        <Route path="/terms-conditions"                 element={<TermsConditionsPage />} />
+        <Route path="/terms-and-conditions"             element={<TermsConditionsPage />} />
+        <Route path="/legal/terms-conditions"           element={<TermsConditionsPage />} />
         <Route path="/legal/terms-and-conditions"       element={<TermsConditionsPage />} />
+        <Route path="/disclaimer"                       element={<DisclaimerPage />} />
         <Route path="/legal/disclaimer"                 element={<DisclaimerPage />} />
+        <Route path="/cancellation-refund"              element={<CancellationRefundPage />} />
         <Route path="/legal/cancellation-refund-policy" element={<CancellationRefundPage />} />
+        <Route path="/shipping-policy"                  element={<ShippingPolicyPage />} />
         <Route path="/legal/shipping-policy font"       element={<ShippingPolicyPage />} />
         <Route path="/legal/shipping-policy"            element={<ShippingPolicyPage />} />
 

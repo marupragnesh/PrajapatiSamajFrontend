@@ -26,7 +26,7 @@ import logger from '../utils/logger';
  * Instagram-style profile header layout with account deletion requiring email OTP verification.
  */
 const EditProfilePage = () => {
-  const { user, deleteAccount } = useAuth();
+  const { user, logout, deleteAccount } = useAuth();
 
   const [activeTab, setActiveTab]         = useState('profile'); // 'profile' | 'expectations'
   const [profile, setProfile]             = useState(null);
@@ -450,6 +450,25 @@ const EditProfilePage = () => {
               </label>
             </div>
           </div>
+        </section>
+
+        {/* Account Session & Logout */}
+        <section className="bg-white dark:bg-card-dark rounded-2xl border border-border dark:border-gray-700 p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+              <span>🔒</span> Account Session
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Logged in as <strong className="text-gray-800 dark:text-gray-200">{user?.email}</strong>
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={logout}
+            className="px-5 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-950/40 text-gray-800 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 border border-gray-300 dark:border-gray-700 font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-sm"
+          >
+            <span>🚪</span> Logout from Account
+          </button>
         </section>
 
         <section className="bg-red-50 dark:bg-red-950/20 rounded-2xl border border-red-200 dark:border-red-900/50 p-6">

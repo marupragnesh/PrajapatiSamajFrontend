@@ -3,32 +3,52 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import RegisterForm from '../components/auth/RegisterForm';
 import Spinner from '../components/common/Spinner';
-import ThemeToggle from '../components/common/ThemeToggle';
 import { registerUser, verifyRegistrationOtp, resendRegistrationOtp } from '../api/authApi';
 import useAuth from '../hooks/useAuth';
 import logger from '../utils/logger';
 import LogoIcon from '../components/common/LogoIcon';
+
+const REG_PENDING_KEY = 'matrimonial_pending_registration';
+
+/** Reads persisted pending registration session if within 5-minute OTP window */
+const getInitialRegistrationState = () => {
+  try {
+    const raw = localStorage.getItem(REG_PENDING_KEY);
+    if (!raw) return { step: 1, email: '', cooldown: 0 };
+    const parsed = JSON.parse(raw);
+    if (parsed.expiresAt && parsed.expiresAt > Date.now()) {
+      const remainingCooldown = Math.max(0, Math.ceil((parsed.cooldownUntil - Date.now()) / 1000));
+      return { step: 2, email: parsed.email || '', cooldown: remainingCooldown };
+    }
+    localStorage.removeItem(REG_PENDING_KEY);
+    return { step: 1, email: '', cooldown: 0 };
+  } catch {
+    return { step: 1, email: '', cooldown: 0 };
+  }
+};
 
 /**
  * RegisterPage — Handles 2-step registration:
  *   Step 1: Fill form → submit email & password → backend sends 5-minute OTP
  *   Step 2: Enter 6-digit OTP → backend validates OTP → user account activated & auto-logged in
  *
- * Resend OTP has a 120-second (2-minute) cooldown timer.
+ * Persists Step 2 state to localStorage so mobile users switching to their email app
+ * to copy the OTP code will not lose their OTP verification screen when returning to Chrome.
  */
 const RegisterPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [step, setStep]                 = useState(1); // 1 = Form, 2 = OTP Verification
-  const [regEmail, setRegEmail]         = useState('');
+  const [initial] = useState(() => getInitialRegistrationState());
+  const [step, setStep]                 = useState(initial.step); // 1 = Form, 2 = OTP Verification
+  const [regEmail, setRegEmail]         = useState(initial.email);
   const [otpCode, setOtpCode]           = useState('');
 
   const [loading, setLoading]           = useState(false);
   const [verifying, setVerifying]       = useState(false);
   const [resending, setResending]       = useState(false);
   const [serverError, setServerError]   = useState('');
-  const [cooldown, setCooldown]         = useState(0);
+  const [cooldown, setCooldown]         = useState(initial.cooldown);
 
   useEffect(() => { logger.info('RegisterPage loaded'); }, []);
 
@@ -48,6 +68,13 @@ const RegisterPage = () => {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
+  const handleResetToForm = () => {
+    localStorage.removeItem(REG_PENDING_KEY);
+    setStep(1);
+    setServerError('');
+    setOtpCode('');
+  };
+
   // Step 1: Submit Registration Form
   const handleRegisterSubmit = async (email, password) => {
     setLoading(true);
@@ -55,6 +82,15 @@ const RegisterPage = () => {
     try {
       logger.api('POST', '/api/auth/register', { email });
       await registerUser(email, password);
+
+      // Persist pending registration session for 5 minutes
+      const now = Date.now();
+      localStorage.setItem(REG_PENDING_KEY, JSON.stringify({
+        email,
+        expiresAt: now + 5 * 60 * 1000,      // 5-minute OTP validity
+        cooldownUntil: now + 120 * 1000,     // 120-second cooldown
+      }));
+
       setRegEmail(email);
       setStep(2);
       setCooldown(120); // 120-second cooldown timer
@@ -84,6 +120,9 @@ const RegisterPage = () => {
       const data = await verifyRegistrationOtp(regEmail, otpCode);
       toast.success('Email verified successfully!');
 
+      // Clear pending registration state from storage
+      localStorage.removeItem(REG_PENDING_KEY);
+
       // Auto-login user and redirect to Profile Setup
       login(data.token, { userId: data.userId, email: data.email });
       navigate('/profile/setup');
@@ -105,6 +144,14 @@ const RegisterPage = () => {
     try {
       logger.api('POST', '/api/auth/register/resend-otp', { email: regEmail });
       await resendRegistrationOtp(regEmail);
+
+      const now = Date.now();
+      localStorage.setItem(REG_PENDING_KEY, JSON.stringify({
+        email: regEmail,
+        expiresAt: now + 5 * 60 * 1000,
+        cooldownUntil: now + 120 * 1000,
+      }));
+
       toast.success('New OTP sent to your email.');
       setCooldown(120); // Reset 120s timer
     } catch (error) {
@@ -119,11 +166,6 @@ const RegisterPage = () => {
 
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark flex flex-col items-center justify-center px-4 relative">
-      {/* Top right theme toggle */}
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
-      </div>
-
       <div className="w-full max-w-md bg-white dark:bg-card-dark rounded-2xl shadow-lg p-8">
         <h1 className="text-2xl font-bold text-primary mb-1 flex items-center gap-2">
           <LogoIcon className="w-7 h-7 text-primary" />
@@ -133,20 +175,37 @@ const RegisterPage = () => {
         {step === 1 ? (
           <>
             <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Create your account</p>
-            <RegisterForm onSubmit={handleRegisterSubmit} loading={loading} serverError={serverError} />
+            <RegisterForm initialEmail={regEmail} onSubmit={handleRegisterSubmit} loading={loading} serverError={serverError} />
           </>
         ) : (
           <div className="space-y-4 mt-2">
             <div>
               <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">Verify Your Email ✉️</h2>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                An OTP valid for <strong className="text-primary">5 minutes</strong> has been sent to:
-                <br />
-                <strong className="text-gray-800 dark:text-gray-200">{regEmail}</strong>
+                An OTP valid for <strong className="text-primary">5 minutes</strong> has been sent to your email.
               </p>
             </div>
 
-            <form onSubmit={handleOtpSubmit} className="space-y-4 pt-2">
+            {/* Email Verification Banner & Change Email Option */}
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3.5 flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-gray-900 dark:text-gray-100 truncate">
+                  ✉️ {regEmail}
+                </p>
+                <p className="text-[11px] text-amber-700 dark:text-amber-300 font-medium mt-0.5">
+                  Made a typo in your email?
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleResetToForm}
+                className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition whitespace-nowrap shadow cursor-pointer flex-shrink-0"
+              >
+                ✏️ Change Email
+              </button>
+            </div>
+
+            <form onSubmit={handleOtpSubmit} className="space-y-4 pt-1">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
                   6-Digit Verification OTP *
@@ -179,10 +238,10 @@ const RegisterPage = () => {
             <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-3 border-t border-border dark:border-gray-700">
               <button
                 type="button"
-                onClick={() => { setStep(1); setServerError(''); }}
-                className="text-gray-500 dark:text-gray-400 hover:underline cursor-pointer"
+                onClick={handleResetToForm}
+                className="text-gray-500 dark:text-gray-400 hover:underline cursor-pointer font-medium"
               >
-                ← Edit Email
+                ← Back to Edit Form
               </button>
               <button
                 type="button"

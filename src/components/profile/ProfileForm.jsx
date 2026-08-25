@@ -34,6 +34,24 @@ const BLOOD_GROUP_OPTIONS = [
   { value: 'O-', label: 'O-' },
 ];
 
+const HOURS_OPTIONS = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
+const MINUTES_OPTIONS = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
+const PERIOD_OPTIONS = ['AM', 'PM'];
+
+const parseBirthTime = (timeStr) => {
+  if (!timeStr) return { hour: '09', minute: '00', period: 'AM' };
+  const match = String(timeStr).trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (match) {
+    let h = match[1].padStart(2, '0');
+    let m = match[2];
+    let p = match[3].toUpperCase();
+    if (Number(h) >= 1 && Number(h) <= 12) {
+      return { hour: h, minute: m, period: p };
+    }
+  }
+  return { hour: '09', minute: '00', period: 'AM' };
+};
+
 const ProfileForm = ({
   initialData = {},
   onSubmit,
@@ -41,6 +59,11 @@ const ProfileForm = ({
   serverError,
   submitLabel = 'Save Profile',
 }) => {
+  const initialTime = parseBirthTime(initialData.birthTime);
+  const [timeHour, setTimeHour] = useState(initialTime.hour);
+  const [timeMinute, setTimeMinute] = useState(initialTime.minute);
+  const [timePeriod, setTimePeriod] = useState(initialTime.period);
+
   const [form, setForm] = useState({
     name:              initialData.name              || (initialData.fullName ? initialData.fullName.split(' ')[0] : ''),
     surname:           initialData.surname           || (initialData.fullName ? initialData.fullName.substring(initialData.fullName.indexOf(' ') + 1) : ''),
@@ -56,7 +79,7 @@ const ProfileForm = ({
     education:         initialData.education         || '',
     profession:        initialData.profession        || '',
     dateOfBirth:       initialData.dateOfBirth       || '',
-    birthTime:         initialData.birthTime         || '',
+    birthTime:         initialData.birthTime         || `${initialTime.hour}:${initialTime.minute} ${initialTime.period}`,
     weight:            initialData.weight            || '',
     bloodGroup:        initialData.bloodGroup        || '',
     birthPlace:        initialData.birthPlace        || '',
@@ -295,9 +318,56 @@ const ProfileForm = ({
             <input type="date" name="dateOfBirth" value={form.dateOfBirth} onChange={handleChange}
               className={inputClass} />
           </Field>
-          <Field label="Birth Time (AM/PM) *" error={errors.birthTime}>
-            <input type="text" name="birthTime" value={form.birthTime} onChange={handleChange}
-              placeholder="e.g. 10:30 AM" className={inputClass} />
+          <Field label="Birth Time (Hour : Minute AM/PM) *" error={errors.birthTime}>
+            <div className="grid grid-cols-3 gap-2">
+              <select
+                value={timeHour}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setTimeHour(val);
+                  const formatted = `${val}:${timeMinute} ${timePeriod}`;
+                  setForm((prev) => ({ ...prev, birthTime: formatted }));
+                  if (errors.birthTime) setErrors((prev) => ({ ...prev, birthTime: '' }));
+                }}
+                className={inputClass}
+              >
+                {HOURS_OPTIONS.map((h) => (
+                  <option key={h} value={h}>{h} Hr</option>
+                ))}
+              </select>
+
+              <select
+                value={timeMinute}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setTimeMinute(val);
+                  const formatted = `${timeHour}:${val} ${timePeriod}`;
+                  setForm((prev) => ({ ...prev, birthTime: formatted }));
+                  if (errors.birthTime) setErrors((prev) => ({ ...prev, birthTime: '' }));
+                }}
+                className={inputClass}
+              >
+                {MINUTES_OPTIONS.map((m) => (
+                  <option key={m} value={m}>{m} Min</option>
+                ))}
+              </select>
+
+              <select
+                value={timePeriod}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setTimePeriod(val);
+                  const formatted = `${timeHour}:${timeMinute} ${val}`;
+                  setForm((prev) => ({ ...prev, birthTime: formatted }));
+                  if (errors.birthTime) setErrors((prev) => ({ ...prev, birthTime: '' }));
+                }}
+                className={inputClass}
+              >
+                {PERIOD_OPTIONS.map((p) => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+            </div>
           </Field>
         </div>
 

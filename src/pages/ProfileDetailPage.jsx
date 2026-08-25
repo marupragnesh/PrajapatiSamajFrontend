@@ -161,19 +161,81 @@ const ProfileDetailPage = () => {
 
           <div className="p-6 space-y-5">
 
-            {/* Name + Instagram Handle Badge + City */}
-            <div>
+            {/* Name + Instagram Handle Badge + City & Primary Actions */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    {profile.fullName}, {profile.age}
+                  </h1>
+                  {profile.username && (
+                    <span className="px-2.5 py-0.5 rounded-full bg-primary/10 dark:bg-primary/20 text-primary dark:text-orange-300 text-xs font-bold tracking-wide border border-primary/20">
+                      @{profile.username}
+                    </span>
+                  )}
+                </div>
+                <p className="text-primary font-medium mt-1">📍 {profile.city}</p>
+              </div>
+
+              {/* Action Buttons: Like & Interest */}
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  {profile.fullName}, {profile.age}
-                </h1>
-                {profile.username && (
-                  <span className="px-2.5 py-0.5 rounded-full bg-primary/10 dark:bg-primary/20 text-primary dark:text-orange-300 text-xs font-bold tracking-wide border border-primary/20">
-                    @{profile.username}
-                  </span>
+                {/* Like Button */}
+                <button
+                  onClick={handleLike}
+                  disabled={likeLoading || profile.isLikedByMe}
+                  className={`px-3 py-2 rounded-xl border text-xs sm:text-sm font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                    profile.isLikedByMe
+                      ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600'
+                  }`}
+                >
+                  <span>{profile.isLikedByMe ? '❤️' : '🤍'}</span>
+                  <span>{profile.isLikedByMe ? 'Liked' : 'Like'}</span>
+                </button>
+
+                {/* Interest Status / Action Button */}
+                {profile.interestStatus === 'MATCHED' && (
+                  <div className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs sm:text-sm font-bold shadow-md flex items-center gap-1.5">
+                    <span>🎉</span>
+                    <span>Mutual Match</span>
+                  </div>
+                )}
+
+                {profile.interestStatus === 'PENDING_SENT' && (
+                  <div className="px-3 py-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs sm:text-sm font-bold flex items-center gap-1.5">
+                    <span>⏳</span>
+                    <span>Interest Sent</span>
+                  </div>
+                )}
+
+                {profile.interestStatus === 'ACCEPTED_SENT' && (
+                  <div className="px-3 py-2 rounded-xl bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 text-xs sm:text-sm font-bold flex items-center gap-1.5">
+                    <span>✅</span>
+                    <span>Accepted by Them</span>
+                  </div>
+                )}
+
+                {profile.interestStatus === 'PENDING_RECEIVED' && (
+                  <button
+                    onClick={() => navigate('/interests')}
+                    className="px-3.5 py-2 rounded-xl bg-primary text-white text-xs sm:text-sm font-bold hover:bg-primary-light transition flex items-center gap-1.5 shadow cursor-pointer"
+                  >
+                    <span>💌</span>
+                    <span>Respond</span>
+                  </button>
+                )}
+
+                {(profile.interestStatus === 'NONE' || profile.interestStatus === 'ACCEPTED_RECEIVED' || profile.interestStatus === 'DECLINED' || !profile.interestStatus) && (
+                  <button
+                    onClick={handleSendInterest}
+                    disabled={interestLoading}
+                    className="px-3.5 py-2 rounded-xl bg-primary text-white text-xs sm:text-sm font-bold hover:bg-primary-light transition flex items-center gap-1.5 shadow disabled:opacity-60 cursor-pointer"
+                  >
+                    <span>💌</span>
+                    <span>{interestLoading ? 'Sending...' : 'Send Interest'}</span>
+                  </button>
                 )}
               </div>
-              <p className="text-primary font-medium mt-1">📍 {profile.city}</p>
             </div>
 
             {/* ── Quick Navigation Pills ── */}
@@ -510,14 +572,14 @@ const ProfileDetailPage = () => {
             <div>
               <h3 className="text-base font-bold text-gray-800 dark:text-gray-100">Unlock Mobile Number</h3>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Choose options below: Unlock this single profile contact for ₹9, or get full unlimited contact access for ₹49.
+                Choose options below: Unlock this single profile contact for ₹9 (Incl. GST), or get full unlimited contact access with our 2-Month Membership plans.
               </p>
             </div>
             <div className="space-y-2 pt-1">
               <UnlockContactButton 
                 targetProfileId={profile.profileId} 
                 feature="SINGLE_PROFILE_UNLOCK" 
-                label="Unlock This Profile (₹9)" 
+                label="Unlock This Profile (₹9 Incl. GST)" 
                 onUnlocked={() => { setShowContactInfoModal(false); fetchProfile(true); }}
                 customClass="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs font-bold shadow transition cursor-pointer"
               />
@@ -525,7 +587,7 @@ const ProfileDetailPage = () => {
                 onClick={() => { setShowContactInfoModal(false); navigate('/payment'); }}
                 className="w-full py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-light transition cursor-pointer shadow"
               >
-                All Contacts Plan (₹49)
+                View Premium Membership Plans
               </button>
               <button
                 onClick={() => setShowContactInfoModal(false)}

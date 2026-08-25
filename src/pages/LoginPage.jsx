@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import LoginForm from '../components/auth/LoginForm';
-import ThemeToggle from '../components/common/ThemeToggle';
 import { loginUser } from '../api/authApi';
 import { getMyProfile } from '../api/profileApi';
 import useAuth from '../hooks/useAuth';
@@ -16,11 +15,16 @@ import LogoIcon from '../components/common/LogoIcon';
  */
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { isLoggedIn, login } = useAuth();
   const [loading, setLoading]         = useState(false);
   const [serverError, setServerError] = useState('');
 
-  useEffect(() => { logger.info('LoginPage loaded'); }, []);
+  useEffect(() => {
+    logger.info('LoginPage loaded');
+    if (isLoggedIn) {
+      navigate('/discover', { replace: true });
+    }
+  }, [isLoggedIn, navigate]);
 
   const handleLogin = async (email, password) => {
     setLoading(true);
@@ -53,11 +57,6 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark flex flex-col
                     items-center justify-center px-4 relative">
-      {/* Top right theme toggle */}
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
-      </div>
-
       <div className="w-full max-w-md bg-white dark:bg-card-dark rounded-2xl shadow-lg p-8">
         <h1 className="text-2xl font-bold text-primary mb-1 flex items-center gap-2">
           <LogoIcon className="w-7 h-7 text-primary" />
