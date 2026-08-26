@@ -43,7 +43,14 @@ const DiscoverPage = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore]         = useState(true);
 
-  const [filters, setFilters]         = useState(DEFAULT_FILTERS);
+  const [filters, setFilters]         = useState(() => {
+    try {
+      const saved = localStorage.getItem('prajapati_discover_filters');
+      return saved ? JSON.parse(saved) : DEFAULT_FILTERS;
+    } catch {
+      return DEFAULT_FILTERS;
+    }
+  });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filtersUnlocked, setFiltersUnlocked] = useState(true);
 
@@ -119,14 +126,19 @@ const DiscoverPage = () => {
     }
   }, [filters]);
 
-  // Initial load
+  // Initial load — uses restored persistent filters
   useEffect(() => {
-    fetchProfiles(0, true, DEFAULT_FILTERS);
+    fetchProfiles(0, true, filters);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Filter change handler — re-fetches from page 0
+  // Filter change handler — saves to localStorage & re-fetches from page 0
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
+    try {
+      localStorage.setItem('prajapati_discover_filters', JSON.stringify(newFilters));
+    } catch (err) {
+      logger.error('Failed to persist discover filters', err);
+    }
     setProfiles([]);
     setPage(0);
     setHasMore(true);
@@ -134,6 +146,11 @@ const DiscoverPage = () => {
   };
 
   const handleClearAllFilters = () => {
+    try {
+      localStorage.removeItem('prajapati_discover_filters');
+    } catch (err) {
+      logger.error('Failed to remove persistent discover filters', err);
+    }
     handleFilterChange(DEFAULT_FILTERS);
   };
 

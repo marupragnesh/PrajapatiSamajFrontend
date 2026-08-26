@@ -24,7 +24,7 @@ import toast from 'react-hot-toast';
 const ASPECT_RATIOS = [
   { id: '4:5', label: '4:5 Portrait', ratio: 4 / 5 },
   { id: '1:1', label: '1:1 Square', ratio: 1 / 1 },
-  { id: '16:9', label: '16:9 Wide', ratio: 16 / 9 },
+  { id: '16:9', label: '16:9 Wide', ratio: 16 / 9, isRecommended: true, tag: '⭐ Best View' },
   { id: 'ORIGINAL', label: 'Original', ratio: null },
 ];
 
@@ -461,13 +461,20 @@ const ImageAdjustModal = ({ files = [], onClose, onConfirm, uploading = false })
                   key={item.id}
                   type="button"
                   onClick={() => updateCurrentAdj({ aspectRatioId: item.id })}
-                  className={`py-1.5 px-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer ${
+                  className={`py-1.5 px-1 rounded-xl text-xs font-semibold border transition cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
                     currentAdj.aspectRatioId === item.id
-                      ? 'bg-primary border-primary text-white shadow-md'
+                      ? 'bg-primary border-primary text-white shadow-md ring-2 ring-primary/40'
+                      : item.isRecommended
+                      ? 'bg-amber-950/30 border-amber-500/70 text-amber-300 hover:bg-amber-900/40 shadow-sm'
                       : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700'
                   }`}
                 >
-                  {item.label}
+                  {item.isRecommended && (
+                    <span className="text-[8px] font-extrabold px-1 py-0.5 rounded-full bg-amber-400 text-amber-950 uppercase tracking-tighter leading-none shadow-sm">
+                      ⭐ Best View
+                    </span>
+                  )}
+                  <span>{item.label}</span>
                 </button>
               ))}
             </div>

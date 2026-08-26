@@ -120,6 +120,16 @@ const EditProfilePage = () => {
     loadData();
   }, [loadData]);
 
+  useEffect(() => {
+    if (!pageLoading && window.location.hash === '#photos-upload-section') {
+      const timer = setTimeout(() => {
+        const el = document.getElementById('photos-upload-section');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [pageLoading]);
+
   const handleProfileUpdate = async (profileData) => {
     setProfileLoading(true);
     setProfileError('');
@@ -262,6 +272,17 @@ const EditProfilePage = () => {
     );
   }
 
+  const handleAvatarClick = () => {
+    const el = document.getElementById('photos-upload-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+      setTimeout(() => {
+        const fileInput = document.getElementById('photo-upload');
+        if (fileInput) fileInput.click();
+      }, 300);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark">
       <Navbar />
@@ -271,16 +292,25 @@ const EditProfilePage = () => {
         {/* Header Card */}
         <div className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
           <div className="flex items-center gap-6">
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-primary/20 overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-gray-800 flex items-center justify-center shadow-inner">
+            <div
+              onClick={handleAvatarClick}
+              title="Click to upload or manage photos"
+              className="relative group cursor-pointer w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-primary/30 overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-gray-800 flex items-center justify-center shadow-inner hover:ring-4 hover:ring-primary/40 transition"
+            >
               {profile?.primaryPhotoUrl ? (
                 <img
                   src={resolveImageUrl(profile.primaryPhotoUrl)}
                   alt={profile?.fullName}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                 />
               ) : (
                 <span className="text-4xl text-gray-400">👤</span>
               )}
+              {/* Overlay camera icon cue */}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-200 flex flex-col items-center justify-center text-white text-xs font-bold">
+                <span className="text-lg">📷</span>
+                <span className="text-[10px] tracking-tight">Upload</span>
+              </div>
             </div>
 
             <div className="flex-1 min-w-0">
@@ -322,7 +352,7 @@ const EditProfilePage = () => {
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
             >
-              💍 Edit Expectation
+              💍 {expectations && Object.values(expectations).some(v => v !== null && v !== undefined && v !== '') ? 'Edit Partner Expectation' : 'Add Partner Expectation'}
             </button>
           </div>
         </div>
@@ -365,7 +395,7 @@ const EditProfilePage = () => {
         )}
 
         {/* Independent Sections (Visible under both tabs when scrolling down) */}
-        <section className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6">
+        <section id="photos-upload-section" className="bg-white dark:bg-card-dark rounded-2xl shadow-sm p-6 scroll-mt-20">
           <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
             Profile Photos (Max 10)
           </h2>

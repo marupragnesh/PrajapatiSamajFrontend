@@ -9,6 +9,14 @@ export const sendInterest = async (profileId) => {
   return response.data;
 };
 
+/** DELETE /api/interests/{profileId}/cancel — cancel/withdraw a pending interest request */
+export const cancelInterest = async (profileId) => {
+  logger.api('DELETE', `/api/interests/${profileId}/cancel`);
+  const response = await axiosInstance.delete(`/api/interests/${profileId}/cancel`);
+  logger.response(`/api/interests/${profileId}/cancel`, response.data);
+  return response.data;
+};
+
 /** GET /api/interests/received — get all PENDING interest requests received */
 export const getInterestsReceived = async () => {
   logger.api('GET', '/api/interests/received');

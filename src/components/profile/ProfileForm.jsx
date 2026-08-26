@@ -1,25 +1,20 @@
 import { useState } from 'react';
 import Spinner from '../common/Spinner';
+import { translations } from '../../utils/translations';
 
 /**
  * Reusable profile form — used on ProfileSetupPage and EditProfilePage.
  * Organized into default-closed collapsible accordions (group wise).
  * Auto-expands accordion sections containing validation errors upon form submit.
+ * Supports English & Gujarati language toggle for field labels.
  */
-
-const MARITAL_STATUS_OPTIONS = [
-  { value: '', label: 'Select marital status' },
-  { value: 'SINGLE', label: 'Single' },
-  { value: 'DIVORCED', label: 'Divorced' },
-  { value: 'WIDOWED', label: 'Widowed' },
-];
 
 const DIET_OPTIONS = [
   { value: '', label: 'Select dietary preference' },
-  { value: 'VEG', label: 'Vegetarian' },
-  { value: 'VEG_EGG', label: 'Veg + Egg Only' },
-  { value: 'NON_VEG', label: 'Non-Vegetarian' },
-  { value: 'VEGAN', label: 'Vegan' },
+  { value: 'VEG', label: 'Vegetarian (શાકાહારી)' },
+  { value: 'VEG_EGG', label: 'Veg + Egg Only (ઈંડાહારી)' },
+  { value: 'NON_VEG', label: 'Non-Vegetarian (અશાકાહારી)' },
+  { value: 'VEGAN', label: 'Vegan (વીગન)' },
 ];
 
 const BLOOD_GROUP_OPTIONS = [
@@ -59,6 +54,14 @@ const ProfileForm = ({
   serverError,
   submitLabel = 'Save Profile',
 }) => {
+  const [lang, setLang] = useState(() => localStorage.getItem('prajapati_lang_pref') || 'gu');
+  const t = translations[lang] || translations.gu;
+
+  const toggleLanguage = (selectedLang) => {
+    setLang(selectedLang);
+    localStorage.setItem('prajapati_lang_pref', selectedLang);
+  };
+
   const initialTime = parseBirthTime(initialData.birthTime);
   const [timeHour, setTimeHour] = useState(initialTime.hour);
   const [timeMinute, setTimeMinute] = useState(initialTime.minute);
@@ -80,11 +83,11 @@ const ProfileForm = ({
     profession:        initialData.profession        || '',
     dateOfBirth:       initialData.dateOfBirth       || '',
     birthTime:         initialData.birthTime         || `${initialTime.hour}:${initialTime.minute} ${initialTime.period}`,
-    weight:            initialData.weight            || '',
+    weight:            initialData.weight !== undefined && initialData.weight !== null ? initialData.weight : '',
     bloodGroup:        initialData.bloodGroup        || '',
     birthPlace:        initialData.birthPlace        || '',
-    hasMangal:         initialData.hasMangal !== undefined && initialData.hasMangal !== null ? Boolean(initialData.hasMangal) : false,
-    hasSani:           initialData.hasSani !== undefined && initialData.hasSani !== null ? Boolean(initialData.hasSani) : false,
+    hasMangal:         initialData.hasMangal !== undefined ? initialData.hasMangal : null,
+    hasSani:           initialData.hasSani !== undefined ? initialData.hasSani : null,
     height:            initialData.height            || '',
     income:            initialData.income            || '',
     gotra:             initialData.gotra             || '',
@@ -149,9 +152,9 @@ const ProfileForm = ({
     if (!form.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
     if (!form.birthTime.trim()) newErrors.birthTime = 'Date of birth time is required';
 
-    if (!form.weight) newErrors.weight = 'Weight is required';
-    else if (!/^\d+$/.test(String(form.weight)) || Number(form.weight) <= 0 || Number(form.weight) > 300) {
-      newErrors.weight = 'Weight must be a valid positive integer (in kg)';
+    if (form.weight === '' || form.weight === null || form.weight === undefined) newErrors.weight = 'Weight is required';
+    else if (isNaN(Number(form.weight)) || Number(form.weight) <= 0 || Number(form.weight) > 300) {
+      newErrors.weight = 'Weight must be a valid number between 1 and 300 kg';
     }
 
     if (!form.birthPlace.trim()) newErrors.birthPlace = 'Place where you born is required';
@@ -224,8 +227,8 @@ const ProfileForm = ({
       weight:            Number(form.weight),
       bloodGroup:        form.bloodGroup || null,
       birthPlace:        form.birthPlace.trim(),
-      hasMangal:         form.hasMangal,
-      hasSani:           form.hasSani,
+      hasMangal:         form.hasMangal !== undefined ? form.hasMangal : null,
+      hasSani:           form.hasSani !== undefined ? form.hasSani : null,
       fatherName:        form.fatherName.trim(),
       fatherOccupation:  form.fatherOccupation.trim() || null,
       motherName:        form.motherName.trim(),
@@ -257,9 +260,40 @@ const ProfileForm = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
 
+      {/* ── Language Switcher Bar ── */}
+      <div className="flex items-center justify-between p-3 rounded-xl bg-orange-500/10 border border-orange-500/30">
+        <span className="text-xs font-semibold text-orange-600 dark:text-orange-400 flex items-center gap-1.5">
+          🌐 Form Language / ભાષા:
+        </span>
+        <div className="flex items-center gap-1 bg-white dark:bg-gray-800 p-1 rounded-lg border border-border dark:border-gray-700">
+          <button
+            type="button"
+            onClick={() => toggleLanguage('gu')}
+            className={`px-3 py-1 rounded-md text-xs font-bold transition cursor-pointer ${
+              lang === 'gu'
+                ? 'bg-primary text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+            }`}
+          >
+            ગુજરાતી
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleLanguage('en')}
+            className={`px-3 py-1 rounded-md text-xs font-bold transition cursor-pointer ${
+              lang === 'en'
+                ? 'bg-primary text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+            }`}
+          >
+            English
+          </button>
+        </div>
+      </div>
+
       {/* ── 1. Personal Information Accordion ── */}
       <AccordionSection
-        title="Personal Information"
+        title={t.personalDetails}
         icon="👤"
         sectionKey="personal"
         isOpen={openSections.personal}
@@ -268,44 +302,45 @@ const ProfileForm = ({
         errorCount={personalErrorCount}
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="First Name *" error={errors.name}>
+          <Field label={`${t.name} *`} error={errors.name}>
             <input name="name" value={form.name} onChange={handleChange}
               placeholder="Rahul" className={inputClass} />
           </Field>
 
-          <Field label="Surname *" error={errors.surname}>
+          <Field label={`${t.surname} *`} error={errors.surname}>
             <input name="surname" value={form.surname} onChange={handleChange}
               placeholder="Prajapati" className={inputClass} />
           </Field>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Age *" error={errors.age}>
+          <Field label={`${t.age} *`} error={errors.age}>
             <input type="number" name="age" value={form.age} onChange={handleChange}
               min={18} max={80} placeholder="25" className={inputClass} />
           </Field>
-          <Field label="Gender *" error={errors.gender}>
+          <Field label={`${t.gender} *`} error={errors.gender}>
             <select name="gender" value={form.gender} onChange={handleChange} className={inputClass}>
               <option value="">Select gender</option>
-              <option value="MALE">Male</option>
-              <option value="FEMALE">Female</option>
-              <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
+              <option value="MALE">{t.male}</option>
+              <option value="FEMALE">{t.female}</option>
+              <option value="PREFER_NOT_TO_SAY">{t.preferNotToSay}</option>
             </select>
           </Field>
         </div>
 
-        <Field label="Marital Status *" error={errors.maritalStatus}>
+        <Field label={`${t.maritalStatus} *`} error={errors.maritalStatus}>
           <select name="maritalStatus" value={form.maritalStatus} onChange={handleChange} className={inputClass}>
-            {MARITAL_STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
+            <option value="">{lang === 'gu' ? 'વૈવાહિક સ્થિતિ પસંદ કરો' : 'Select marital status'}</option>
+            <option value="SINGLE">{t.maritalStatusSingle}</option>
+            <option value="DIVORCED">{t.maritalStatusDivorced}</option>
+            <option value="WIDOWED">{t.maritalStatusWidowed}</option>
           </select>
         </Field>
       </AccordionSection>
 
       {/* ── 2. Birth & Horoscope Details Accordion ── */}
       <AccordionSection
-        title="Birth & Horoscope Details"
+        title={t.astrologicalDetails}
         icon="📜"
         sectionKey="birth"
         isOpen={openSections.birth}
@@ -314,11 +349,11 @@ const ProfileForm = ({
         errorCount={birthErrorCount}
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Date of Birth *" error={errors.dateOfBirth}>
+          <Field label={`${t.dateOfBirth} *`} error={errors.dateOfBirth}>
             <input type="date" name="dateOfBirth" value={form.dateOfBirth} onChange={handleChange}
               className={inputClass} />
           </Field>
-          <Field label="Birth Time (Hour : Minute AM/PM) *" error={errors.birthTime}>
+          <Field label={`${t.birthTime} (Hour : Minute AM/PM) *`} error={errors.birthTime}>
             <div className="grid grid-cols-3 gap-2">
               <select
                 value={timeHour}
@@ -372,16 +407,23 @@ const ProfileForm = ({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Weight (kg - Integer only) *" error={errors.weight}>
-            <input type="number" name="weight" value={form.weight}
+          <Field label={`${t.weight} *`} error={errors.weight}>
+            <input type="number" step="0.01" name="weight" value={form.weight}
               onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, '');
+                const val = e.target.value;
                 setForm((prev) => ({ ...prev, weight: val }));
                 if (errors.weight) setErrors((prev) => ({ ...prev, weight: '' }));
               }}
-              placeholder="65" className={inputClass} />
+              onBlur={(e) => {
+                const raw = e.target.value;
+                if (raw && !isNaN(Number(raw))) {
+                  const rounded = (Math.round(Number(raw) * 100) / 100).toString();
+                  setForm((prev) => ({ ...prev, weight: rounded }));
+                }
+              }}
+              placeholder="e.g. 56.38" className={inputClass} />
           </Field>
-          <Field label="Blood Group (Optional)" error={errors.bloodGroup}>
+          <Field label={t.bloodGroup} error={errors.bloodGroup}>
             <select name="bloodGroup" value={form.bloodGroup} onChange={handleChange} className={inputClass}>
               {BLOOD_GROUP_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -390,25 +432,25 @@ const ProfileForm = ({
           </Field>
         </div>
 
-        <Field label="Place Where You Born *" error={errors.birthPlace}>
+        <Field label={`${t.birthPlace} *`} error={errors.birthPlace}>
           <input name="birthPlace" value={form.birthPlace} onChange={handleChange}
             placeholder="e.g. Ahmedabad, Gujarat" className={inputClass} />
         </Field>
 
-        {/* 2 Gujarati Toggle Buttons */}
+        {/* 2 Gujarati Toggle / Choice Groups */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              તમને મંગળ છે? *
+              તમને મંગળ છે? (Mangal)
             </label>
-            <div className="flex items-center gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               <button
                 type="button"
                 onClick={() => setToggleValue('hasMangal', true)}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold border transition cursor-pointer ${
-                  form.hasMangal
-                    ? 'bg-primary text-white border-primary'
-                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-border dark:border-gray-600'
+                className={`py-2 px-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer text-center ${
+                  form.hasMangal === true
+                    ? 'bg-primary text-white border-primary shadow-sm'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
                 }`}
               >
                 હા (Yes)
@@ -416,29 +458,40 @@ const ProfileForm = ({
               <button
                 type="button"
                 onClick={() => setToggleValue('hasMangal', false)}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold border transition cursor-pointer ${
-                  !form.hasMangal
-                    ? 'bg-primary text-white border-primary'
-                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-border dark:border-gray-600'
+                className={`py-2 px-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer text-center ${
+                  form.hasMangal === false
+                    ? 'bg-primary text-white border-primary shadow-sm'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
                 }`}
               >
                 ના (No)
+              </button>
+              <button
+                type="button"
+                onClick={() => setToggleValue('hasMangal', null)}
+                className={`py-2 px-1 rounded-lg text-[11px] font-semibold border transition cursor-pointer text-center leading-tight flex items-center justify-center ${
+                  form.hasMangal === null || form.hasMangal === undefined
+                    ? 'bg-primary text-white border-primary shadow-sm'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
+                }`}
+              >
+                કહેવા માંગતા નથી
               </button>
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              તમને શનિ છે? *
+              તમને શનિ છે? (Shani)
             </label>
-            <div className="flex items-center gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               <button
                 type="button"
                 onClick={() => setToggleValue('hasSani', true)}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold border transition cursor-pointer ${
-                  form.hasSani
-                    ? 'bg-primary text-white border-primary'
-                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-border dark:border-gray-600'
+                className={`py-2 px-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer text-center ${
+                  form.hasSani === true
+                    ? 'bg-primary text-white border-primary shadow-sm'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
                 }`}
               >
                 હા (Yes)
@@ -446,13 +499,24 @@ const ProfileForm = ({
               <button
                 type="button"
                 onClick={() => setToggleValue('hasSani', false)}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold border transition cursor-pointer ${
-                  !form.hasSani
-                    ? 'bg-primary text-white border-primary'
-                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-border dark:border-gray-600'
+                className={`py-2 px-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer text-center ${
+                  form.hasSani === false
+                    ? 'bg-primary text-white border-primary shadow-sm'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
                 }`}
               >
                 ના (No)
+              </button>
+              <button
+                type="button"
+                onClick={() => setToggleValue('hasSani', null)}
+                className={`py-2 px-1 rounded-lg text-[11px] font-semibold border transition cursor-pointer text-center leading-tight flex items-center justify-center ${
+                  form.hasSani === null || form.hasSani === undefined
+                    ? 'bg-primary text-white border-primary shadow-sm'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
+                }`}
+              >
+                કહેવા માંગતા નથી
               </button>
             </div>
           </div>
@@ -461,7 +525,7 @@ const ProfileForm = ({
 
       {/* ── 3. Family Details Accordion ── */}
       <AccordionSection
-        title="Family Details"
+        title={t.familyDetails}
         icon="👨‍👩‍👧"
         sectionKey="family"
         isOpen={openSections.family}
@@ -470,22 +534,22 @@ const ProfileForm = ({
         errorCount={familyErrorCount}
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Father's Name *" error={errors.fatherName}>
+          <Field label={`${t.fatherName} *`} error={errors.fatherName}>
             <input name="fatherName" value={form.fatherName} onChange={handleChange}
               placeholder="Ramesh Prajapati" className={inputClass} />
           </Field>
-          <Field label="Father's Occupation (Optional)">
+          <Field label={t.fatherOccupation}>
             <input name="fatherOccupation" value={form.fatherOccupation} onChange={handleChange}
               placeholder="Business / Retired" className={inputClass} />
           </Field>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Mother's Name *" error={errors.motherName}>
+          <Field label={`${t.motherName} *`} error={errors.motherName}>
             <input name="motherName" value={form.motherName} onChange={handleChange}
               placeholder="Sunita Prajapati" className={inputClass} />
           </Field>
-          <Field label="Mother's Occupation (Optional)">
+          <Field label={t.motherOccupation}>
             <input name="motherOccupation" value={form.motherOccupation} onChange={handleChange}
               placeholder="Homemaker / Teacher" className={inputClass} />
           </Field>
@@ -494,7 +558,7 @@ const ProfileForm = ({
 
       {/* ── 4. Contact & Address Accordion ── */}
       <AccordionSection
-        title="Contact & Address"
+        title={t.contactDetails}
         icon="📞"
         sectionKey="contact"
         isOpen={openSections.contact}
@@ -503,33 +567,33 @@ const ProfileForm = ({
         errorCount={contactErrorCount}
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Mobile Number *" error={errors.mobileNo}>
+          <Field label={`${t.mobileNo} *`} error={errors.mobileNo}>
             <input name="mobileNo" value={form.mobileNo} onChange={handleChange}
               placeholder="9876543210" maxLength={10} className={inputClass} />
           </Field>
-          <Field label="Alternate Mobile Number (Optional)" error={errors.alternateMobileNo}>
+          <Field label={t.alternateMobileNo} error={errors.alternateMobileNo}>
             <input name="alternateMobileNo" value={form.alternateMobileNo} onChange={handleChange}
               placeholder="9876543211" maxLength={10} className={inputClass} />
           </Field>
         </div>
 
-        <Field label="Address *" error={errors.addressLine}>
+        <Field label={`${t.addressLine} *`} error={errors.addressLine}>
           <input name="addressLine" value={form.addressLine} onChange={handleChange}
             placeholder="123, Ring Road" className={inputClass} />
         </Field>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="State *" error={errors.state}>
+          <Field label={`${t.state} *`} error={errors.state}>
             <input name="state" value={form.state} onChange={handleChange}
               placeholder="Gujarat" className={inputClass} />
           </Field>
-          <Field label="City *" error={errors.city}>
+          <Field label={`${t.city} *`} error={errors.city}>
             <input name="city" value={form.city} onChange={handleChange}
               placeholder="Ahmedabad" className={inputClass} />
           </Field>
         </div>
 
-        <Field label="Pincode *" error={errors.pincode}>
+        <Field label={`${t.pincode} *`} error={errors.pincode}>
           <input name="pincode" value={form.pincode} onChange={handleChange}
             placeholder="380001" maxLength={6} className={inputClass} />
         </Field>
@@ -537,7 +601,7 @@ const ProfileForm = ({
 
       {/* ── 5. Education & Profession Accordion ── */}
       <AccordionSection
-        title="Education & Profession"
+        title={t.educationCareer}
         icon="🎓"
         sectionKey="education"
         isOpen={openSections.education}
@@ -545,33 +609,33 @@ const ProfileForm = ({
         hasError={educationErrorCount > 0}
         errorCount={educationErrorCount}
       >
-        <Field label="Education *" error={errors.education}>
+        <Field label={`${t.education} *`} error={errors.education}>
           <input name="education" value={form.education} onChange={handleChange}
             placeholder="B.Tech CS / M.Com" className={inputClass} />
         </Field>
 
-        <Field label="Occupation / Profession *" error={errors.profession}>
+        <Field label={`${t.profession} *`} error={errors.profession}>
           <input name="profession" value={form.profession} onChange={handleChange}
             placeholder="Software Engineer / Business" className={inputClass} />
         </Field>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Height (Optional)">
+          <Field label={t.height}>
             <input name="height" value={form.height} onChange={handleChange}
               placeholder="e.g. 5'8&quot;" className={inputClass} />
           </Field>
-          <Field label="Monthly Salary (Optional)">
+          <Field label={t.income}>
             <input name="income" value={form.income} onChange={handleChange}
               placeholder="25000" className={inputClass} />
           </Field>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Gotra (Optional)">
+          <Field label={t.gotra}>
             <input name="gotra" value={form.gotra} onChange={handleChange}
               placeholder="e.g. Kashyap" className={inputClass} />
           </Field>
-          <Field label="Diet *" error={errors.diet}>
+          <Field label={`${t.diet} *`} error={errors.diet}>
             <select name="diet" value={form.diet} onChange={handleChange} className={inputClass}>
               {DIET_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -588,7 +652,7 @@ const ProfileForm = ({
 
       {/* ── 6. Description & Hobbies Accordion ── */}
       <AccordionSection
-        title="Description & Hobbies (Optional)"
+        title={t.aboutMe}
         icon="📝"
         sectionKey="about"
         isOpen={openSections.about}
@@ -596,7 +660,7 @@ const ProfileForm = ({
         hasError={false}
         errorCount={0}
       >
-        <Field label="Description / About Me">
+        <Field label={t.description}>
           <textarea name="description" value={form.description} onChange={handleChange}
             rows={4} placeholder="Write something about yourself, your background, and family..." className={inputClass} />
         </Field>

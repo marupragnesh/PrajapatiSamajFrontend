@@ -151,6 +151,12 @@ const Navbar = () => {
                     <span>👤</span> My Profile &amp; Settings
                   </button>
                   <button
+                    onClick={() => { setShowMenu(false); navigate('/profile/edit#photos-upload-section'); }}
+                    className="w-full px-4 py-2.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2.5 transition cursor-pointer"
+                  >
+                    <span>📷</span> Upload &amp; Manage Photos
+                  </button>
+                  <button
                     onClick={() => { setShowMenu(false); navigate('/biodata'); }}
                     className="w-full px-4 py-2.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2.5 transition cursor-pointer"
                   >
@@ -160,7 +166,7 @@ const Navbar = () => {
                     onClick={() => { setShowMenu(false); navigate('/profile/expectations'); }}
                     className="w-full px-4 py-2.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2.5 transition cursor-pointer"
                   >
-                    <span>⚙️</span> Partner Expectations
+                    <span>⚙️</span> {showExclamation ? 'Add Partner Expectation' : 'Edit Partner Expectation'}
                   </button>
                   <div className="border-t border-border dark:border-gray-700 my-1"></div>
                   <button

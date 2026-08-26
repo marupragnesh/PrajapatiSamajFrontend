@@ -6,7 +6,7 @@ import Spinner from '../components/common/Spinner';
 import UnlockContactButton from '../components/payment/UnlockContactButton';
 import { getProfileById } from '../api/profileApi';
 import { likeProfile } from '../api/likeApi';
-import { sendInterest } from '../api/interestApi';
+import { sendInterest, cancelInterest } from '../api/interestApi';
 import { resolveImageUrl } from '../utils/imageHelper';
 import logger from '../utils/logger';
 
@@ -39,6 +39,7 @@ const ProfileDetailPage = () => {
   const [selectedPhotoUrl, setSelectedPhotoUrl] = useState(null);
   const [likeLoading, setLikeLoading] = useState(false);
   const [interestLoading, setInterestLoading] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
   const [showContactInfoModal, setShowContactInfoModal] = useState(false);
 
   const fetchProfile = async (isRefetch = false) => {
@@ -93,6 +94,19 @@ const ProfileDetailPage = () => {
       toast.error(error.response?.data?.message || 'Could not send interest.');
     } finally {
       setInterestLoading(false);
+    }
+  };
+
+  const handleCancelInterest = async () => {
+    setCancelLoading(true);
+    try {
+      const data = await cancelInterest(profileId);
+      toast.success(data.message || 'Interest request withdrawn.');
+      setProfile((prev) => (prev ? { ...prev, interestStatus: 'NONE' } : prev));
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Could not withdraw interest.');
+    } finally {
+      setCancelLoading(false);
     }
   };
 
@@ -202,9 +216,20 @@ const ProfileDetailPage = () => {
                 )}
 
                 {profile.interestStatus === 'PENDING_SENT' && (
-                  <div className="px-3 py-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs sm:text-sm font-bold flex items-center gap-1.5">
-                    <span>⏳</span>
-                    <span>Interest Sent</span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <div className="px-3.5 py-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs sm:text-sm font-bold flex items-center gap-1.5">
+                      <span>⏳</span>
+                      <span>Interest Sent</span>
+                    </div>
+                    <button
+                      onClick={handleCancelInterest}
+                      disabled={cancelLoading}
+                      title="Withdraw sent interest request"
+                      className="px-2.5 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 text-xs font-semibold border border-border dark:border-gray-700 transition cursor-pointer flex items-center gap-1"
+                    >
+                      {cancelLoading ? <Spinner size="xs" /> : <span>✕</span>}
+                      <span>Withdraw</span>
+                    </button>
                   </div>
                 )}
 
@@ -296,9 +321,6 @@ const ProfileDetailPage = () => {
                 {profile.city && (
                   <DetailRow label="City" value={`${profile.city}${profile.state ? ', ' + profile.state : ''}`} />
                 )}
-                {profile.addressLine && (
-                  <DetailRow label="Address" value={profile.addressLine} />
-                )}
                 {profile.hobbies && (
                   <div className="col-span-2">
                     <DetailRow label="Hobbies" value={profile.hobbies} />
@@ -346,11 +368,17 @@ const ProfileDetailPage = () => {
                   {profile.birthPlace && (
                     <DetailRow label="Birth Place" value={profile.birthPlace} />
                   )}
-                  {profile.hasMangal !== undefined && profile.hasMangal !== null && (
-                    <DetailRow label="Mangal Dosh" value={profile.hasMangal ? 'Yes' : 'No'} />
+                  {profile.hasMangal !== undefined && (
+                    <DetailRow
+                      label="Mangal (મંગળ)"
+                      value={profile.hasMangal === true ? 'Yes (હા)' : profile.hasMangal === false ? 'No (ના)' : 'Prefer not to say'}
+                    />
                   )}
-                  {profile.hasSani !== undefined && profile.hasSani !== null && (
-                    <DetailRow label="Sani Dosh" value={profile.hasSani ? 'Yes' : 'No'} />
+                  {profile.hasSani !== undefined && (
+                    <DetailRow
+                      label="Shani (શનિ)"
+                      value={profile.hasSani === true ? 'Yes (હા)' : profile.hasSani === false ? 'No (ના)' : 'Prefer not to say'}
+                    />
                   )}
                 </div>
               </Section>
@@ -403,12 +431,36 @@ const ProfileDetailPage = () => {
                     )}
                   </div>
 
+                  {/* Residential Address Subsection */}
+                  <div className="pt-2 border-t border-border/50 dark:border-gray-700/50">
+                    <span className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide block mb-1">
+                      Residential Address
+                    </span>
+                    {profile.isMobileUnlocked ? (
+                      <div className="text-sm text-gray-800 dark:text-gray-100 space-y-0.5">
+                        <p className="font-semibold">{profile.addressLine || 'Address details not specified'}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {[profile.city, profile.state, profile.pincode].filter(Boolean).join(', ')}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-100 tracking-wider">
+                          🏠 ****************** ({[profile.city, profile.state].filter(Boolean).join(', ')})
+                        </span>
+                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold border border-amber-500/20">
+                          🔒 Locked
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
                   {/* ₹9 Single Profile Unlock Action Button directly on contact section */}
                   {!profile.isMobileUnlocked && (
                     <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-200 dark:border-amber-800/50 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 mt-3">
                       <div>
-                        <p className="text-xs font-bold text-amber-900 dark:text-amber-200">🔓 Unlock Contact for ₹9</p>
-                        <p className="text-[11px] text-amber-700 dark:text-amber-400">Pay only ₹9 to instantly reveal this specific user's mobile number!</p>
+                        <p className="text-xs font-bold text-amber-900 dark:text-amber-200">🔓 Unlock Contact &amp; Address for ₹9</p>
+                        <p className="text-[11px] text-amber-700 dark:text-amber-400">Pay only ₹9 to instantly reveal this user's mobile number and full address!</p>
                       </div>
                       <UnlockContactButton 
                         targetProfileId={profile.profileId} 
@@ -421,59 +473,6 @@ const ProfileDetailPage = () => {
                 </div>
               </Section>
             )}
-
-            {/* ── Action Buttons ── */}
-            <div className="flex gap-3 pt-1">
-              {profile.isLikedByMe ? (
-                <button
-                  disabled
-                  className="flex-1 py-3 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-300 font-semibold border border-red-200 dark:border-red-800/60 flex items-center justify-center gap-2 cursor-default shadow-sm"
-                >
-                  ❤️ Liked
-                </button>
-              ) : (
-                <button
-                  onClick={handleLike}
-                  disabled={likeLoading}
-                  className="flex-1 py-3 rounded-xl bg-error text-white font-semibold hover:bg-red-700 transition disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-                >
-                  {likeLoading ? <Spinner /> : '❤️'}
-                  {likeLoading ? 'Liking...' : 'Like Profile'}
-                </button>
-              )}
-
-              {profile.interestStatus === 'PENDING_SENT' ? (
-                <button
-                  disabled
-                  className="flex-1 py-3 rounded-xl bg-primary/10 dark:bg-primary/20 text-primary dark:text-orange-300 font-semibold border border-primary/30 flex items-center justify-center gap-2 cursor-default shadow-sm"
-                >
-                  📩 Interest Sent
-                </button>
-              ) : profile.interestStatus === 'ACCEPTED' ? (
-                <button
-                  disabled
-                  className="flex-1 py-3 rounded-xl bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 font-semibold border border-green-200 dark:border-green-800 flex items-center justify-center gap-2 cursor-default shadow-sm"
-                >
-                  🤝 Mutual Match
-                </button>
-              ) : profile.interestStatus === 'PENDING_RECEIVED' ? (
-                <button
-                  onClick={() => navigate('/interests')}
-                  className="flex-1 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primary-light transition flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-                >
-                  📬 View Received Interest
-                </button>
-              ) : (
-                <button
-                  onClick={handleSendInterest}
-                  disabled={interestLoading}
-                  className="flex-1 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primary-light transition disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-                >
-                  {interestLoading ? <Spinner /> : '💌'}
-                  {interestLoading ? 'Sending...' : 'Send Interest'}
-                </button>
-              )}
-            </div>
 
           </div>
         </div>

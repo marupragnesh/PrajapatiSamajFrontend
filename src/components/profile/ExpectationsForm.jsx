@@ -1,23 +1,12 @@
 import { useState, useEffect } from 'react';
 import Spinner from '../common/Spinner';
+import { translations } from '../../utils/translations';
 
 /**
- * Reusable form for editing partner expectations.
- * Used on EditProfilePage and ExpectationsPage.
+ * Reusable form for adding/editing partner expectations.
+ * Displays "Add Partner Expectation" on first fill and "Edit Partner Expectation" thereafter.
+ * Used on EditProfilePage and ExpectationsPage with Gujarati/English label toggle.
  */
-const MARITAL_STATUS_OPTIONS = [
-  { value: '', label: 'Any' },
-  { value: 'SINGLE', label: 'Single' },
-  { value: 'DIVORCED', label: 'Divorced' },
-  { value: 'WIDOWED', label: 'Widowed' },
-];
-
-const DIET_OPTIONS = [
-  { value: '', label: 'Any' },
-  { value: 'VEG', label: 'Vegetarian' },
-  { value: 'NON_VEG', label: 'Non-Vegetarian' },
-  { value: 'VEGAN', label: 'Vegan' },
-];
 
 const ExpectationsForm = ({
   initialData = {},
@@ -26,6 +15,21 @@ const ExpectationsForm = ({
   serverError,
   submitLabel = 'Save Expectations',
 }) => {
+  const [lang, setLang] = useState(() => localStorage.getItem('prajapati_lang_pref') || 'gu');
+  const t = translations[lang] || translations.gu;
+
+  const toggleLanguage = (selectedLang) => {
+    setLang(selectedLang);
+    localStorage.setItem('prajapati_lang_pref', selectedLang);
+  };
+
+  const hasExistingData = Boolean(
+    initialData &&
+    Object.values(initialData).some((v) => v !== null && v !== undefined && v !== '')
+  );
+
+  const formHeading = hasExistingData ? t.editExpectationTitle : t.addExpectationTitle;
+
   const [form, setForm] = useState({
     minAge:                 initialData.minAge                 ?? '',
     maxAge:                 initialData.maxAge                 ?? '',
@@ -129,33 +133,65 @@ const ExpectationsForm = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
 
+      {/* ── Language & Dynamic Title Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-orange-500/10 border border-orange-500/30 mb-2">
+        <h3 className="font-bold text-base text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          <span>💖</span> {formHeading}
+        </h3>
+        <div className="flex items-center gap-1 bg-white dark:bg-gray-800 p-1 rounded-lg border border-border dark:border-gray-700 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => toggleLanguage('gu')}
+            className={`px-3 py-1 rounded-md text-xs font-bold transition cursor-pointer ${
+              lang === 'gu'
+                ? 'bg-primary text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+            }`}
+          >
+            ગુજરાતી
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleLanguage('en')}
+            className={`px-3 py-1 rounded-md text-xs font-bold transition cursor-pointer ${
+              lang === 'en'
+                ? 'bg-primary text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+            }`}
+          >
+            English
+          </button>
+        </div>
+      </div>
+
       {/* Age & Physical preference */}
       <SectionTitle>Age, Height &amp; Weight Preference</SectionTitle>
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Min Age" error={errors.minAge}>
+        <Field label={t.preferredAgeMin} error={errors.minAge}>
           <input type="number" name="minAge" value={form.minAge} onChange={handleChange}
             min={18} max={80} placeholder="21" className={inputClass} />
         </Field>
-        <Field label="Max Age" error={errors.maxAge}>
+        <Field label={t.preferredAgeMax} error={errors.maxAge}>
           <input type="number" name="maxAge" value={form.maxAge} onChange={handleChange}
             min={18} max={80} placeholder="30" className={inputClass} />
         </Field>
       </div>
 
-      <Field label="Preferred Marital Status">
+      <Field label={t.preferredMaritalStatus}>
         <select name="preferredMaritalStatus" value={form.preferredMaritalStatus} onChange={handleChange} className={inputClass}>
-          {MARITAL_STATUS_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
+          <option value="">{t.any}</option>
+          <option value="SINGLE">{t.maritalStatusSingle}</option>
+          <option value="DIVORCED">{t.maritalStatusDivorced}</option>
+          <option value="WIDOWED">{t.maritalStatusWidowed}</option>
         </select>
       </Field>
 
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Min Height">
+        <Field label={t.preferredHeightMin}>
           <input name="preferredMinHeight" value={form.preferredMinHeight} onChange={handleChange}
             placeholder="e.g. 5'2&quot;" className={inputClass} />
         </Field>
-        <Field label="Max Height">
+        <Field label={t.preferredHeightMax}>
           <input name="preferredMaxHeight" value={form.preferredMaxHeight} onChange={handleChange}
             placeholder="e.g. 6'0&quot;" className={inputClass} />
         </Field>
@@ -163,11 +199,11 @@ const ExpectationsForm = ({
 
       <div className="grid grid-cols-2 gap-4">
         <Field label="Min Weight (kg)">
-          <input type="number" name="preferredMinWeight" value={form.preferredMinWeight} onChange={handleChange}
+          <input type="number" step="0.01" name="preferredMinWeight" value={form.preferredMinWeight} onChange={handleChange}
             placeholder="e.g. 45" className={inputClass} />
         </Field>
         <Field label="Max Weight (kg)">
-          <input type="number" name="preferredMaxWeight" value={form.preferredMaxWeight} onChange={handleChange}
+          <input type="number" step="0.01" name="preferredMaxWeight" value={form.preferredMaxWeight} onChange={handleChange}
             placeholder="e.g. 75" className={inputClass} />
         </Field>
       </div>
@@ -186,17 +222,17 @@ const ExpectationsForm = ({
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Preferred Education">
+        <Field label={t.preferredEducation}>
           <input name="preferredEducation" value={form.preferredEducation} onChange={handleChange}
             placeholder="e.g. Graduate / B.Tech" className={inputClass} />
         </Field>
-        <Field label="Preferred Profession">
+        <Field label={t.preferredProfession}>
           <input name="preferredProfession" value={form.preferredProfession} onChange={handleChange}
             placeholder="e.g. Engineer, Doctor" className={inputClass} />
         </Field>
       </div>
 
-      <Field label="Preferred Monthly Income">
+      <Field label={t.preferredIncome}>
         <input name="preferredIncome" value={form.preferredIncome} onChange={handleChange}
           placeholder="e.g. 40,000+/month" className={inputClass} />
       </Field>
@@ -204,7 +240,7 @@ const ExpectationsForm = ({
       {/* Horoscope & Mangal / Shani */}
       <SectionTitle>Horoscope &amp; Dosha Preferences</SectionTitle>
       <div className="grid grid-cols-2 gap-4">
-        <Field label="મંગળ (Mangal) Preference">
+        <Field label={t.preferredMangal}>
           <select name="preferredHasMangal" value={form.preferredHasMangal} onChange={handleChange} className={inputClass}>
             <option value="">Doesn't Matter / Any (કોઈ વાંધો નથી)</option>
             <option value="true">Mangal Only (મંગળ હોવું જોઈએ)</option>
@@ -212,7 +248,7 @@ const ExpectationsForm = ({
           </select>
         </Field>
 
-        <Field label="શનિ (Shani) Preference">
+        <Field label={t.preferredShani}>
           <select name="preferredHasSani" value={form.preferredHasSani} onChange={handleChange} className={inputClass}>
             <option value="">Doesn't Matter / Any (કોઈ વાંધો નથી)</option>
             <option value="true">Shani Only (શનિ હોવું જોઈએ)</option>
@@ -224,15 +260,16 @@ const ExpectationsForm = ({
       {/* Community & Personal */}
       <SectionTitle>Community &amp; Lifestyle</SectionTitle>
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Preferred Gotra">
+        <Field label={t.preferredGotra}>
           <input name="preferredGotra" value={form.preferredGotra} onChange={handleChange}
             placeholder="e.g. Any / Specific Gotra" className={inputClass} />
         </Field>
-        <Field label="Preferred Diet">
+        <Field label={t.preferredDiet}>
           <select name="preferredDiet" value={form.preferredDiet} onChange={handleChange} className={inputClass}>
-            {DIET_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
+            <option value="">{t.any}</option>
+            <option value="VEG">{t.dietVeg}</option>
+            <option value="NON_VEG">{t.dietNonVeg}</option>
+            <option value="VEGAN">{t.dietVegan}</option>
           </select>
         </Field>
       </div>
@@ -243,8 +280,8 @@ const ExpectationsForm = ({
       </Field>
 
       {/* About expectations */}
-      <SectionTitle>Other Expectations (Optional)</SectionTitle>
-      <Field label="About Expectations">
+      <SectionTitle>{t.generalExpectations}</SectionTitle>
+      <Field label={t.generalExpectations}>
         <textarea name="aboutExpectations" value={form.aboutExpectations} onChange={handleChange}
           rows={4} placeholder="Describe any other preferences you have in mind for your partner..." className={inputClass} />
       </Field>
