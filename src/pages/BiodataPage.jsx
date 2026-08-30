@@ -44,7 +44,7 @@ const BiodataPage = () => {
   const handlePay = async () => {
     setProcessingPay(true);
     try {
-      const order = await createOrder('BIODATA_DOWNLOAD');
+      const order = await createOrder('LEVEL_1');
 
       const options = {
         key: order.keyId,
@@ -52,7 +52,7 @@ const BiodataPage = () => {
         currency: order.currency,
         order_id: order.orderId,
         name: 'Prajapati Samaj',
-        description: '6 Months All-in-One Premium Pass (Biodata PDF Download)',
+        description: '2-Month Level 1 Membership (₹99 - Biodata PDF Download & All Profiles)',
         handler: async (response) => {
           try {
             const result = await verifyPayment({
@@ -62,7 +62,7 @@ const BiodataPage = () => {
             });
 
             if (result.success) {
-              toast.success('Congratulations! 6-Month Premium Pass Activated!');
+              toast.success('Congratulations! Level 1 Membership Activated!');
               await fetchData();
             } else {
               toast.error(result.message || 'Payment verification failed.');

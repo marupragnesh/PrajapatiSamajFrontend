@@ -15,12 +15,10 @@ import logger from '../utils/logger';
  * DiscoverPage — /discover
  *
  * Features:
- *   - Search bar at the top: type a name → dropdown shows matching profiles
- *     (name + DP). Search fires 400ms after user stops typing (debounce).
- *   - Filter popup: Filter button opens modal to filter profiles live by
- *     Age Range, Marital Status, Height Range, Diet, and Surname.
- *   - Premium check: Discover filters require DISCOVER_FILTERS payment unlock.
- *   - Browse grid below: paginated card list filtered by partner preference + active filters.
+ *   - Search bar at top: search by name/surname with debounce
+ *   - Filter popup: Level 2 & 3 members can filter by Age, Marital Status, Height, Diet, Surname
+ *   - Higher Visibility Ranking: Profiles are ranked by Level 3 -> Level 2 -> Level 1 -> Free, then popularity
+ *   - 10-Profile Cap for Free users: Free users can view top 10 profiles; prompt to upgrade to Level 1/2/3 to unlock all
  */
 const DEFAULT_FILTERS = {
   gender: '',
@@ -52,7 +50,13 @@ const DiscoverPage = () => {
     }
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [filtersUnlocked, setFiltersUnlocked] = useState(true);
+  const [paymentStatus, setPaymentStatus] = useState({
+    membershipTier: 'FREE',
+    allProfilesUnlocked: false,
+    filtersUnlocked: false,
+    contactUnlocked: false,
+    biodataUnlocked: false,
+  });
 
   // ── Search state ──
   const [keyword, setKeyword]             = useState('');
@@ -69,7 +73,7 @@ const DiscoverPage = () => {
     const loadStatus = async () => {
       try {
         const data = await getPaymentStatus();
-        setFiltersUnlocked(data.filtersUnlocked);
+        setPaymentStatus(data);
       } catch (err) {
         logger.error('Failed to load payment status on discover page', err);
       }
@@ -104,6 +108,7 @@ const DiscoverPage = () => {
       logger.api('GET', '/api/discover', { page: pageToLoad, size: PAGE_SIZE, ...currentFilters });
       const data = await discoverProfiles(pageToLoad, PAGE_SIZE, currentFilters);
       logger.response('/api/discover', { count: data.length, page: pageToLoad });
+
       if (data.length === 0) {
         setHasMore(false);
         if (!isInitial && pageToLoad > 0) {
@@ -115,6 +120,14 @@ const DiscoverPage = () => {
         } else {
           appendProfiles(data);
         }
+
+        // If user is Free and received 10 profiles, cap pagination
+        if (paymentStatus.membershipTier === 'FREE' && data.length >= 10) {
+          setHasMore(false);
+        } else {
+          setHasMore(data.length === PAGE_SIZE);
+        }
+
         setPage(pageToLoad + 1);
       }
     } catch (error) {
@@ -124,7 +137,7 @@ const DiscoverPage = () => {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [filters]);
+  }, [filters, paymentStatus.membershipTier]);
 
   // Initial load — uses restored persistent filters
   useEffect(() => {
@@ -203,6 +216,10 @@ const DiscoverPage = () => {
   };
 
   const handleLoadMore = () => {
+    if (paymentStatus.membershipTier === 'FREE') {
+      navigate('/payment');
+      return;
+    }
     logger.info('User clicked Load More', { nextPage: page });
     fetchProfiles(page, false, filters);
   };
@@ -212,129 +229,110 @@ const DiscoverPage = () => {
     navigate(`/profiles/${profileId}`);
   };
 
+  const isFreeTier = paymentStatus.membershipTier === 'FREE';
+
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark">
       <Navbar />
 
       <div className="max-w-6xl mx-auto px-4 py-8">
 
-        {/* ── Header + Filter + Search Bar ── */}
-        <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">🧭 Discover</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Showing profiles based on your partner preference
-              {activeFilterCount > 0 && ` • ${activeFilterCount} filter${activeFilterCount > 1 ? 's' : ''} applied`}
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            {/* Filter Toggle Button */}
-            <button
-              onClick={() => setIsFilterOpen(true)}
-              className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl border font-medium text-sm transition cursor-pointer ${
-                activeFilterCount > 0
-                  ? 'bg-primary text-white border-primary shadow-sm hover:bg-primary-light'
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-              }`}
-            >
-              <span>{filtersUnlocked ? '⚙️ Filter' : '🔒 Filter (Premium)'}</span>
-              {activeFilterCount > 0 && (
-                <span className="w-5 h-5 rounded-full bg-white text-primary font-bold text-xs flex items-center justify-center">
-                  {activeFilterCount}
+        {/* ── Search Bar & Filter Button ── */}
+        <div className="flex items-center gap-3 mb-6">
+          <div ref={searchContainerRef} className="relative flex-1">
+            <div className="relative">
+              <span className="absolute inset-y-0 left-3 flex items-center text-gray-400 pointer-events-none text-base">
+                🔍
+              </span>
+              <input
+                type="text"
+                value={keyword}
+                onChange={handleSearchChange}
+                placeholder="Search profiles by name, surname, username or ID..."
+                className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-border
+                           bg-white dark:bg-card-dark text-gray-900 dark:text-gray-100
+                           text-sm placeholder-gray-400 focus:outline-none focus:ring-2
+                           focus:ring-primary focus:border-transparent transition shadow-sm"
+              />
+              {searching && (
+                <span className="absolute inset-y-0 right-3 flex items-center">
+                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                 </span>
-              )}
-            </button>
-
-            {/* Search input with dropdown */}
-            <div ref={searchContainerRef} className="relative w-full sm:w-72">
-              <div className="relative">
-                <span className="absolute inset-y-0 left-3 flex items-center text-gray-400 pointer-events-none">
-                  🔎
-                </span>
-                <input
-                  type="text"
-                  value={keyword}
-                  onChange={handleSearchChange}
-                  placeholder="Search name, @username, or ID..."
-                  className="w-full pl-9 pr-4 py-2 rounded-xl border border-border dark:border-gray-600
-                             bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm
-                             focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                {searching && (
-                  <span className="absolute inset-y-0 right-3 flex items-center">
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  </span>
-                )}
-              </div>
-
-              {/* Search results dropdown */}
-              {showDropdown && (
-                <div className="absolute z-50 top-full mt-1 w-full bg-white dark:bg-gray-800 rounded-xl
-                                shadow-lg border border-border dark:border-gray-600 overflow-hidden">
-                  {searchResults.length === 0 ? (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 px-4 py-3 text-center">
-                      No profiles found for &quot;{keyword}&quot;
-                    </p>
-                  ) : (
-                    <ul>
-                      {searchResults.map((result) => (
-                        <li
-                          key={result.profileId}
-                          onClick={() => handleSearchResultClick(result.profileId)}
-                          className="flex items-center justify-between gap-3 px-4 py-2.5 cursor-pointer
-                                     hover:bg-gray-50 dark:hover:bg-gray-700 transition border-b border-border/40 last:border-0"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            {result.primaryPhotoUrl ? (
-                              <img
-                                src={resolveImageUrl(result.primaryPhotoUrl)}
-                                alt={result.fullName}
-                                className="w-9 h-9 rounded-full object-cover flex-shrink-0 border border-border"
-                              />
-                            ) : (
-                              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center
-                                              flex-shrink-0 text-primary font-semibold text-sm">
-                                {result.fullName?.charAt(0)?.toUpperCase() || '?'}
-                              </div>
-                            )}
-                            <div className="min-w-0">
-                              <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 block truncate">
-                                {result.fullName}
-                              </span>
-                              {result.username && (
-                                <span className="text-xs text-primary font-medium block truncate">
-                                  @{result.username}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
               )}
             </div>
+
+            {/* Live Search Dropdown */}
+            {showDropdown && (
+              <div className="absolute z-30 w-full mt-1.5 bg-white dark:bg-card-dark rounded-xl shadow-xl border border-border overflow-hidden max-h-72 overflow-y-auto">
+                {searchResults.length === 0 ? (
+                  <div className="p-4 text-center text-xs text-gray-400">
+                    No matching profiles found
+                  </div>
+                ) : (
+                  searchResults.map((res) => (
+                    <div
+                      key={res.profileId}
+                      onClick={() => handleSearchResultClick(res.profileId)}
+                      className="flex items-center gap-3 px-3.5 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800/60 cursor-pointer border-b border-border/40 last:border-0 transition"
+                    >
+                      <img
+                        src={resolveImageUrl(res.primaryPhotoUrl)}
+                        alt={res.fullName}
+                        className="w-9 h-9 rounded-full object-cover border border-primary/20"
+                        onError={(e) => { e.currentTarget.src = 'https://placehold.co/100x100?text=Photo'; }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                          {res.fullName}
+                        </p>
+                        {res.username && (
+                          <p className="text-[11px] text-gray-400 truncate">@{res.username}</p>
+                        )}
+                      </div>
+                      <span className="text-xs text-primary font-medium">View &rarr;</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
+
+          {/* Filter Button */}
+          <button
+            onClick={() => setIsFilterOpen(true)}
+            className={`px-3.5 py-2.5 rounded-xl border font-semibold text-xs transition
+                       flex items-center gap-2 cursor-pointer shadow-sm shrink-0 ${
+                         activeFilterCount > 0
+                           ? 'bg-primary text-white border-primary'
+                           : 'bg-white dark:bg-card-dark text-gray-700 dark:text-gray-200 border-border hover:border-primary'
+                       }`}
+          >
+            <span>🎛️</span>
+            <span>Filters</span>
+            {activeFilterCount > 0 && (
+              <span className="w-5 h-5 rounded-full bg-white text-primary text-[11px] font-bold flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
         </div>
 
-        {/* ── Active Filter Bar (Chips) ── */}
+        {/* Active Filter Chips */}
         {activeFilterCount > 0 && (
-          <div className="mb-6 flex flex-wrap items-center gap-2 bg-gray-50 dark:bg-gray-800/60 p-3 rounded-xl border border-border dark:border-gray-700">
-            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Active Filters:</span>
+          <div className="flex flex-wrap items-center gap-2 mb-6 p-3 bg-gray-50 dark:bg-card-dark/60 rounded-xl border border-border/60">
+            <span className="text-xs font-semibold text-gray-500">Active Filters:</span>
 
-            {filters.minAge && (
+            {filters.gender && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/10 text-primary dark:text-primary-light">
-                Min Age: {filters.minAge}
-                <button onClick={() => handleFilterChange({ ...filters, minAge: '' })} className="hover:text-red-500 ml-1">✕</button>
+                Gender: {filters.gender}
+                <button onClick={() => handleFilterChange({ ...filters, gender: '' })} className="hover:text-red-500 ml-1">✕</button>
               </span>
             )}
 
-            {filters.maxAge && (
+            {(filters.minAge || filters.maxAge) && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/10 text-primary dark:text-primary-light">
-                Max Age: {filters.maxAge}
-                <button onClick={() => handleFilterChange({ ...filters, maxAge: '' })} className="hover:text-red-500 ml-1">✕</button>
+                Age: {filters.minAge || 'Any'} - {filters.maxAge || 'Any'}
+                <button onClick={() => handleFilterChange({ ...filters, minAge: '', maxAge: '' })} className="hover:text-red-500 ml-1">✕</button>
               </span>
             )}
 
@@ -368,14 +366,14 @@ const DiscoverPage = () => {
           </div>
         )}
 
-        {/* ── Browse grid — skeleton on initial load ── */}
+        {/* ── Browse Grid ── */}
         {loading && (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
         )}
 
-        {/* Profile grid */}
+        {/* Profile Grid */}
         {!loading && profiles.length > 0 && (
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -386,7 +384,29 @@ const DiscoverPage = () => {
               ))}
             </div>
 
-            {hasMore && (
+            {/* Free User 10-Profile Limit Upgrade Banner */}
+            {isFreeTier && profiles.length >= 10 && (
+              <div className="mt-8 p-6 bg-gradient-to-r from-primary/10 via-amber-500/10 to-primary/10 border border-primary/30 rounded-3xl text-center space-y-3 max-w-2xl mx-auto shadow-md">
+                <div className="text-3xl">🔒</div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                  Showing Top 10 Profiles (Free Plan)
+                </h3>
+                <p className="text-xs md:text-sm text-gray-600 dark:text-gray-300">
+                  Upgrade to Level 1, 2, or 3 to unlock unlimited profile browsing, higher visibility, and direct contact details!
+                </p>
+                <div className="pt-1">
+                  <button
+                    onClick={() => navigate('/payment')}
+                    className="px-6 py-2.5 rounded-xl bg-primary hover:bg-primary-light text-white font-bold text-xs transition shadow cursor-pointer"
+                  >
+                    💎 Upgrade to Unlock All Profiles
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Load More Button for Paid Users */}
+            {!isFreeTier && hasMore && (
               <div className="mt-8 flex justify-center">
                 <button
                   onClick={handleLoadMore}
@@ -404,7 +424,7 @@ const DiscoverPage = () => {
               </div>
             )}
 
-            {!hasMore && (
+            {!isFreeTier && !hasMore && (
               <p className="text-center text-sm text-gray-400 dark:text-gray-500 mt-8">
                 You have seen all available profiles matching your criteria.
               </p>
@@ -432,7 +452,7 @@ const DiscoverPage = () => {
         appliedFilters={filters}
         onApply={handleFilterChange}
         onClearAll={handleClearAllFilters}
-        isUnlocked={filtersUnlocked}
+        isUnlocked={paymentStatus.filtersUnlocked}
         onUpgrade={() => navigate('/payment')}
       />
     </div>

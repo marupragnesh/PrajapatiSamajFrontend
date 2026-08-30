@@ -163,9 +163,9 @@ const FilterPopup = ({
           {!isUnlocked && (
             <div className="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm mb-2">
               <div className="space-y-0.5 text-center sm:text-left">
-                <p className="text-sm font-bold text-amber-900 dark:text-amber-200">🔒 Premium Feature Locked</p>
+                <p className="text-sm font-bold text-amber-900 dark:text-amber-200">🔒 Level 2 &amp; 3 Feature</p>
                 <p className="text-xs text-amber-700 dark:text-amber-300">
-                  Discover filters require a one-time ₹99 Premium Unlock.
+                  Advanced discover filters require Level 2 (₹199) or Level 3 (₹299) Membership.
                 </p>
               </div>
               <button
@@ -173,7 +173,7 @@ const FilterPopup = ({
                 onClick={() => { onClose(); if (onUpgrade) onUpgrade(); }}
                 className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-primary-light transition cursor-pointer shadow whitespace-nowrap"
               >
-                Upgrade to Unlock (₹99)
+                Upgrade to Level 2 (₹199)
               </button>
             </div>
           )}

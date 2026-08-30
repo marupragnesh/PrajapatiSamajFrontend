@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Navbar from '../components/common/Navbar';
 import Spinner from '../components/common/Spinner';
-import UnlockContactButton from '../components/payment/UnlockContactButton';
 import { getProfileById } from '../api/profileApi';
 import { likeProfile } from '../api/likeApi';
 import { sendInterest, cancelInterest } from '../api/interestApi';
@@ -455,19 +454,20 @@ const ProfileDetailPage = () => {
                     )}
                   </div>
 
-                  {/* ₹9 Single Profile Unlock Action Button directly on contact section */}
+                  {/* Level 3 VIP Membership Unlock Action Button on contact section */}
                   {!profile.isMobileUnlocked && (
-                    <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-200 dark:border-amber-800/50 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 mt-3">
+                    <div className="p-3.5 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-amber-500/10 border border-amber-500/30 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 mt-3">
                       <div>
-                        <p className="text-xs font-bold text-amber-900 dark:text-amber-200">🔓 Unlock Contact &amp; Address for ₹9</p>
-                        <p className="text-[11px] text-amber-700 dark:text-amber-400">Pay only ₹9 to instantly reveal this user's mobile number and full address!</p>
+                        <p className="text-xs font-bold text-amber-900 dark:text-amber-200">👑 Mobile &amp; Address Locked</p>
+                        <p className="text-[11px] text-amber-700 dark:text-amber-400">Upgrade to Level 3 VIP Pass to view full contact numbers &amp; addresses for all profiles.</p>
                       </div>
-                      <UnlockContactButton 
-                        targetProfileId={profile.profileId} 
-                        feature="SINGLE_PROFILE_UNLOCK" 
-                        label="Unlock for ₹9" 
-                        onUnlocked={() => fetchProfile(true)}
-                      />
+                      <button
+                        type="button"
+                        onClick={() => navigate('/payment')}
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs shadow hover:from-amber-600 hover:to-orange-600 transition cursor-pointer shrink-0"
+                      >
+                        Upgrade to Level 3 (₹299)
+                      </button>
                     </div>
                   )}
                 </div>
@@ -565,28 +565,21 @@ const ProfileDetailPage = () => {
       {showContactInfoModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
           <div className="w-full max-w-sm bg-white dark:bg-card-dark rounded-2xl shadow-2xl border border-border dark:border-gray-700 p-6 text-center space-y-4">
-            <div className="w-12 h-12 rounded-full bg-primary/10 text-primary text-2xl flex items-center justify-center mx-auto">
-              🔒
+            <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-500 text-2xl flex items-center justify-center mx-auto">
+              👑
             </div>
             <div>
-              <h3 className="text-base font-bold text-gray-800 dark:text-gray-100">Unlock Mobile Number</h3>
+              <h3 className="text-base font-bold text-gray-800 dark:text-gray-100">Unlock Mobile Number &amp; Address</h3>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Choose options below: Unlock this single profile contact for ₹9 (Incl. GST), or get full unlimited contact access with our 2-Month Membership plans.
+                Full mobile numbers, alternate numbers, and complete addresses for all profiles are unlocked with the <strong>Level 3 VIP Pass</strong> (₹299 for 2 Months).
               </p>
             </div>
             <div className="space-y-2 pt-1">
-              <UnlockContactButton 
-                targetProfileId={profile.profileId} 
-                feature="SINGLE_PROFILE_UNLOCK" 
-                label="Unlock This Profile (₹9 Incl. GST)" 
-                onUnlocked={() => { setShowContactInfoModal(false); fetchProfile(true); }}
-                customClass="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs font-bold shadow transition cursor-pointer"
-              />
               <button
                 onClick={() => { setShowContactInfoModal(false); navigate('/payment'); }}
-                className="w-full py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-light transition cursor-pointer shadow"
+                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold transition cursor-pointer shadow"
               >
-                View Premium Membership Plans
+                👑 Upgrade to Level 3 VIP (₹299)
               </button>
               <button
                 onClick={() => setShowContactInfoModal(false)}
