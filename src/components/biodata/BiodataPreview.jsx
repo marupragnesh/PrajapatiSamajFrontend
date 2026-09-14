@@ -153,6 +153,8 @@ const BiodataPreview = ({ profile, isUnlocked, onPayNow, userEmail }) => {
     { id: 'kesari', label: '📙 Kesari Vintage' },
     { id: 'temple', label: '🪷 Temple Elegance' },
     { id: 'emerald', label: '🌿 Vedic Gold' },
+    { id: 'ruby', label: '👑 Royal Ruby' },
+    { id: 'sapphire', label: '💠 Royal Sapphire' },
   ];
 
   return (

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Navbar from '../components/common/Navbar';
+import Footer from '../components/common/Footer';
 import Spinner from '../components/common/Spinner';
 import { getProfileById } from '../api/profileApi';
 import { likeProfile } from '../api/likeApi';
@@ -184,6 +185,12 @@ const ProfileDetailPage = () => {
                   {profile.username && (
                     <span className="px-2.5 py-0.5 rounded-full bg-primary/10 dark:bg-primary/20 text-primary dark:text-orange-300 text-xs font-bold tracking-wide border border-primary/20">
                       @{profile.username}
+                    </span>
+                  )}
+                  {profile.lastActiveText && (
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                      <span className={`w-1.5 h-1.5 rounded-full ${profile.lastActiveText.includes('today') ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`} />
+                      <span>{profile.lastActiveText}</span>
                     </span>
                   )}
                 </div>
@@ -591,6 +598,9 @@ const ProfileDetailPage = () => {
           </div>
         </div>
       )}
+
+      {/* Global Universal Footer */}
+      <Footer />
     </div>
   );
 };

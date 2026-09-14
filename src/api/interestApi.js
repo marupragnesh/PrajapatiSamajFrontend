@@ -25,6 +25,15 @@ export const getInterestsReceived = async () => {
   return response.data;
 };
 
+/** GET /api/interests/sent — get all interest requests sent by the logged-in user */
+export const getSentInterests = async (status = null) => {
+  const url = status ? `/api/interests/sent?status=${status}` : '/api/interests/sent';
+  logger.api('GET', url);
+  const response = await axiosInstance.get(url);
+  logger.response('/api/interests/sent', { count: response.data.length });
+  return response.data;
+};
+
 /** PUT /api/interests/{interestId}/accept — accept an interest request */
 export const acceptInterest = async (interestId) => {
   logger.api('PUT', `/api/interests/${interestId}/accept`);

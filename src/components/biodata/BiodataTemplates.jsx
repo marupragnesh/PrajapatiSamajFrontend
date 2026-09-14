@@ -677,6 +677,228 @@ const BiodataTemplates = React.forwardRef(({ profile, styleName = 'royal', hideB
     );
   }
 
+  // --- THEME 6: ROYAL RUBY & GOLD (CRIMSON & OPULENT GOLD) ---
+  if (styleName === 'ruby') {
+    return (
+      <div
+        ref={ref}
+        className="w-[794px] h-[1123px] bg-[#FFFBFB] text-rose-950 p-7 font-serif border-[10px] border-double border-rose-800 shadow-2xl relative select-none overflow-hidden box-border flex flex-col justify-between"
+        id="biodata-template-canvas"
+      >
+        <div>
+          {/* Header */}
+          <div className="text-center pb-3 border-b-2 border-rose-700/40 relative">
+            <div className="text-base text-amber-600 font-bold tracking-widest uppercase">
+              🕉️ || શ્રી ગણેશાય નમઃ || 🕉️
+            </div>
+            <h1 className="text-3xl font-extrabold text-rose-900 tracking-widest mt-1 uppercase">
+              MARRIAGE BIODATA
+            </h1>
+            <div className="text-[11px] tracking-wider text-rose-700 font-sans uppercase mt-0.5">
+              Royal Heritage Collection
+            </div>
+          </div>
+
+          {/* Profile Photo & Quick Summary Banner */}
+          <div className="grid grid-cols-12 gap-5 my-4 items-center bg-rose-50/60 p-4 rounded-2xl border border-rose-200">
+            <div className="col-span-4 flex justify-center">
+              <div className="w-36 h-44 rounded-xl border-2 border-rose-700 p-1 bg-white shadow-md">
+                <img src={dpUrl} alt={fullName} className="w-full h-full object-cover rounded-lg" />
+              </div>
+            </div>
+            <div className="col-span-8 space-y-2 pl-2">
+              <h2 className="text-2xl font-extrabold text-rose-900">{fullName}</h2>
+              <div className="grid grid-cols-2 gap-y-1.5 text-xs font-sans text-rose-900">
+                <div><span className="font-bold text-rose-950">Age / Gender:</span> {fmt(profile.age)} Yrs | {fmt(profile.gender)}</div>
+                <div><span className="font-bold text-rose-950">Height:</span> {fmt(profile.height)}</div>
+                <div><span className="font-bold text-rose-950">Education:</span> {fmt(profile.education)}</div>
+                <div><span className="font-bold text-rose-950">Profession:</span> {fmt(profile.profession)}</div>
+                <div><span className="font-bold text-rose-950">Annual Income:</span> {fmt(profile.income)}</div>
+                <div><span className="font-bold text-rose-950">Marital Status:</span> {fmt(profile.maritalStatus)}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sections Layout */}
+          <div className="space-y-3 font-sans text-xs">
+            {/* Personal Details */}
+            <div>
+              <div className="bg-rose-100/90 py-1 px-3 rounded-lg border-l-4 border-rose-800 font-serif font-bold text-sm text-rose-950 flex items-center justify-between">
+                <span>📌 Personal &amp; Astrological Details</span>
+                <span className="text-[11px] font-sans font-normal text-rose-700">Horoscope Profile</span>
+              </div>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-1 mt-1.5 px-2 text-rose-900">
+                <div><strong>Date of Birth:</strong> {fmt(profile.dateOfBirth)}</div>
+                <div><strong>Birth Time:</strong> {fmt(profile.birthTime)}</div>
+                <div><strong>Birthplace:</strong> {fmt(profile.birthPlace)}</div>
+                <div><strong>Weight:</strong> {profile.weight ? `${profile.weight} kg` : 'N/A'}</div>
+                <div><strong>Blood Group:</strong> {fmt(profile.bloodGroup)}</div>
+                <div><strong>Gotra:</strong> {fmt(profile.gotra)}</div>
+                <div><strong>Diet:</strong> {fmt(profile.diet)}</div>
+                <div><strong>Religion / Caste:</strong> {fmt(profile.religion || 'Hindu - Prajapati')}</div>
+                <div><strong>Gujarati Mangal:</strong> {profile.hasMangal ? 'Yes' : 'No'}</div>
+                <div><strong>Gujarati Sani:</strong> {profile.hasSani ? 'Yes' : 'No'}</div>
+              </div>
+            </div>
+
+            {/* Contact & Residential */}
+            <div>
+              <div className="bg-rose-100/90 py-1 px-3 rounded-lg border-l-4 border-rose-800 font-serif font-bold text-sm text-rose-950">
+                📞 Contact &amp; Residential Address
+              </div>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-1 mt-1.5 px-2 text-rose-900">
+                <div><strong>Mobile No:</strong> {fmt(profile.mobileNo)}</div>
+                <div><strong>Alternate Mobile:</strong> {fmt(profile.alternateMobileNo)}</div>
+                <div><strong>City &amp; State:</strong> {fmt(profile.city)}, {fmt(profile.state)}</div>
+                <div><strong>Pincode:</strong> {fmt(profile.pincode)}</div>
+                <div className="col-span-2"><strong>Full Address:</strong> {fmt(profile.addressLine)}</div>
+              </div>
+            </div>
+
+            {/* Family Details */}
+            <div>
+              <div className="bg-rose-100/90 py-1 px-3 rounded-lg border-l-4 border-rose-800 font-serif font-bold text-sm text-rose-950">
+                👨‍👩‍👦 Family Background
+              </div>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-1 mt-1.5 px-2 text-rose-900">
+                <div><strong>Father's Name:</strong> {fmt(profile.fatherName)}</div>
+                <div><strong>Father's Occupation:</strong> {fmt(profile.fatherOccupation)}</div>
+                <div><strong>Mother's Name:</strong> {fmt(profile.motherName)}</div>
+                <div><strong>Mother's Occupation:</strong> {fmt(profile.motherOccupation)}</div>
+              </div>
+            </div>
+
+            {/* Partner Expectations */}
+            <div>
+              <div className="bg-rose-100/90 py-1 px-3 rounded-lg border-l-4 border-rose-800 font-serif font-bold text-sm text-rose-950">
+                💍 Partner Expectations
+              </div>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-1 mt-1.5 px-2 text-rose-900">
+                <div><strong>Preferred Age:</strong> {expectations.minAge && expectations.maxAge ? `${expectations.minAge} - ${expectations.maxAge} Yrs` : 'N/A'}</div>
+                <div><strong>Preferred Marital Status:</strong> {fmt(expectations.preferredMaritalStatus)}</div>
+                <div><strong>Preferred Height:</strong> {expectations.preferredMinHeight || expectations.preferredMaxHeight ? `${fmt(expectations.preferredMinHeight)} - ${fmt(expectations.preferredMaxHeight)}` : 'N/A'}</div>
+                <div><strong>Preferred Location:</strong> {fmt(expectations.preferredCity)} {fmt(expectations.preferredState)}</div>
+                <div className="col-span-2"><strong>Education &amp; Profession:</strong> {fmt(expectations.preferredEducation)} {expectations.preferredProfession ? `| ${expectations.preferredProfession}` : ''}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        {!hideBranding && (
+          <div className="pt-2 border-t border-rose-300 text-center font-sans text-[11px] text-rose-800 font-medium">
+            Generated via PrajapatiSamaj Matrimonial Platform • Verifiable Member Profile
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // --- THEME 7: ROYAL SAPPHIRE & SILVER (REGAL NAVY & METALLIC SILVER) ---
+  if (styleName === 'sapphire') {
+    return (
+      <div
+        ref={ref}
+        className="w-[794px] h-[1123px] bg-[#F8FAFC] text-slate-900 p-7 font-sans border-[10px] border-double border-slate-700 shadow-2xl relative select-none overflow-hidden box-border flex flex-col justify-between"
+        id="biodata-template-canvas"
+      >
+        <div>
+          {/* Header */}
+          <div className="text-center pb-3 border-b-2 border-slate-300 relative">
+            <div className="text-sm text-blue-800 font-bold tracking-widest uppercase font-serif">
+              🌸 || ॐ नमः शिवाय || 🌸
+            </div>
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-wider mt-1 uppercase font-serif">
+              MARRIAGE BIODATA
+            </h1>
+            <div className="text-[11px] tracking-widest text-slate-500 uppercase mt-0.5">
+              Royal Sapphire Edition
+            </div>
+          </div>
+
+          {/* Profile Photo & Candidate Spotlight */}
+          <div className="grid grid-cols-12 gap-5 my-4 items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="col-span-4 flex justify-center">
+              <div className="w-36 h-44 rounded-xl border-2 border-slate-400 p-1 bg-slate-50 shadow">
+                <img src={dpUrl} alt={fullName} className="w-full h-full object-cover rounded-lg" />
+              </div>
+            </div>
+            <div className="col-span-8 space-y-2 border-l border-slate-200 pl-5">
+              <h2 className="text-2xl font-bold text-slate-900 font-serif">{fullName}</h2>
+              <div className="grid grid-cols-2 gap-y-1.5 text-xs text-slate-700">
+                <div><span className="font-semibold text-slate-900">Age / Gender:</span> {fmt(profile.age)} Yrs | {fmt(profile.gender)}</div>
+                <div><span className="font-semibold text-slate-900">Height:</span> {fmt(profile.height)}</div>
+                <div><span className="font-semibold text-slate-900">Education:</span> {fmt(profile.education)}</div>
+                <div><span className="font-semibold text-slate-900">Profession:</span> {fmt(profile.profession)}</div>
+                <div><span className="font-semibold text-slate-900">Income:</span> {fmt(profile.income)}</div>
+                <div><span className="font-semibold text-slate-900">Marital Status:</span> {fmt(profile.maritalStatus)}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* 4 Cards Grid Layout */}
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            {/* Card 1: Personal Details */}
+            <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-1.5">
+              <div className="font-serif font-bold text-blue-900 border-b border-slate-200 pb-1 text-sm flex items-center justify-between">
+                <span>📌 Personal Details</span>
+              </div>
+              <div><strong>DOB:</strong> {fmt(profile.dateOfBirth)}</div>
+              <div><strong>Birth Time:</strong> {fmt(profile.birthTime)}</div>
+              <div><strong>Birthplace:</strong> {fmt(profile.birthPlace)}</div>
+              <div><strong>Weight:</strong> {profile.weight ? `${profile.weight} kg` : 'N/A'}</div>
+              <div><strong>Blood Group:</strong> {fmt(profile.bloodGroup)}</div>
+              <div><strong>Gotra:</strong> {fmt(profile.gotra)}</div>
+              <div><strong>Diet:</strong> {fmt(profile.diet)}</div>
+              <div><strong>Mangal / Sani:</strong> {profile.hasMangal ? 'Yes' : 'No'} / {profile.hasSani ? 'Yes' : 'No'}</div>
+            </div>
+
+            {/* Card 2: Contact Details */}
+            <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-1.5">
+              <div className="font-serif font-bold text-blue-900 border-b border-slate-200 pb-1 text-sm">
+                📞 Contact &amp; Address
+              </div>
+              <div><strong>Mobile:</strong> {fmt(profile.mobileNo)}</div>
+              <div><strong>Alt Mobile:</strong> {fmt(profile.alternateMobileNo)}</div>
+              <div><strong>City &amp; State:</strong> {fmt(profile.city)}, {fmt(profile.state)}</div>
+              <div><strong>Pincode:</strong> {fmt(profile.pincode)}</div>
+              <div className="truncate"><strong>Address:</strong> {fmt(profile.addressLine)}</div>
+            </div>
+
+            {/* Card 3: Family Details */}
+            <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-1.5">
+              <div className="font-serif font-bold text-blue-900 border-b border-slate-200 pb-1 text-sm">
+                👨‍👩‍👧 Family Background
+              </div>
+              <div><strong>Father:</strong> {fmt(profile.fatherName)}</div>
+              <div><strong>Father Occ.:</strong> {fmt(profile.fatherOccupation)}</div>
+              <div><strong>Mother:</strong> {fmt(profile.motherName)}</div>
+              <div><strong>Mother Occ.:</strong> {fmt(profile.motherOccupation)}</div>
+            </div>
+
+            {/* Card 4: Partner Expectations */}
+            <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-1.5">
+              <div className="font-serif font-bold text-blue-900 border-b border-slate-200 pb-1 text-sm">
+                💍 Partner Expectations
+              </div>
+              <div><strong>Age Range:</strong> {expectations.minAge && expectations.maxAge ? `${expectations.minAge} - ${expectations.maxAge} Yrs` : 'N/A'}</div>
+              <div><strong>Status:</strong> {fmt(expectations.preferredMaritalStatus)}</div>
+              <div><strong>Height:</strong> {expectations.preferredMinHeight || expectations.preferredMaxHeight ? `${fmt(expectations.preferredMinHeight)} - ${fmt(expectations.preferredMaxHeight)}` : 'N/A'}</div>
+              <div><strong>Location:</strong> {fmt(expectations.preferredCity)} {fmt(expectations.preferredState)}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        {!hideBranding && (
+          <div className="pt-2 border-t border-slate-300 text-center font-sans text-[11px] text-slate-600 font-medium">
+            Generated via PrajapatiSamaj Matrimonial Platform • Verifiable Member Profile
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return null;
 });
 

@@ -3,11 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Navbar from '../components/common/Navbar';
 import ProfileCard from '../components/common/ProfileCard';
+import ProfileListCard from '../components/common/ProfileListCard';
 import SkeletonCard from '../components/common/SkeletonCard';
 import EmptyState from '../components/common/EmptyState';
+import Footer from '../components/common/Footer';
 import FilterPopup from '../components/discover/FilterPopup';
 import { discoverProfiles, searchProfiles } from '../api/discoverApi';
 import { getPaymentStatus } from '../api/paymentApi';
+import { getTodayRegistrationsCount } from '../api/profileApi';
 import { resolveImageUrl } from '../utils/imageHelper';
 import logger from '../utils/logger';
 
@@ -57,6 +60,47 @@ const DiscoverPage = () => {
     contactUnlocked: false,
     biodataUnlocked: false,
   });
+
+  // ── View Mode state (Grid / List) ──
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      return localStorage.getItem('prajapati_profile_view_mode') || 'grid';
+    } catch {
+      return 'grid';
+    }
+  });
+
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('prajapati_profile_view_mode', mode);
+    } catch (e) {
+      logger.error('Failed to save view mode to localStorage', e);
+    }
+  };
+
+  // ── Community Stats state ──
+  const [stats, setStats] = useState({ total: null, today: null, loading: false });
+
+  const loadCommunityStats = async (isManual = false) => {
+    setStats((prev) => ({ ...prev, loading: true }));
+    try {
+      const res = await getTodayRegistrationsCount();
+      setStats({
+        total: res?.totalUsersCount ?? res?.data?.totalUsersCount ?? 0,
+        today: res?.todayRegistrationsCount ?? res?.data?.todayRegistrationsCount ?? 0,
+        loading: false,
+      });
+      if (isManual) toast.success('Stats updated!');
+    } catch (err) {
+      logger.error('Failed to load stats on discover page', err);
+      setStats((prev) => ({ ...prev, loading: false }));
+    }
+  };
+
+  useEffect(() => {
+    loadCommunityStats();
+  }, []);
 
   // ── Search state ──
   const [keyword, setKeyword]             = useState('');
@@ -237,9 +281,38 @@ const DiscoverPage = () => {
 
       <div className="max-w-6xl mx-auto px-4 py-8">
 
-        {/* ── Search Bar & Filter Button ── */}
-        <div className="flex items-center gap-3 mb-6">
-          <div ref={searchContainerRef} className="relative flex-1">
+        {/* ── Community Live Growth Stats Banner ── */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6 p-3 sm:px-4 sm:py-2.5 rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-white dark:to-card-dark border border-primary/20 text-xs shadow-sm">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <span className="flex h-2 w-2 relative shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="font-semibold text-gray-800 dark:text-gray-200">
+              Community Growth:
+            </span>
+            <span className="text-gray-600 dark:text-gray-300">
+              Total <strong className="text-gray-900 dark:text-white font-bold">{stats.total !== null ? stats.total : '...'}</strong> Profiles
+            </span>
+            <span className="text-gray-400 hidden sm:inline">•</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+              +{stats.today !== null ? stats.today : '...'} Joined Today
+            </span>
+          </div>
+          <button
+            onClick={() => loadCommunityStats(true)}
+            disabled={stats.loading}
+            title="Refresh community registration stats"
+            className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer ml-auto disabled:opacity-50"
+          >
+            <span className={stats.loading ? 'animate-spin' : ''}>🔄</span>
+            <span>{stats.loading ? 'Refreshing...' : 'Refresh Stats'}</span>
+          </button>
+        </div>
+
+        {/* ── Search Bar, View Mode Toggle & Filter Button ── */}
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-3 mb-6">
+          <div ref={searchContainerRef} className="relative flex-1 min-w-[220px]">
             <div className="relative">
               <span className="absolute inset-y-0 left-3 flex items-center text-gray-400 pointer-events-none text-base">
                 🔍
@@ -295,6 +368,36 @@ const DiscoverPage = () => {
                 )}
               </div>
             )}
+          </div>
+
+          {/* View Mode Toggle (Grid Section 1 vs List Section 2) */}
+          <div className="flex items-center bg-white dark:bg-card-dark rounded-xl p-1 border border-border shrink-0 shadow-sm">
+            <button
+              type="button"
+              onClick={() => handleViewModeChange('grid')}
+              title="Grid View (Section 1)"
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+                viewMode === 'grid'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-primary'
+              }`}
+            >
+              <span>⊞</span>
+              <span className="hidden sm:inline">Grid</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleViewModeChange('list')}
+              title="List View (Section 2)"
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+                viewMode === 'list'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-primary'
+              }`}
+            >
+              <span>☰</span>
+              <span className="hidden sm:inline">List</span>
+            </button>
           </div>
 
           {/* Filter Button */}
@@ -374,15 +477,26 @@ const DiscoverPage = () => {
         )}
 
         {/* Profile Grid */}
+        {/* Profile Grid or List Mode */}
         {!loading && profiles.length > 0 && (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {profiles.map((profile) => (
-                <div key={profile.profileId} onClick={() => handleCardClick(profile.profileId)}>
-                  <ProfileCard profile={profile} />
-                </div>
-              ))}
-            </div>
+            {viewMode === 'grid' ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {profiles.map((profile) => (
+                  <div key={profile.profileId} onClick={() => handleCardClick(profile.profileId)}>
+                    <ProfileCard profile={profile} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3.5">
+                {profiles.map((profile) => (
+                  <div key={profile.profileId} onClick={() => handleCardClick(profile.profileId)}>
+                    <ProfileListCard profile={profile} />
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Free User 10-Profile Limit Upgrade Banner */}
             {isFreeTier && profiles.length >= 10 && (
@@ -432,6 +546,37 @@ const DiscoverPage = () => {
           </>
         )}
 
+        {/* Website & Tech Project Proposal Banner */}
+        <div className="mt-12 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-primary/20 via-white dark:via-card-dark to-primary/10 border border-primary/30 flex flex-col md:flex-row items-center justify-between gap-5 shadow-sm">
+          <div className="space-y-1.5 text-center md:text-left">
+            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-primary text-white">
+              Tech Collaboration
+            </span>
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100">
+              💡 Have a Website Idea or Need a Custom Platform?
+            </h3>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 max-w-xl">
+              Whether you want to build a custom matrimonial portal, community directory, business website, or have a startup idea, connect directly with me to build it.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2.5 shrink-0">
+            <a
+              href="https://wa.me/919998000000?text=Hello%20Pragnesh,%20I%20have%20a%20website%20idea!"
+              target="_blank"
+              rel="noreferrer"
+              className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition shadow flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>💬</span> WhatsApp
+            </a>
+            <a
+              href="mailto:pragneshmaru12112001@gmail.com?subject=Custom%20Website%20Idea%20Inquiry"
+              className="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-light text-white font-semibold text-xs transition shadow flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>✉️</span> Connect
+            </a>
+          </div>
+        </div>
+
         {!loading && profiles.length === 0 && (
           <EmptyState
             icon="🔍"
@@ -455,6 +600,9 @@ const DiscoverPage = () => {
         isUnlocked={paymentStatus.filtersUnlocked}
         onUpgrade={() => navigate('/payment')}
       />
+
+      {/* Global Universal Footer */}
+      <Footer />
     </div>
   );
 };

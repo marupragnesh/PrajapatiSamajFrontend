@@ -8,7 +8,7 @@ import logger from '../../utils/logger';
  */
 const ProfileCard = ({ profile }) => {
   const navigate = useNavigate();
-  const { profileId, fullName, age, city, profession, primaryPhotoUrl } = profile;
+  const { profileId, fullName, age, city, profession, primaryPhotoUrl, lastActiveText } = profile;
 
   const handleClick = () => {
     logger.info('User clicked profile card', { profileId });
@@ -18,19 +18,27 @@ const ProfileCard = ({ profile }) => {
   return (
     <div
       onClick={handleClick}
-      className="cursor-pointer rounded-2xl border border-border bg-white dark:bg-card-dark overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+      className="group cursor-pointer rounded-2xl border border-border bg-white dark:bg-card-dark overflow-hidden shadow-sm hover:shadow-md transition duration-200 flex flex-col h-full"
     >
       {/* Profile photo — resolveImageUrl strips backend host so Vite proxy handles it */}
-      <div className="h-48 bg-gray-100 dark:bg-gray-800 overflow-hidden">
+      <div className="relative h-48 bg-gray-100 dark:bg-gray-800 overflow-hidden">
         {primaryPhotoUrl ? (
           <img
             src={resolveImageUrl(primaryPhotoUrl)}
             alt={fullName}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl text-gray-300">
             👤
+          </div>
+        )}
+
+        {/* Day-wise Last Active Badge */}
+        {lastActiveText && (
+          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-black/60 text-white backdrop-blur-md flex items-center gap-1 border border-white/10 shadow-sm">
+            <span className={`w-1.5 h-1.5 rounded-full ${lastActiveText.includes('today') ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+            <span>{lastActiveText}</span>
           </div>
         )}
       </div>

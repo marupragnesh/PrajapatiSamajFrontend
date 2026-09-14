@@ -23,6 +23,7 @@ const MatchesPage           = lazy(() => import('./pages/MatchesPage'));
 const PaymentPage           = lazy(() => import('./pages/PaymentPage'));
 const BiodataPage           = lazy(() => import('./pages/BiodataPage'));
 const AboutDeveloperPage    = lazy(() => import('./pages/AboutDeveloperPage'));
+const ContactUsPage         = lazy(() => import('./pages/ContactUsPage'));
 
 // Legal pages
 const PrivacyPolicyPage      = lazy(() => import('./pages/legal/PrivacyPolicyPage'));
@@ -68,6 +69,9 @@ const App = () => {
         {/* ── Legal & About Public Routes ── */}
         <Route path="/about"                            element={<AboutDeveloperPage />} />
         <Route path="/about-developer"                  element={<AboutDeveloperPage />} />
+        <Route path="/contact"                          element={<ContactUsPage />} />
+        <Route path="/contact-us"                       element={<ContactUsPage />} />
+        <Route path="/legal/contact-us"                 element={<ContactUsPage />} />
         <Route path="/privacy-policy font"              element={<PrivacyPolicyPage />} />
         <Route path="/privacy-policy"                   element={<PrivacyPolicyPage />} />
         <Route path="/legal/privacy-policy font"        element={<PrivacyPolicyPage />} />
