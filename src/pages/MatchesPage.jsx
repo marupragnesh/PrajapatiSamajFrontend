@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { Sparkles, User, CheckCircle2 } from 'lucide-react';
 import Navbar from '../components/common/Navbar';
+import Footer from '../components/common/Footer';
 import SkeletonCard from '../components/common/SkeletonCard';
 import EmptyState from '../components/common/EmptyState';
 import { getMatches } from '../api/interestApi';
@@ -10,8 +12,7 @@ import logger from '../utils/logger';
 
 /**
  * MatchesPage — shows all mutual matches.
- * Phase 1: name, age, city, profession, matched date only.
- * Contact info reveal is Phase 2 (paid feature).
+ * Features consistent line icons and global footer.
  */
 const MatchesPage = () => {
   const navigate = useNavigate();
@@ -39,16 +40,17 @@ const MatchesPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background-light dark:bg-background-dark">
+    <div className="min-h-screen bg-background-light dark:bg-background-dark flex flex-col">
       <Navbar />
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <main className="max-w-6xl mx-auto px-4 py-8 flex-1 w-full">
 
         {/* Celebratory banner */}
         {!loading && matches.length > 0 && (
           <div className="bg-primary/10 border border-primary/20 rounded-2xl px-6 py-4 mb-6 text-center">
-            <p className="text-lg font-bold text-primary">
-              🎉 You have {matches.length} mutual match{matches.length > 1 ? 'es' : ''}!
+            <p className="text-lg font-bold text-primary flex items-center justify-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              <span>You have {matches.length} mutual match{matches.length > 1 ? 'es' : ''}!</span>
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               These people accepted your interest request
@@ -57,7 +59,10 @@ const MatchesPage = () => {
         )}
 
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">🎉 Matches</h1>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+            <Sparkles className="w-6 h-6 text-primary" />
+            <span>Matches</span>
+          </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Your mutual connections — both of you said yes!
           </p>
@@ -83,12 +88,14 @@ const MatchesPage = () => {
 
         {!loading && matches.length === 0 && (
           <EmptyState
-            icon="🤝"
+            icon={<Sparkles className="w-10 h-10 text-gray-400" />}
             title="No Matches Yet"
             message="No mutual matches yet. Send more interest requests and wait for them to accept!"
           />
         )}
-      </div>
+      </main>
+
+      <Footer />
     </div>
   );
 };
@@ -103,7 +110,7 @@ const MatchCard = ({ match, onViewProfile }) => {
   return (
     <div
       onClick={() => onViewProfile(profileId)}
-      className="cursor-pointer rounded-2xl border border-primary/30 bg-white dark:bg-card-dark overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+      className="cursor-pointer rounded-2xl border border-primary/30 bg-white dark:bg-card-dark overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col h-full"
     >
       <div className="h-48 bg-gray-100 dark:bg-gray-800 overflow-hidden relative">
         {primaryPhotoUrl ? (
@@ -113,20 +120,25 @@ const MatchCard = ({ match, onViewProfile }) => {
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-4xl text-gray-300">
-            👤
+          <div className="w-full h-full flex items-center justify-center text-gray-400">
+            <User className="w-12 h-12 text-gray-300 dark:text-gray-600 stroke-1" />
           </div>
         )}
-        <div className="absolute top-2 right-2 bg-primary text-white text-xs font-bold px-2 py-1 rounded-full">
-          ✓ Match
+        <div className="absolute top-2 right-2 bg-primary text-white text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow">
+          <CheckCircle2 className="w-3.5 h-3.5" />
+          <span>Match</span>
         </div>
       </div>
-      <div className="p-4">
-        <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{fullName}</h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{age} yrs · {city}</p>
-        <p className="text-sm text-primary mt-1 truncate">{profession}</p>
+      <div className="p-4 flex-1 flex flex-col justify-between">
+        <div>
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{fullName}</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{age} yrs · {city}</p>
+          <p className="text-sm text-primary mt-1 truncate">{profession}</p>
+        </div>
         {formattedDate && (
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">Matched on {formattedDate}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 pt-2 border-t border-border/50">
+            Matched on {formattedDate}
+          </p>
         )}
       </div>
     </div>

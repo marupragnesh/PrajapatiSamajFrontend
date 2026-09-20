@@ -1,6 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import {
+  Send,
+  Inbox,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  ArrowRight,
+  User,
+  MapPin,
+  Briefcase,
+  X,
+  Check
+} from 'lucide-react';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import EmptyState from '../components/common/EmptyState';
@@ -131,8 +144,9 @@ const InterestsReceivedPage = () => {
       <main className="max-w-4xl mx-auto px-4 py-8 flex-1 w-full space-y-6">
         {/* Header Title */}
         <div className="space-y-1">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-            <span>💌</span> Interest Hub
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2.5">
+            <Send className="w-6 h-6 text-primary" />
+            <span>Interest Hub</span>
           </h1>
           <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
             View all interest requests you have sent and manage incoming requests received from other members.
@@ -149,7 +163,7 @@ const InterestsReceivedPage = () => {
                 : 'bg-white dark:bg-card-dark text-gray-600 dark:text-gray-300 border border-border hover:border-primary'
             }`}
           >
-            <span>📤</span>
+            <Send className="w-4 h-4" />
             <span>Sent Interests</span>
             <span
               className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
@@ -170,7 +184,7 @@ const InterestsReceivedPage = () => {
                 : 'bg-white dark:bg-card-dark text-gray-600 dark:text-gray-300 border border-border hover:border-primary'
             }`}
           >
-            <span>📥</span>
+            <Inbox className="w-4 h-4" />
             <span>Received Requests</span>
             <span
               className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
@@ -215,7 +229,8 @@ const InterestsReceivedPage = () => {
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:text-amber-600'
                 }`}
               >
-                <span>⏳ Pending</span>
+                <Clock className="w-3.5 h-3.5" />
+                <span>Pending</span>
                 <span className="opacity-80">({sentCounts.pending})</span>
               </button>
 
@@ -228,7 +243,8 @@ const InterestsReceivedPage = () => {
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:text-emerald-600'
                 }`}
               >
-                <span>🎉 Accepted</span>
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Accepted</span>
                 <span className="opacity-80">({sentCounts.accepted})</span>
               </button>
 
@@ -241,7 +257,8 @@ const InterestsReceivedPage = () => {
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:text-rose-600'
                 }`}
               >
-                <span>🚫 Not Interested</span>
+                <XCircle className="w-3.5 h-3.5" />
+                <span>Not Interested</span>
                 <span className="opacity-80">({sentCounts.declined})</span>
               </button>
             </div>
@@ -281,7 +298,7 @@ const InterestsReceivedPage = () => {
             {/* Empty States */}
             {!loading && filteredSentInterests.length === 0 && (
               <EmptyState
-                icon="📤"
+                icon={<Send className="w-10 h-10 text-gray-400" />}
                 title={
                   sentFilter === 'PENDING'
                     ? 'No Pending Interests'
@@ -341,7 +358,7 @@ const InterestsReceivedPage = () => {
 
             {!loading && receivedInterests.length === 0 && (
               <EmptyState
-                icon="📥"
+                icon={<Inbox className="w-10 h-10 text-gray-400" />}
                 title="No Pending Received Requests"
                 message="You have no pending interest requests right now. Visit Discover to find people you like!"
               />
@@ -399,8 +416,8 @@ const SentInterestCard = ({ interest, onWithdraw, isActing, onNavigate }) => {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-2xl text-gray-300">
-              👤
+            <div className="w-full h-full flex items-center justify-center text-gray-400">
+              <User className="w-8 h-8 text-gray-300 dark:text-gray-600 stroke-1" />
             </div>
           )}
         </div>
@@ -414,32 +431,40 @@ const SentInterestCard = ({ interest, onWithdraw, isActing, onNavigate }) => {
             {/* Status Pill on Interest Page Only */}
             {status === 'ACCEPTED' && (
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                <span>🎉</span>
+                <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>Accepted</span>
               </span>
             )}
 
             {status === 'PENDING' && (
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1">
-                <span>⏳</span>
+                <Clock className="w-3.5 h-3.5" />
                 <span>Pending</span>
               </span>
             )}
 
             {status === 'DECLINED' && (
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 flex items-center gap-1">
-                <span>🚫</span>
+                <XCircle className="w-3.5 h-3.5" />
                 <span>{displayStatus || 'Not Interested'}</span>
               </span>
             )}
           </div>
 
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            {receiverAge ? `${receiverAge} yrs` : ''} {receiverCity ? `· 📍 ${receiverCity}` : ''}
+          <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+            <span>{receiverAge ? `${receiverAge} yrs` : ''}</span>
+            {receiverCity && (
+              <span className="inline-flex items-center">
+                · <MapPin className="w-3 h-3 text-gray-400 mx-0.5 inline" /> {receiverCity}
+              </span>
+            )}
           </p>
 
           {receiverProfession && (
-            <p className="text-xs font-medium text-primary truncate">💼 {receiverProfession}</p>
+            <p className="text-xs font-medium text-primary truncate flex items-center gap-1">
+              <Briefcase className="w-3 h-3 shrink-0" />
+              <span>{receiverProfession}</span>
+            </p>
           )}
 
           {formattedDate && (
@@ -458,17 +483,17 @@ const SentInterestCard = ({ interest, onWithdraw, isActing, onNavigate }) => {
             disabled={isActing}
             className="px-3 py-2 rounded-xl border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
           >
-            {isActing ? <Spinner size="xs" /> : <span>✕</span>}
+            {isActing ? <Spinner size="xs" /> : <X className="w-3.5 h-3.5" />}
             <span>Withdraw</span>
           </button>
         )}
 
         <button
           onClick={() => receiverProfileId && onNavigate(receiverProfileId)}
-          className="px-3.5 py-2 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-white text-xs font-semibold transition cursor-pointer flex items-center gap-1"
+          className="px-3.5 py-2 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-white text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
         >
           <span>View Profile</span>
-          <span>&rarr;</span>
+          <ArrowRight className="w-3.5 h-3.5" />
         </button>
       </div>
     </div>
@@ -512,8 +537,8 @@ const ReceivedInterestCard = ({ interest, onAccept, onDecline, isActing, onNavig
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-2xl text-gray-300">
-              👤
+            <div className="w-full h-full flex items-center justify-center text-gray-400">
+              <User className="w-8 h-8 text-gray-300 dark:text-gray-600 stroke-1" />
             </div>
           )}
         </div>
@@ -522,10 +547,20 @@ const ReceivedInterestCard = ({ interest, onAccept, onDecline, isActing, onNavig
           <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate hover:text-primary transition">
             {senderFullName}
           </h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            {senderAge ? `${senderAge} yrs` : ''} {senderCity ? `· 📍 ${senderCity}` : ''}
+          <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+            <span>{senderAge ? `${senderAge} yrs` : ''}</span>
+            {senderCity && (
+              <span className="inline-flex items-center">
+                · <MapPin className="w-3 h-3 text-gray-400 mx-0.5 inline" /> {senderCity}
+              </span>
+            )}
           </p>
-          <p className="text-xs text-primary truncate mt-0.5">💼 {senderProfession}</p>
+          {senderProfession && (
+            <p className="text-xs text-primary truncate mt-0.5 flex items-center gap-1">
+              <Briefcase className="w-3 h-3 shrink-0" />
+              <span>{senderProfession}</span>
+            </p>
+          )}
           {formattedDate && (
             <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
               Received on {formattedDate}
@@ -541,7 +576,7 @@ const ReceivedInterestCard = ({ interest, onAccept, onDecline, isActing, onNavig
           disabled={isActing}
           className="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-500 transition disabled:opacity-60 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
         >
-          {isActing ? <Spinner size="xs" color="white" /> : <span>✅</span>}
+          {isActing ? <Spinner size="xs" color="white" /> : <Check className="w-3.5 h-3.5" />}
           <span>Accept Request</span>
         </button>
 
@@ -550,7 +585,7 @@ const ReceivedInterestCard = ({ interest, onAccept, onDecline, isActing, onNavig
           disabled={isActing}
           className="flex-1 py-2.5 rounded-xl border border-rose-500 text-rose-600 dark:text-rose-400 text-xs font-semibold hover:bg-rose-50 dark:hover:bg-rose-950/30 transition disabled:opacity-60 flex items-center justify-center gap-1.5 cursor-pointer"
         >
-          <span>❌</span>
+          <X className="w-3.5 h-3.5" />
           <span>Decline</span>
         </button>
       </div>

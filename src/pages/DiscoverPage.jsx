@@ -1,13 +1,24 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import {
+  Search,
+  SlidersHorizontal,
+  LayoutGrid,
+  List,
+  RotateCw,
+  X,
+  Users,
+  TrendingUp
+} from 'lucide-react';
 import Navbar from '../components/common/Navbar';
 import ProfileCard from '../components/common/ProfileCard';
 import ProfileListCard from '../components/common/ProfileListCard';
+import FilterPopup from '../components/discover/FilterPopup';
 import SkeletonCard from '../components/common/SkeletonCard';
 import EmptyState from '../components/common/EmptyState';
+import Spinner from '../components/common/Spinner';
 import Footer from '../components/common/Footer';
-import FilterPopup from '../components/discover/FilterPopup';
 import { discoverProfiles, searchProfiles } from '../api/discoverApi';
 import { getPaymentStatus } from '../api/paymentApi';
 import { getTodayRegistrationsCount } from '../api/profileApi';
@@ -303,9 +314,9 @@ const DiscoverPage = () => {
             onClick={() => loadCommunityStats(true)}
             disabled={stats.loading}
             title="Refresh community registration stats"
-            className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer ml-auto disabled:opacity-50"
+            className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1.5 cursor-pointer ml-auto disabled:opacity-50"
           >
-            <span className={stats.loading ? 'animate-spin' : ''}>🔄</span>
+            <RotateCw className={`w-3.5 h-3.5 ${stats.loading ? 'animate-spin' : ''}`} />
             <span>{stats.loading ? 'Refreshing...' : 'Refresh Stats'}</span>
           </button>
         </div>
@@ -314,8 +325,8 @@ const DiscoverPage = () => {
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-3 mb-6">
           <div ref={searchContainerRef} className="relative flex-1 min-w-[220px]">
             <div className="relative">
-              <span className="absolute inset-y-0 left-3 flex items-center text-gray-400 pointer-events-none text-base">
-                🔍
+              <span className="absolute inset-y-0 left-3 flex items-center text-gray-400 pointer-events-none">
+                <Search className="w-4 h-4 text-gray-400" />
               </span>
               <input
                 type="text"
@@ -382,7 +393,7 @@ const DiscoverPage = () => {
                   : 'text-gray-600 dark:text-gray-300 hover:text-primary'
               }`}
             >
-              <span>⊞</span>
+              <LayoutGrid className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Grid</span>
             </button>
             <button
@@ -395,7 +406,7 @@ const DiscoverPage = () => {
                   : 'text-gray-600 dark:text-gray-300 hover:text-primary'
               }`}
             >
-              <span>☰</span>
+              <List className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">List</span>
             </button>
           </div>
@@ -410,7 +421,7 @@ const DiscoverPage = () => {
                            : 'bg-white dark:bg-card-dark text-gray-700 dark:text-gray-200 border-border hover:border-primary'
                        }`}
           >
-            <span>🎛️</span>
+            <SlidersHorizontal className="w-3.5 h-3.5" />
             <span>Filters</span>
             {activeFilterCount > 0 && (
               <span className="w-5 h-5 rounded-full bg-white text-primary text-[11px] font-bold flex items-center justify-center">
@@ -428,35 +439,45 @@ const DiscoverPage = () => {
             {filters.gender && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/10 text-primary dark:text-primary-light">
                 Gender: {filters.gender}
-                <button onClick={() => handleFilterChange({ ...filters, gender: '' })} className="hover:text-red-500 ml-1">✕</button>
+                <button onClick={() => handleFilterChange({ ...filters, gender: '' })} className="hover:text-red-500 ml-1">
+                  <X className="w-3 h-3" />
+                </button>
               </span>
             )}
 
             {(filters.minAge || filters.maxAge) && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/10 text-primary dark:text-primary-light">
                 Age: {filters.minAge || 'Any'} - {filters.maxAge || 'Any'}
-                <button onClick={() => handleFilterChange({ ...filters, minAge: '', maxAge: '' })} className="hover:text-red-500 ml-1">✕</button>
+                <button onClick={() => handleFilterChange({ ...filters, minAge: '', maxAge: '' })} className="hover:text-red-500 ml-1">
+                  <X className="w-3 h-3" />
+                </button>
               </span>
             )}
 
             {filters.maritalStatus && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/10 text-primary dark:text-primary-light">
                 Status: {filters.maritalStatus}
-                <button onClick={() => handleFilterChange({ ...filters, maritalStatus: '' })} className="hover:text-red-500 ml-1">✕</button>
+                <button onClick={() => handleFilterChange({ ...filters, maritalStatus: '' })} className="hover:text-red-500 ml-1">
+                  <X className="w-3 h-3" />
+                </button>
               </span>
             )}
 
             {filters.diet && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/10 text-primary dark:text-primary-light">
                 Diet: {filters.diet}
-                <button onClick={() => handleFilterChange({ ...filters, diet: '' })} className="hover:text-red-500 ml-1">✕</button>
+                <button onClick={() => handleFilterChange({ ...filters, diet: '' })} className="hover:text-red-500 ml-1">
+                  <X className="w-3 h-3" />
+                </button>
               </span>
             )}
 
             {filters.surname && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/10 text-primary dark:text-primary-light">
                 Surname: {filters.surname}
-                <button onClick={() => handleFilterChange({ ...filters, surname: '' })} className="hover:text-red-500 ml-1">✕</button>
+                <button onClick={() => handleFilterChange({ ...filters, surname: '' })} className="hover:text-red-500 ml-1">
+                  <X className="w-3 h-3" />
+                </button>
               </span>
             )}
 
@@ -546,40 +567,9 @@ const DiscoverPage = () => {
           </>
         )}
 
-        {/* Website & Tech Project Proposal Banner */}
-        <div className="mt-12 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-primary/20 via-white dark:via-card-dark to-primary/10 border border-primary/30 flex flex-col md:flex-row items-center justify-between gap-5 shadow-sm">
-          <div className="space-y-1.5 text-center md:text-left">
-            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-primary text-white">
-              Tech Collaboration
-            </span>
-            <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100">
-              💡 Have a Website Idea or Need a Custom Platform?
-            </h3>
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 max-w-xl">
-              Whether you want to build a custom matrimonial portal, community directory, business website, or have a startup idea, connect directly with me to build it.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-2.5 shrink-0">
-            <a
-              href="https://wa.me/919998000000?text=Hello%20Pragnesh,%20I%20have%20a%20website%20idea!"
-              target="_blank"
-              rel="noreferrer"
-              className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition shadow flex items-center gap-1.5 cursor-pointer"
-            >
-              <span>💬</span> WhatsApp
-            </a>
-            <a
-              href="mailto:pragneshmaru12112001@gmail.com?subject=Custom%20Website%20Idea%20Inquiry"
-              className="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-light text-white font-semibold text-xs transition shadow flex items-center gap-1.5 cursor-pointer"
-            >
-              <span>✉️</span> Connect
-            </a>
-          </div>
-        </div>
-
         {!loading && profiles.length === 0 && (
           <EmptyState
-            icon="🔍"
+            icon={<Search className="w-12 h-12 text-gray-400" />}
             title="No Profiles Match Your Filters"
             message={
               activeFilterCount > 0

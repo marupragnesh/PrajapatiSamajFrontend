@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { User } from 'lucide-react';
 import { resolveImageUrl } from '../../utils/imageHelper';
 import logger from '../../utils/logger';
 
@@ -29,8 +30,8 @@ const ProfileCard = ({ profile }) => {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-4xl text-gray-300">
-            👤
+          <div className="w-full h-full flex items-center justify-center text-gray-400">
+            <User className="w-12 h-12 text-gray-300 dark:text-gray-600 stroke-1" />
           </div>
         )}
 

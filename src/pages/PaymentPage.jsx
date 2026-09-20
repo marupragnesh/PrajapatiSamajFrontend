@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import {
+  ShieldCheck,
+  Zap,
+  CheckCircle2,
+  Sparkles,
+  MessageCircle,
+  Mail,
+  Lightbulb
+} from 'lucide-react';
 import Navbar from '../components/common/Navbar';
+import Footer from '../components/common/Footer';
 import Spinner from '../components/common/Spinner';
 import PaymentResultModal from '../components/payment/PaymentResultModal';
 import { createOrder, verifyPayment, getPaymentStatus } from '../api/paymentApi';
@@ -21,7 +31,7 @@ import logger from '../utils/logger';
 
 const TRANSLATIONS = {
   en: {
-    pageTitle: "💎 Choose Your Membership Plan",
+    pageTitle: "Choose Your Membership Plan",
     pageSubtitle: "Get more visibility, send more likes & interests, and connect faster. All plans are valid for a full 2 Months (60 Days).",
     activePlan: "Active Membership Plan",
     activeBadge: "Active",
@@ -29,8 +39,8 @@ const TRANSLATIONS = {
     dayLeft: "day remaining",
     gstBadge: "Incl. 18% GST",
     validity: "Valid for 2 Months",
-    currentActivePlan: "✅ Current Active Plan",
-    vipAccessActive: "✅ VIP Access Active",
+    currentActivePlan: "Current Active Plan",
+    vipAccessActive: "VIP Access Active",
 
     // Active banner descriptions
     level3Desc: "You have full VIP access: Unlimited Contact & Address, Highest Visibility, Unlimited Likes & Interests.",
@@ -38,7 +48,7 @@ const TRANSLATIONS = {
     level1Desc: "You have Level 1 access: All Profiles Unlocked, 2 Likes/Day, 10 Interests, Biodata PDF Downloads.",
 
     // Tier 1
-    t1Badge: "🥉 Level 1",
+    t1Badge: "Level 1",
     t1Title: "Starter Pass",
     t1F1: "Unlock All Profiles: Browse unrestricted profiles.",
     t1F2: "Marriage Biodata PDF Download: Download clean A4 PDF in all 6 traditional themes!",
@@ -50,7 +60,7 @@ const TRANSLATIONS = {
     t1Btn: "Get Level 1 (₹99)",
 
     // Tier 2
-    t2Badge: "🥈 Level 2",
+    t2Badge: "Level 2",
     t2Title: "Growth Pass",
     t2Rec: "RECOMMENDED",
     t2F1: "All Level 1 Features Included",
@@ -62,9 +72,9 @@ const TRANSLATIONS = {
     t2Btn: "Get Level 2 (₹199)",
 
     // Tier 3
-    t3Badge: "🥇 Level 3 VIP",
+    t3Badge: "Level 3 VIP",
     t3Title: "VIP Unlimited Pass",
-    t3Rec: "👑 VIP ALL ACCESS",
+    t3Rec: "VIP ALL ACCESS",
     t3F1: "All Level 2 Features Included",
     t3F2: "Unlimited Mobile No & Address: Unmask full phone numbers & addresses for ANY profile on the platform!",
     t3F3: "Highest Visibility Ranking: Appear at the absolute TOP of all search and discover listings!",
@@ -75,13 +85,13 @@ const TRANSLATIONS = {
     t3BtnGet: "Get VIP Level 3 (₹299)",
 
     // Footer Trust Items
-    secTitle: "🔒 100% Safe & Instant Payment",
+    secTitle: "100% Safe & Instant Payment",
     sec1: "Secure Razorpay payments (UPI, GPay, Paytm, Cards, NetBanking)",
     sec2: "Instant account activation right after payment",
     sec3: "One-time payment • No auto-debit • Valid for 60 Days",
   },
   gu: {
-    pageTitle: "💎 તમારી મેમ્બરશિપ યોજના પસંદ કરો",
+    pageTitle: "તમારી મેમ્બરશિપ યોજના પસંદ કરો",
     pageSubtitle: "વધુ દૃશ્યતા મેળવો, વધુ લાઇક્સ અને ઇન્ટરેસ્ટ મોકલો અને ઝડપથી યોગ્ય જીવનસાથી શોધો. તમામ પ્લાન પૂરા ૨ મહિના (૬૦ દિવસ) માટે માન્ય છે.",
     activePlan: "સક્રિય મેમ્બરશિપ પ્લાન",
     activeBadge: "સક્રિય",
@@ -89,8 +99,8 @@ const TRANSLATIONS = {
     dayLeft: "દિવસ બાકી",
     gstBadge: "૧૮% GST સહિત",
     validity: "૨ મહિના માટે માન્ય",
-    currentActivePlan: "✅ હાલનો સક્રિય પ્લાન",
-    vipAccessActive: "✅ VIP ઍક્સેસ સક્રિય",
+    currentActivePlan: "હાલનો સક્રિય પ્લાન",
+    vipAccessActive: "VIP ઍક્સેસ સક્રિય",
 
     // Active banner descriptions
     level3Desc: "તમારી પાસે પૂર્ણ VIP ઍક્સેસ છે: બધા પ્રોફાઇલ્સના મોબાઇલ નંબર અને સરનામું, સૌથી વધુ દૃશ્યતા, અમર્યાદિત લાઇક્સ અને ઇન્ટરેસ્ટ.",
@@ -635,26 +645,64 @@ const PaymentPage = () => {
 
         {/* Trust & Safety Features Footer */}
         <div className="p-6 bg-white dark:bg-card-dark rounded-3xl border border-border/70 dark:border-gray-700/70 shadow-sm max-w-4xl mx-auto text-center space-y-4">
-          <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200">
-            {t.secTitle}
+          <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center justify-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-500" />
+            <span>{t.secTitle}</span>
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-gray-600 dark:text-gray-400">
             <div className="flex items-center justify-center gap-2">
-              <span className="text-emerald-500 font-bold text-base">🛡️</span>
+              <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
               <span>{t.sec1}</span>
             </div>
             <div className="flex items-center justify-center gap-2">
-              <span className="text-blue-500 font-bold text-base">⚡</span>
+              <Zap className="w-4 h-4 text-blue-500 shrink-0" />
               <span>{t.sec2}</span>
             </div>
             <div className="flex items-center justify-center gap-2">
-              <span className="text-amber-500 font-bold text-base">✅</span>
+              <CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0" />
               <span>{t.sec3}</span>
             </div>
           </div>
         </div>
 
+        {/* Website & Tech Project Proposal Banner (Showcased in Premium Section) */}
+        <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-primary/20 via-white dark:via-card-dark to-primary/10 border border-primary/30 flex flex-col md:flex-row items-center justify-between gap-5 shadow-sm max-w-4xl mx-auto">
+          <div className="space-y-1.5 text-center md:text-left">
+            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-primary text-white">
+              Tech Collaboration
+            </span>
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center justify-center md:justify-start gap-2">
+              <Lightbulb className="w-4 h-4 text-amber-500 shrink-0" />
+              <span>Have a Website Idea or Need a Custom Platform?</span>
+            </h3>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 max-w-xl">
+              Whether you want to build a custom matrimonial portal, community directory, business website, or have a startup idea, connect directly with me to build it.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2.5 shrink-0">
+            <a
+              href="https://wa.me/919998000000?text=Hello%20Pragnesh,%20I%20have%20a%20website%20idea!"
+              target="_blank"
+              rel="noreferrer"
+              className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition shadow flex items-center gap-2 cursor-pointer"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>WhatsApp Connect</span>
+            </a>
+            <a
+              href="mailto:pragneshmaru12112001@gmail.com?subject=Custom%20Website%20Idea%20Inquiry"
+              className="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-light text-white font-semibold text-xs transition shadow flex items-center gap-2 cursor-pointer"
+            >
+              <Mail className="w-3.5 h-3.5" />
+              <span>Email Developer</span>
+            </a>
+          </div>
+        </div>
+
       </div>
+
+      {/* Global Universal Footer */}
+      <Footer />
 
       {/* Payment Result Modal Popup */}
       <PaymentResultModal

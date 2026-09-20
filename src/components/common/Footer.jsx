@@ -1,15 +1,28 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  Compass,
+  FileText,
+  CreditCard,
+  UserCheck,
+  Headphones,
+  ShieldCheck,
+  Scale,
+  RotateCcw,
+  PackageCheck,
+  Users,
+  Heart,
+  Mail,
+  MapPin,
+  Clock
+} from 'lucide-react';
 import LogoIcon from './LogoIcon';
 import { getTodayRegistrationsCount } from '../../api/profileApi';
 import logger from '../../utils/logger';
 
 /**
- * Footer — Global platform footer providing:
- *  - Legal policy links (Privacy Policy, Terms & Conditions, Disclaimer, Cancellation & Refund, Shipping)
- *  - Core navigation (About Us, Contact Us, Membership & Pricing, Biodata Studio, Discover)
- *  - Live Community growth statistics (Total Profiles, Today's New Profiles)
- *  - Developer collaborative connect callout ("Build a website or tech idea? Connect with me")
+ * Footer — Global platform footer with unified minimalist line icons.
+ * Provides accessible navigation, verified legal compliance, and community growth metrics.
  */
 const Footer = () => {
   const [stats, setStats] = useState({ total: null, today: null });
@@ -36,47 +49,17 @@ const Footer = () => {
   }, []);
 
   return (
-    <footer className="w-full bg-slate-900 text-gray-300 border-t border-slate-800 pt-12 pb-24 md:pb-12 mt-auto">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-10">
-        {/* Top Section: Developer Connect CTA Card */}
-        <div className="bg-gradient-to-r from-primary/20 via-slate-800 to-primary/10 rounded-2xl p-6 border border-primary/30 flex flex-col md:flex-row items-center justify-between gap-6 shadow-md">
-          <div className="space-y-1.5 text-center md:text-left">
-            <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase bg-primary text-white">
-              Tech Collaboration
-            </span>
-            <h3 className="text-lg sm:text-xl font-bold text-white">
-              Have a Website Idea or Want to Build Your Own Platform?
-            </h3>
-            <p className="text-xs sm:text-sm text-gray-300 max-w-xl">
-              Need a custom community portal, matrimonial website, or web application? Let's connect and build it together.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
-            <a
-              href="https://wa.me/919998000000?text=Hello%20Pragnesh,%20I%20have%20a%20website/project%20idea%20to%20discuss!"
-              target="_blank"
-              rel="noreferrer"
-              className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition shadow flex items-center gap-1.5 cursor-pointer"
-            >
-              <span>💬</span> WhatsApp Connect
-            </a>
-            <a
-              href="mailto:pragneshmaru12112001@gmail.com?subject=Website%20Idea%20Proposal"
-              className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs transition border border-white/20 flex items-center gap-1.5 cursor-pointer"
-            >
-              <span>✉️</span> Email Developer
-            </a>
-          </div>
-        </div>
-
-        {/* Middle Section: Columns */}
+    <footer className="w-full bg-slate-900 text-gray-300 border-t border-slate-800 pt-10 pb-24 md:pb-10 mt-auto">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-8">
+        
+        {/* Main Footer Columns */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-          {/* Column 1: Brand & Community Stats */}
+          
+          {/* Column 1: Brand & Verified Matrimonial Identity */}
           <div className="space-y-4">
             <div className="flex items-center gap-2.5">
-              <LogoIcon className="w-8 h-8 text-primary shrink-0" />
-              <span className="text-lg font-bold text-white tracking-wide">
+              <LogoIcon className="w-8 h-8 shrink-0" />
+              <span className="text-lg font-bold text-white tracking-wide font-serif">
                 PrajapatiSamaj
               </span>
             </div>
@@ -85,11 +68,12 @@ const Footer = () => {
             </p>
 
             {/* Live Community Counters */}
-            <div className="p-3 bg-slate-800/80 rounded-xl border border-slate-700/60 space-y-1.5 text-xs">
-              <div className="font-semibold text-white flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-primary-light">
-                <span>📊</span> Live Community Stats
+            <div className="p-3.5 bg-slate-800/80 rounded-xl border border-slate-700/60 space-y-2 text-xs">
+              <div className="font-semibold text-white flex items-center gap-2 text-[11px] uppercase tracking-wider text-amber-400">
+                <Users className="w-4 h-4 text-amber-400" />
+                <span>Live Community Stats</span>
               </div>
-              <div className="flex items-center justify-between text-gray-300 pt-1">
+              <div className="flex items-center justify-between text-gray-300 pt-1 border-t border-slate-700/50">
                 <span>Total Registered:</span>
                 <span className="font-bold text-white">
                   {stats.total !== null ? `${stats.total} Profiles` : '...'}
@@ -111,62 +95,102 @@ const Footer = () => {
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <Link to="/discover" className="hover:text-primary transition-colors">
-                  🔍 Discover Profiles
+                <Link
+                  to="/discover"
+                  className="flex items-center gap-2 text-gray-300 hover:text-amber-400 transition-colors py-0.5"
+                >
+                  <Compass className="w-4 h-4 text-gray-400 shrink-0" />
+                  <span>Discover Profiles</span>
                 </Link>
               </li>
               <li>
-                <Link to="/biodata" className="hover:text-primary transition-colors">
-                  📜 Marriage Biodata Studio
+                <Link
+                  to="/biodata"
+                  className="flex items-center gap-2 text-gray-300 hover:text-amber-400 transition-colors py-0.5"
+                >
+                  <FileText className="w-4 h-4 text-gray-400 shrink-0" />
+                  <span>Marriage Biodata Studio</span>
                 </Link>
               </li>
               <li>
-                <Link to="/payment" className="hover:text-primary transition-colors">
-                  💎 Membership Plans &amp; Pricing
+                <Link
+                  to="/payment"
+                  className="flex items-center gap-2 text-gray-300 hover:text-amber-400 transition-colors py-0.5"
+                >
+                  <CreditCard className="w-4 h-4 text-gray-400 shrink-0" />
+                  <span>Membership Plans &amp; Pricing</span>
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="hover:text-primary transition-colors">
-                  👤 About Platform &amp; Developer
+                <Link
+                  to="/about"
+                  className="flex items-center gap-2 text-gray-300 hover:text-amber-400 transition-colors py-0.5"
+                >
+                  <UserCheck className="w-4 h-4 text-gray-400 shrink-0" />
+                  <span>About Platform &amp; Developer</span>
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="hover:text-primary transition-colors">
-                  📞 Contact &amp; Support
+                <Link
+                  to="/contact"
+                  className="flex items-center gap-2 text-gray-300 hover:text-amber-400 transition-colors py-0.5"
+                >
+                  <Headphones className="w-4 h-4 text-gray-400 shrink-0" />
+                  <span>Contact &amp; Support</span>
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Column 3: Legal Policies */}
+          {/* Column 3: Legal & Compliance (Publicly viewable without login) */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold text-white uppercase tracking-wider">
               Legal &amp; Compliance
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <Link to="/privacy-policy" className="hover:text-primary transition-colors">
-                  🔒 Privacy Policy
+                <Link
+                  to="/privacy-policy"
+                  className="flex items-center gap-2 text-gray-300 hover:text-amber-400 transition-colors py-0.5"
+                >
+                  <ShieldCheck className="w-4 h-4 text-gray-400 shrink-0" />
+                  <span>Privacy Policy</span>
                 </Link>
               </li>
               <li>
-                <Link to="/terms-conditions" className="hover:text-primary transition-colors">
-                  📋 Terms &amp; Conditions
+                <Link
+                  to="/terms-conditions"
+                  className="flex items-center gap-2 text-gray-300 hover:text-amber-400 transition-colors py-0.5"
+                >
+                  <FileText className="w-4 h-4 text-gray-400 shrink-0" />
+                  <span>Terms &amp; Conditions</span>
                 </Link>
               </li>
               <li>
-                <Link to="/disclaimer" className="hover:text-primary transition-colors">
-                  ⚖️ Legal Disclaimer
+                <Link
+                  to="/disclaimer"
+                  className="flex items-center gap-2 text-gray-300 hover:text-amber-400 transition-colors py-0.5"
+                >
+                  <Scale className="w-4 h-4 text-gray-400 shrink-0" />
+                  <span>Legal Disclaimer</span>
                 </Link>
               </li>
               <li>
-                <Link to="/cancellation-refund" className="hover:text-primary transition-colors">
-                  💳 Cancellation &amp; Refund Policy
+                <Link
+                  to="/cancellation-refund"
+                  className="flex items-center gap-2 text-gray-300 hover:text-amber-400 transition-colors py-0.5"
+                >
+                  <RotateCcw className="w-4 h-4 text-gray-400 shrink-0" />
+                  <span>Cancellation &amp; Refund Policy</span>
                 </Link>
               </li>
               <li>
-                <Link to="/shipping-policy" className="hover:text-primary transition-colors">
-                  📦 Shipping &amp; Delivery Policy
+                <Link
+                  to="/shipping-policy"
+                  className="flex items-center gap-2 text-gray-300 hover:text-amber-400 transition-colors py-0.5"
+                >
+                  <PackageCheck className="w-4 h-4 text-gray-400 shrink-0" />
+                  <span>Shipping &amp; Delivery Policy</span>
                 </Link>
               </li>
             </ul>
@@ -178,24 +202,26 @@ const Footer = () => {
               Get in Touch
             </h4>
             <p className="text-xs text-gray-400">
-              For any help, verification assistance, or website inquiries:
+              For verification assistance, inquiries, or support:
             </p>
-            <div className="space-y-2 text-xs">
-              <p className="text-gray-300">
-                <strong className="text-white">Email:</strong>{' '}
+            <div className="space-y-2.5 text-xs text-gray-300">
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-amber-400 shrink-0" />
                 <a
                   href="mailto:pragneshmaru12112001@gmail.com"
-                  className="text-primary hover:underline"
+                  className="text-gray-300 hover:text-amber-400 transition-colors truncate"
                 >
                   pragneshmaru12112001@gmail.com
                 </a>
-              </p>
-              <p className="text-gray-300">
-                <strong className="text-white">Location:</strong> Gujarat, India
-              </p>
-              <p className="text-gray-300">
-                <strong className="text-white">Hours:</strong> Mon - Sun, 9 AM - 9 PM IST
-              </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>Gujarat, India</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>Mon – Sun, 9 AM – 9 PM IST</span>
+              </div>
             </div>
           </div>
         </div>
@@ -205,9 +231,11 @@ const Footer = () => {
           <p>
             &copy; {new Date().getFullYear()} PrajapatiSamaj. All rights reserved.
           </p>
-          <p className="text-gray-400">
-            Developed with ❤️ by{' '}
-            <Link to="/about" className="text-primary-light hover:underline font-semibold">
+          <p className="flex items-center gap-1.5 text-gray-400">
+            <span>Crafted with</span>
+            <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 inline-block" />
+            <span>for the community by</span>
+            <Link to="/about" className="text-amber-400 hover:underline font-semibold ml-0.5">
               Pragnesh Maru
             </Link>
           </p>

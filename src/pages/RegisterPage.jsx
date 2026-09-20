@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { Heart } from 'lucide-react';
 import RegisterForm from '../components/auth/RegisterForm';
 import Spinner from '../components/common/Spinner';
 import { registerUser, verifyRegistrationOtp, resendRegistrationOtp } from '../api/authApi';
@@ -256,9 +257,23 @@ const RegisterPage = () => {
         )}
       </div>
 
+      {/* Public Legal & Compliance Links (Accessible without login) */}
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+        <Link to="/privacy-policy" className="hover:text-primary transition-colors">Privacy Policy</Link>
+        <span>•</span>
+        <Link to="/terms-conditions" className="hover:text-primary transition-colors">Terms &amp; Conditions</Link>
+        <span>•</span>
+        <Link to="/contact" className="hover:text-primary transition-colors">Contact Support</Link>
+      </div>
+
       {/* Developer credit */}
-      <p className="mt-6 text-xs text-gray-400 dark:text-gray-500">
-        Developed by Pragnesh Maru <span className="text-red-500">❤️</span>
+      <p className="mt-3 text-xs text-gray-400 dark:text-gray-500 flex items-center justify-center gap-1">
+        <span>Developed with</span>
+        <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+        <span>by</span>
+        <Link to="/about" className="text-primary hover:underline font-semibold ml-0.5">
+          Pragnesh Maru
+        </Link>
       </p>
     </div>
   );

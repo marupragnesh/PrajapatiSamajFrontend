@@ -1,6 +1,22 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import {
+  User,
+  MapPin,
+  Heart,
+  Sparkles,
+  Clock,
+  X,
+  CheckCircle2,
+  Send,
+  GraduationCap,
+  Users,
+  FileText,
+  Phone,
+  HeartHandshake,
+  ChevronDown
+} from 'lucide-react';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import Spinner from '../components/common/Spinner';
@@ -148,8 +164,8 @@ const ProfileDetailPage = () => {
                 className="max-h-[500px] sm:max-h-[550px] w-auto max-w-full object-contain mx-auto transition-transform"
               />
             ) : (
-              <div className="w-full h-72 flex items-center justify-center text-6xl text-gray-400">
-                👤
+              <div className="w-full h-72 flex items-center justify-center text-gray-500">
+                <User className="w-16 h-16 stroke-1 text-gray-600" />
               </div>
             )}
           </div>
@@ -194,7 +210,10 @@ const ProfileDetailPage = () => {
                     </span>
                   )}
                 </div>
-                <p className="text-primary font-medium mt-1">📍 {profile.city}</p>
+                <p className="text-primary font-medium mt-1 flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
+                  <span>{profile.city}</span>
+                </p>
               </div>
 
               {/* Action Buttons: Like & Interest */}
@@ -209,14 +228,14 @@ const ProfileDetailPage = () => {
                       : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600'
                   }`}
                 >
-                  <span>{profile.isLikedByMe ? '❤️' : '🤍'}</span>
+                  <Heart className={`w-4 h-4 ${profile.isLikedByMe ? 'fill-rose-500 text-rose-500' : 'text-gray-400'}`} />
                   <span>{profile.isLikedByMe ? 'Liked' : 'Like'}</span>
                 </button>
 
                 {/* Interest Status / Action Button */}
                 {profile.interestStatus === 'MATCHED' && (
                   <div className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs sm:text-sm font-bold shadow-md flex items-center gap-1.5">
-                    <span>🎉</span>
+                    <Sparkles className="w-4 h-4" />
                     <span>Mutual Match</span>
                   </div>
                 )}
@@ -224,7 +243,7 @@ const ProfileDetailPage = () => {
                 {profile.interestStatus === 'PENDING_SENT' && (
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <div className="px-3.5 py-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs sm:text-sm font-bold flex items-center gap-1.5">
-                      <span>⏳</span>
+                      <Clock className="w-4 h-4" />
                       <span>Interest Sent</span>
                     </div>
                     <button
@@ -233,7 +252,7 @@ const ProfileDetailPage = () => {
                       title="Withdraw sent interest request"
                       className="px-2.5 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 text-xs font-semibold border border-border dark:border-gray-700 transition cursor-pointer flex items-center gap-1"
                     >
-                      {cancelLoading ? <Spinner size="xs" /> : <span>✕</span>}
+                      {cancelLoading ? <Spinner size="xs" /> : <X className="w-3.5 h-3.5" />}
                       <span>Withdraw</span>
                     </button>
                   </div>
@@ -241,7 +260,7 @@ const ProfileDetailPage = () => {
 
                 {profile.interestStatus === 'ACCEPTED_SENT' && (
                   <div className="px-3 py-2 rounded-xl bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 text-xs sm:text-sm font-bold flex items-center gap-1.5">
-                    <span>✅</span>
+                    <CheckCircle2 className="w-4 h-4" />
                     <span>Accepted by Them</span>
                   </div>
                 )}
@@ -251,7 +270,7 @@ const ProfileDetailPage = () => {
                     onClick={() => navigate('/interests')}
                     className="px-3.5 py-2 rounded-xl bg-primary text-white text-xs sm:text-sm font-bold hover:bg-primary-light transition flex items-center gap-1.5 shadow cursor-pointer"
                   >
-                    <span>💌</span>
+                    <Send className="w-4 h-4" />
                     <span>Respond</span>
                   </button>
                 )}
@@ -262,7 +281,7 @@ const ProfileDetailPage = () => {
                     disabled={interestLoading}
                     className="px-3.5 py-2 rounded-xl bg-primary text-white text-xs sm:text-sm font-bold hover:bg-primary-light transition flex items-center gap-1.5 shadow disabled:opacity-60 cursor-pointer"
                   >
-                    <span>💌</span>
+                    <Send className="w-4 h-4" />
                     <span>{interestLoading ? 'Sending...' : 'Send Interest'}</span>
                   </button>
                 )}
@@ -271,34 +290,40 @@ const ProfileDetailPage = () => {
 
             {/* ── Quick Navigation Pills ── */}
             <div className="flex flex-wrap gap-2 pt-2 border-t border-border/50">
-              <a href="#sec-personal" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer">
-                👤 Personal Details
+              <a href="#sec-personal" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 text-primary" />
+                <span>Personal Details</span>
               </a>
-              <a href="#sec-education" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer">
-                🎓 Education &amp; Job
+              <a href="#sec-education" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer flex items-center gap-1.5">
+                <GraduationCap className="w-3.5 h-3.5 text-primary" />
+                <span>Education &amp; Job</span>
               </a>
-              <a href="#sec-family" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer">
-                👨‍👩‍👧 Family Details
+              <a href="#sec-family" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-primary" />
+                <span>Family Details</span>
               </a>
               {(profile.dateOfBirth || profile.birthTime || profile.birthPlace || profile.hasMangal !== undefined || profile.hasSani !== undefined) && (
-                <a href="#sec-birth" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer">
-                  📜 Birth &amp; Horoscope
+                <a href="#sec-birth" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-primary" />
+                  <span>Birth &amp; Horoscope</span>
                 </a>
               )}
               {profile.mobileNo && (
-                <a href="#sec-contact" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer">
-                  📞 Contact Details
+                <a href="#sec-contact" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-primary" />
+                  <span>Contact Details</span>
                 </a>
               )}
               {hasExpectations && (
-                <a href="#sec-expectations" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer">
-                  💑 Expectations
+                <a href="#sec-expectations" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer flex items-center gap-1.5">
+                  <HeartHandshake className="w-3.5 h-3.5 text-primary" />
+                  <span>Expectations</span>
                 </a>
               )}
             </div>
 
             {/* ── Personal Info ── */}
-            <Section title="Personal Information" icon="👤" id="sec-personal">
+            <Section title="Personal Information" icon={<User className="w-4 h-4 text-primary" />} id="sec-personal">
               <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                 {profile.gender && (
                   <DetailRow label="Gender" value={GENDER_LABELS[profile.gender] || profile.gender} />
@@ -341,7 +366,7 @@ const ProfileDetailPage = () => {
             </Section>
 
             {/* ── Education, Job & Salary ── */}
-            <Section title="Education & Job" icon="🎓" id="sec-education">
+            <Section title="Education & Job" icon={<GraduationCap className="w-4 h-4 text-primary" />} id="sec-education">
               <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                 <DetailRow label="Education" value={profile.education || 'Not specified'} />
                 <DetailRow label="Profession" value={profile.profession || 'Not specified'} />
@@ -352,7 +377,7 @@ const ProfileDetailPage = () => {
             </Section>
 
             {/* ── Family Details ── */}
-            <Section title="Family Background" icon="👨‍👩‍👧" id="sec-family">
+            <Section title="Family Background" icon={<Users className="w-4 h-4 text-primary" />} id="sec-family">
               <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                 <DetailRow label="Father's Name" value={profile.fatherName || 'Not specified'} />
                 <DetailRow label="Father's Occupation" value={profile.fatherOccupation || 'Not specified'} />
@@ -363,7 +388,7 @@ const ProfileDetailPage = () => {
 
             {/* ── Birth & Horoscope Details ── */}
             {(profile.dateOfBirth || profile.birthTime || profile.birthPlace || profile.hasMangal !== undefined || profile.hasSani !== undefined) && (
-              <Section title="Birth & Horoscope Details" icon="📜" id="sec-birth">
+              <Section title="Birth & Horoscope Details" icon={<FileText className="w-4 h-4 text-primary" />} id="sec-birth">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                   {profile.dateOfBirth && (
                     <DetailRow label="Date of Birth" value={profile.dateOfBirth} />
@@ -392,7 +417,7 @@ const ProfileDetailPage = () => {
 
             {/* ── Contact Info Collapsible Wrap ── */}
             {profile.mobileNo && (
-              <Section title="Contact Details" icon="📞" id="sec-contact">
+              <Section title="Contact Details" icon={<Phone className="w-4 h-4 text-primary" />} id="sec-contact">
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-x-4 gap-y-3 items-center">
                     <div>
@@ -616,12 +641,10 @@ const Section = ({ title, icon, defaultOpen = false, id, children }) => {
         className="w-full px-5 py-4 bg-gray-50/80 dark:bg-gray-800/60 flex items-center justify-between font-bold text-gray-900 dark:text-gray-100 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer select-none border-b border-border/50 dark:border-gray-700/50"
       >
         <span className="flex items-center gap-2.5">
-          {icon && <span className="text-base">{icon}</span>}
+          {icon && <span className="text-primary flex items-center">{icon}</span>}
           <span className="tracking-wide">{title}</span>
         </span>
-        <span className={`text-xs text-gray-500 transform transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}>
-          ▼
-        </span>
+        <ChevronDown className={`w-4 h-4 text-gray-500 transform transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`} />
       </button>
       {isOpen && (
         <div className="p-5">

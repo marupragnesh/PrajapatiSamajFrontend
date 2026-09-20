@@ -1,11 +1,18 @@
 import { useNavigate } from 'react-router-dom';
+import {
+  User,
+  MapPin,
+  Briefcase,
+  GraduationCap,
+  ArrowRight
+} from 'lucide-react';
 import { resolveImageUrl } from '../../utils/imageHelper';
 import logger from '../../utils/logger';
 
 /**
  * ProfileListCard — Horizontal full-width list card for Discover & Browse views.
  * Corresponds to Section 2 (wide horizontal row) in the layout design.
- * Clicking navigates to /profiles/{profileId}.
+ * Features consistent Lucide outline line icons.
  */
 const ProfileListCard = ({ profile }) => {
   const navigate = useNavigate();
@@ -45,8 +52,8 @@ const ProfileListCard = ({ profile }) => {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-4xl text-gray-300">
-            👤
+          <div className="w-full h-full flex items-center justify-center text-gray-400">
+            <User className="w-10 h-10 text-gray-300 dark:text-gray-600 stroke-1" />
           </div>
         )}
 
@@ -79,27 +86,30 @@ const ProfileListCard = ({ profile }) => {
         </div>
 
         {/* Basic Stats: Age, Gender, Location */}
-        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 flex items-center flex-wrap gap-x-2 gap-y-1">
+        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 flex items-center flex-wrap gap-x-2 gap-y-1">
           <span>{age ? `${age} Yrs` : ''}</span>
           {gender && <span>• {gender}</span>}
           {maritalStatus && <span>• {maritalStatus}</span>}
           {(city || state) && (
-            <span className="text-gray-500 dark:text-gray-400">
-              • 📍 {[city, state].filter(Boolean).join(', ')}
+            <span className="inline-flex items-center text-gray-500 dark:text-gray-400">
+              • <MapPin className="w-3 h-3 text-gray-400 mx-1 shrink-0 inline" />
+              {[city, state].filter(Boolean).join(', ')}
             </span>
           )}
-        </p>
+        </div>
 
         {/* Career & Education */}
         <div className="text-xs sm:text-sm space-y-0.5">
           {profession && (
-            <p className="font-medium text-primary dark:text-primary-light truncate">
-              💼 {profession}
+            <p className="font-medium text-primary dark:text-primary-light truncate flex items-center gap-1.5">
+              <Briefcase className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">{profession}</span>
             </p>
           )}
           {education && (
-            <p className="text-gray-500 dark:text-gray-400 truncate">
-              🎓 {education}
+            <p className="text-gray-500 dark:text-gray-400 truncate flex items-center gap-1.5">
+              <GraduationCap className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">{education}</span>
             </p>
           )}
         </div>
@@ -126,10 +136,10 @@ const ProfileListCard = ({ profile }) => {
             e.stopPropagation();
             handleClick();
           }}
-          className="w-full sm:w-auto px-4 py-2 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-white font-semibold text-xs transition duration-200 flex items-center justify-center gap-1 cursor-pointer"
+          className="w-full sm:w-auto px-4 py-2 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-white font-semibold text-xs transition duration-200 flex items-center justify-center gap-1.5 cursor-pointer"
         >
           <span>View Profile</span>
-          <span>&rarr;</span>
+          <ArrowRight className="w-3.5 h-3.5" />
         </button>
       </div>
     </div>

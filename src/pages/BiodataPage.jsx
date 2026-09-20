@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { FileText, Sparkles } from 'lucide-react';
 import Navbar from '../components/common/Navbar';
+import Footer from '../components/common/Footer';
 import Spinner from '../components/common/Spinner';
 import BiodataPreview from '../components/biodata/BiodataPreview';
 import { createOrder, verifyPayment, getPaymentStatus } from '../api/paymentApi';
@@ -10,7 +12,7 @@ import logger from '../utils/logger';
 /**
  * BiodataPage — Dedicated Marriage Biodata Studio Page.
  * Accessible from Navbar /biodata.
- * Allows users to choose from 6 traditional themes, preview auto-filled biodata, and download PDF.
+ * Allows users to choose from traditional themes, preview auto-filled biodata, and download PDF.
  */
 const BiodataPage = () => {
   const [status, setStatus] = useState({ contactUnlocked: false, filtersUnlocked: false, biodataUnlocked: false });
@@ -18,7 +20,7 @@ const BiodataPage = () => {
   const [loading, setLoading] = useState(true);
   const [processingPay, setProcessingPay] = useState(false);
 
-  // ONLY ₹99 Pass (status.biodataUnlocked) unlocks Marriage Biodata PDF Download
+  // ONLY Level 1 / Level 2 / Level 3 (status.biodataUnlocked) unlocks Marriage Biodata PDF Download
   const isUnlocked = Boolean(status.biodataUnlocked);
 
   const fetchData = async () => {
@@ -102,16 +104,20 @@ const BiodataPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100">
+    <div className="min-h-screen bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100 flex flex-col">
       <Navbar />
 
-      <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+      <main className="max-w-5xl mx-auto px-4 py-8 space-y-8 flex-1 w-full">
         {/* Page Banner */}
         <div className="text-center space-y-2">
-          <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-            🌸 Traditional Marriage Biodata Generator
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <span>Traditional Marriage Biodata Generator</span>
           </span>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-primary">📜 Marriage Biodata Studio</h1>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-primary flex items-center justify-center gap-2.5">
+            <FileText className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
+            <span>Marriage Biodata Studio</span>
+          </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
             Create and download clean, elegant single-page Marriage Biodata auto-filled with your registered profile details &amp; active DP photo.
           </p>
@@ -129,7 +135,9 @@ const BiodataPage = () => {
             userEmail={profile?.email}
           />
         )}
-      </div>
+      </main>
+
+      <Footer />
     </div>
   );
 };

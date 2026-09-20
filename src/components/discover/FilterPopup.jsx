@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { SlidersHorizontal, X, Lock } from 'lucide-react';
 
 /**
  * FilterPopup — Modal component for Discover Page Filters.
@@ -133,8 +134,8 @@ const FilterPopup = ({
       >
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">⚙️</span>
+          <div className="flex items-center gap-2.5">
+            <SlidersHorizontal className="w-5 h-5 text-primary" />
             <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">Filter Profiles</h2>
           </div>
           <div className="flex items-center gap-3">
@@ -150,10 +151,10 @@ const FilterPopup = ({
             <button
               type="button"
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl font-bold p-1 transition cursor-pointer"
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1 transition cursor-pointer"
               aria-label="Close"
             >
-              ✕
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -163,7 +164,10 @@ const FilterPopup = ({
           {!isUnlocked && (
             <div className="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm mb-2">
               <div className="space-y-0.5 text-center sm:text-left">
-                <p className="text-sm font-bold text-amber-900 dark:text-amber-200">🔒 Level 2 &amp; 3 Feature</p>
+                <p className="text-sm font-bold text-amber-900 dark:text-amber-200 flex items-center justify-center sm:justify-start gap-1.5">
+                  <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span>Level 2 &amp; 3 Feature</span>
+                </p>
                 <p className="text-xs text-amber-700 dark:text-amber-300">
                   Advanced discover filters require Level 2 (₹199) or Level 3 (₹299) Membership.
                 </p>
