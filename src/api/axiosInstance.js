@@ -4,19 +4,13 @@ import logger from '../utils/logger';
 /**
  * Shared Axios instance — single source of truth for API base URL.
  * All HTTP calls must go through this instance (never write raw fetch()).
+ *
+ * Base URL is read from VITE_API_URL environment variable:
+ * - Dev (.env.development): http://localhost:8080
+ * - Prod (.env.production): https://prajapatisamaj.onrender.com
  */
-/**
- * Dynamically resolves API base URL:
- * - On PC browser: http://localhost:8080
- * - On Mobile phone over Wi-Fi: http://<laptop-ip>:8080 (automatically matches current hostname)
- */
-const getBaseUrl = () => {
-  const hostname = window.location.hostname || 'localhost';
-  return `http://${hostname}:8080`;
-};
-
 const axiosInstance = axios.create({
-  baseURL: getBaseUrl(),
+  baseURL: import.meta.env.VITE_API_URL,
   headers: { 'Content-Type': 'application/json' },
 });
 
