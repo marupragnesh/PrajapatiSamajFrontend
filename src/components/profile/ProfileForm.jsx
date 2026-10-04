@@ -190,10 +190,10 @@ const ProfileForm = ({
 
       // Auto-expand any accordion sections that have errors
       const personalErr  = ['name', 'surname', 'age', 'gender', 'maritalStatus'].some((k) => validationErrors[k]);
-      const birthErr     = ['dateOfBirth', 'birthTime', 'weight', 'bloodGroup', 'birthPlace'].some((k) => validationErrors[k]);
+      const birthErr     = ['dateOfBirth', 'birthTime', 'weight', 'bloodGroup', 'birthPlace', 'diet'].some((k) => validationErrors[k]);
       const familyErr    = ['fatherName', 'motherName'].some((k) => validationErrors[k]);
       const contactErr   = ['mobileNo', 'alternateMobileNo', 'addressLine', 'state', 'city', 'pincode'].some((k) => validationErrors[k]);
-      const educationErr = ['education', 'profession', 'diet'].some((k) => validationErrors[k]);
+      const educationErr = ['education', 'profession'].some((k) => validationErrors[k]);
 
       setOpenSections((prev) => ({
         ...prev,
@@ -252,10 +252,10 @@ const ProfileForm = ({
   };
 
   const personalErrorCount  = getSectionErrorCount(['name', 'surname', 'age', 'gender', 'maritalStatus']);
-  const birthErrorCount     = getSectionErrorCount(['dateOfBirth', 'birthTime', 'weight', 'bloodGroup', 'birthPlace']);
+  const birthErrorCount     = getSectionErrorCount(['dateOfBirth', 'birthTime', 'weight', 'bloodGroup', 'birthPlace', 'diet']);
   const familyErrorCount    = getSectionErrorCount(['fatherName', 'motherName']);
   const contactErrorCount   = getSectionErrorCount(['mobileNo', 'alternateMobileNo', 'addressLine', 'state', 'city', 'pincode']);
-  const educationErrorCount = getSectionErrorCount(['education', 'profession', 'diet']);
+  const educationErrorCount = getSectionErrorCount(['education', 'profession']);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
@@ -407,6 +407,10 @@ const ProfileForm = ({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label={t.height}>
+            <input name="height" value={form.height} onChange={handleChange}
+              placeholder="e.g. 5'8&quot;" className={inputClass} />
+          </Field>
           <Field label={`${t.weight} *`} error={errors.weight}>
             <input type="number" step="0.01" name="weight" value={form.weight}
               onChange={(e) => {
@@ -423,6 +427,9 @@ const ProfileForm = ({
               }}
               placeholder="e.g. 56.38" className={inputClass} />
           </Field>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label={t.bloodGroup} error={errors.bloodGroup}>
             <select name="bloodGroup" value={form.bloodGroup} onChange={handleChange} className={inputClass}>
               {BLOOD_GROUP_OPTIONS.map((opt) => (
@@ -430,11 +437,29 @@ const ProfileForm = ({
               ))}
             </select>
           </Field>
+          <Field label={`${t.birthPlace} *`} error={errors.birthPlace}>
+            <input name="birthPlace" value={form.birthPlace} onChange={handleChange}
+              placeholder="e.g. Ahmedabad, Gujarat" className={inputClass} />
+          </Field>
         </div>
 
-        <Field label={`${t.birthPlace} *`} error={errors.birthPlace}>
-          <input name="birthPlace" value={form.birthPlace} onChange={handleChange}
-            placeholder="e.g. Ahmedabad, Gujarat" className={inputClass} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label={t.gotra}>
+            <input name="gotra" value={form.gotra} onChange={handleChange}
+              placeholder="e.g. Kashyap" className={inputClass} />
+          </Field>
+          <Field label="Religion">
+            <input name="religion" value={form.religion} onChange={handleChange}
+              placeholder="Hindu" className={inputClass} />
+          </Field>
+        </div>
+
+        <Field label={`${t.diet} *`} error={errors.diet}>
+          <select name="diet" value={form.diet} onChange={handleChange} className={inputClass}>
+            {DIET_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
         </Field>
 
         {/* 2 Gujarati Toggle / Choice Groups */}
@@ -619,34 +644,9 @@ const ProfileForm = ({
             placeholder="Software Engineer / Business" className={inputClass} />
         </Field>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label={t.height}>
-            <input name="height" value={form.height} onChange={handleChange}
-              placeholder="e.g. 5'8&quot;" className={inputClass} />
-          </Field>
-          <Field label={t.income}>
-            <input name="income" value={form.income} onChange={handleChange}
-              placeholder="25000" className={inputClass} />
-          </Field>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label={t.gotra}>
-            <input name="gotra" value={form.gotra} onChange={handleChange}
-              placeholder="e.g. Kashyap" className={inputClass} />
-          </Field>
-          <Field label={`${t.diet} *`} error={errors.diet}>
-            <select name="diet" value={form.diet} onChange={handleChange} className={inputClass}>
-              {DIET_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </Field>
-        </div>
-
-        <Field label="Religion">
-          <input name="religion" value={form.religion} onChange={handleChange}
-            placeholder="Hindu" className={inputClass} />
+        <Field label={t.income}>
+          <input name="income" value={form.income} onChange={handleChange}
+            placeholder="25000" className={inputClass} />
         </Field>
       </AccordionSection>
 
