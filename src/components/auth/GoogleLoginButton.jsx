@@ -24,7 +24,7 @@ const GoogleLoginButton = ({ mode = 'login', onError }) => {
   const [loading, setLoading] = useState(false);
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const clientId = import.meta.env.GOOGLE_CLIENT_ID || import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   // Handle successful Google authentication credential response
   const handleCredentialResponse = async (response) => {
@@ -131,7 +131,7 @@ const GoogleLoginButton = ({ mode = 'login', onError }) => {
   // Click handler for when client ID is not configured or custom click
   const handleCustomButtonClick = () => {
     if (!clientId) {
-      toast.error('Google Client ID is not configured. Please add VITE_GOOGLE_CLIENT_ID to your .env file.', {
+      toast.error('Google Client ID is not configured. Please add GOOGLE_CLIENT_ID to your .env file.', {
         duration: 5000,
       });
       return;
