@@ -56,8 +56,20 @@ export const translations = {
     
     education: "Education Qualification",
     profession: "Profession / Occupation",
-    income: "Annual Income",
+    income: "Annual Salary / Income",
     
+    managedBy: "Profile Managed By",
+    managedBySelf: "Self (Creating for Myself)",
+    managedByFather: "Father (Creating for Daughter / Son)",
+    managedByMother: "Mother (Creating for Daughter / Son)",
+    managedByBrother: "Brother (Creating for Sibling)",
+    managedBySister: "Sister (Creating for Sibling)",
+    managedByRelative: "Relative",
+    managedByFriend: "Friend",
+    educationPlaceholder: "e.g. B.Com, BCA, Diploma, ITI (What you studied)",
+    professionPlaceholder: "e.g. Student, Engineer, Job, Cook, Business...",
+    incomePlaceholder: "e.g. ₹3,00,000 / 5 LPA",
+
     fatherName: "Father's Full Name",
     fatherOccupation: "Father's Occupation",
     motherName: "Mother's Full Name",
@@ -139,8 +151,20 @@ export const translations = {
     
     education: "શિક્ષણ / અભ્યાસ (Education)",
     profession: "નોકરી / વ્યવસાય (Profession)",
-    income: "વાર્ષિક આવક (Annual Income)",
+    income: "વાર્ષિક પગાર / આવક (Annual Salary)",
     
+    managedBy: "પ્રોફાઇલ કોના દ્વારા સંચાલિત છે (Managed By)",
+    managedBySelf: "પોતે (Self)",
+    managedByFather: "પિતા (Father)",
+    managedByMother: "માતા (Mother)",
+    managedByBrother: "ભાઈ (Brother)",
+    managedBySister: "બહેન (Sister)",
+    managedByRelative: "સંબંધી (Relative)",
+    managedByFriend: "મિત્ર (Friend)",
+    educationPlaceholder: "દા.ત. B.Com, BCA, Diploma, ITI (શું અભ્યાસ કર્યો છે)",
+    professionPlaceholder: "દા.ત. Student, Engineer, Job, Cook, Business...",
+    incomePlaceholder: "દા.ત. ₹3,00,000 / 5 LPA",
+
     fatherName: "પિતાનું નામ (Father's Name)",
     fatherOccupation: "પિતાનો વ્યવસાય (Father's Occupation)",
     motherName: "માતાનું નામ (Mother's Name)",

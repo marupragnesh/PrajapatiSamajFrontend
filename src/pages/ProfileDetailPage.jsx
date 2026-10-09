@@ -209,6 +209,11 @@ const ProfileDetailPage = () => {
                       <span>{profile.lastActiveText}</span>
                     </span>
                   )}
+                  {profile.managedBy && (
+                    <span className="px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-semibold border border-blue-500/20">
+                      Managed by: {profile.managedBy}
+                    </span>
+                  )}
                 </div>
                 <p className="text-primary font-medium mt-1 flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
@@ -325,6 +330,9 @@ const ProfileDetailPage = () => {
             {/* ── Personal Info ── */}
             <Section title="Personal Information" icon={<User className="w-4 h-4 text-primary" />} id="sec-personal">
               <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                {profile.managedBy && (
+                  <DetailRow label="Profile Managed By" value={profile.managedBy} />
+                )}
                 {profile.gender && (
                   <DetailRow label="Gender" value={GENDER_LABELS[profile.gender] || profile.gender} />
                 )}
@@ -371,7 +379,7 @@ const ProfileDetailPage = () => {
                 <DetailRow label="Education" value={profile.education || 'Not specified'} />
                 <DetailRow label="Profession" value={profile.profession || 'Not specified'} />
                 {profile.income && (
-                  <DetailRow label="Annual Income" value={profile.income} />
+                  <DetailRow label="Annual Salary / Income" value={profile.income} />
                 )}
               </div>
             </Section>

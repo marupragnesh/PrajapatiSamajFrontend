@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Heart } from 'lucide-react';
 import LoginForm from '../components/auth/LoginForm';
+import GoogleLoginButton from '../components/auth/GoogleLoginButton';
 import { loginUser } from '../api/authApi';
 import { getMyProfile } from '../api/profileApi';
 import useAuth from '../hooks/useAuth';
@@ -11,6 +12,7 @@ import LogoIcon from '../components/common/LogoIcon';
 
 /**
  * LoginPage — after login, checks if profile exists.
+ * Supports direct Google OAuth sign-in and email/password login.
  * Provides direct public access to legal & compliance documents.
  */
 const LoginPage = () => {
@@ -63,8 +65,26 @@ const LoginPage = () => {
           <span className="font-serif font-extrabold tracking-wide text-amber-700 dark:text-amber-400">PrajapatiSamaj</span>
         </h1>
         <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Welcome back</p>
+
+        {/* 1-Click Google Sign-In */}
+        <GoogleLoginButton mode="login" onError={(err) => setServerError(err)} />
+
+        {/* Divider */}
+        <div className="relative my-5">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200 dark:border-gray-700" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white dark:bg-card-dark px-3 text-gray-500 dark:text-gray-400 font-medium">
+              or continue with email
+            </span>
+          </div>
+        </div>
+
+        {/* Standard Email/Password Form */}
         <LoginForm onSubmit={handleLogin} loading={loading} serverError={serverError} />
       </div>
+
 
       {/* Public Legal & Compliance Links (Accessible without login) */}
       <div className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">

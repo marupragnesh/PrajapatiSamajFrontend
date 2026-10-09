@@ -3,7 +3,9 @@ import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Heart } from 'lucide-react';
 import RegisterForm from '../components/auth/RegisterForm';
+import GoogleLoginButton from '../components/auth/GoogleLoginButton';
 import Spinner from '../components/common/Spinner';
+
 import { registerUser, verifyRegistrationOtp, resendRegistrationOtp } from '../api/authApi';
 import useAuth from '../hooks/useAuth';
 import logger from '../utils/logger';
@@ -176,9 +178,26 @@ const RegisterPage = () => {
         {step === 1 ? (
           <>
             <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Create your account</p>
+
+            {/* 1-Click Google Sign-Up */}
+            <GoogleLoginButton mode="register" onError={(err) => setServerError(err)} />
+
+            {/* Divider */}
+            <div className="relative my-5">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200 dark:border-gray-700" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white dark:bg-card-dark px-3 text-gray-500 dark:text-gray-400 font-medium">
+                  or register with email
+                </span>
+              </div>
+            </div>
+
             <RegisterForm initialEmail={regEmail} onSubmit={handleRegisterSubmit} loading={loading} serverError={serverError} />
           </>
         ) : (
+
           <div className="space-y-4 mt-2">
             <div>
               <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">Verify Your Email ✉️</h2>

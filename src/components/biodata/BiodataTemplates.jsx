@@ -105,6 +105,7 @@ const BiodataTemplates = React.forwardRef(({ profile, styleName = 'royal', hideB
                 <div><strong>Father's Occupation:</strong> {fmt(profile.fatherOccupation)}</div>
                 <div><strong>Mother's Name:</strong> {fmt(profile.motherName)}</div>
                 <div><strong>Mother's Occupation:</strong> {fmt(profile.motherOccupation)}</div>
+                {profile.managedBy && <div className="col-span-2"><strong>Managed By:</strong> {fmt(profile.managedBy)}</div>}
               </div>
             </div>
 
@@ -216,6 +217,7 @@ const BiodataTemplates = React.forwardRef(({ profile, styleName = 'royal', hideB
                 <div><strong>Father Occ.:</strong> {fmt(profile.fatherOccupation)}</div>
                 <div><strong>Mother:</strong> {fmt(profile.motherName)}</div>
                 <div><strong>Mother Occ.:</strong> {fmt(profile.motherOccupation)}</div>
+                {profile.managedBy && <div><strong>Managed By:</strong> {fmt(profile.managedBy)}</div>}
               </div>
             </div>
           </div>
@@ -336,6 +338,7 @@ const BiodataTemplates = React.forwardRef(({ profile, styleName = 'royal', hideB
                   <div><strong>Father Occ.:</strong> {fmt(profile.fatherOccupation)}</div>
                   <div><strong>Mother:</strong> {fmt(profile.motherName)}</div>
                   <div><strong>Mother Occ.:</strong> {fmt(profile.motherOccupation)}</div>
+                  {profile.managedBy && <div className="col-span-2"><strong>Managed By:</strong> {fmt(profile.managedBy)}</div>}
                 </div>
               </div>
 
@@ -451,6 +454,7 @@ const BiodataTemplates = React.forwardRef(({ profile, styleName = 'royal', hideB
               <div><strong>Father Occ.:</strong> {fmt(profile.fatherOccupation)}</div>
               <div><strong>Mother:</strong> {fmt(profile.motherName)}</div>
               <div><strong>Mother Occ.:</strong> {fmt(profile.motherOccupation)}</div>
+              {profile.managedBy && <div><strong>Managed By:</strong> {fmt(profile.managedBy)}</div>}
             </div>
 
             {/* Partner Expectations */}
@@ -550,6 +554,7 @@ const BiodataTemplates = React.forwardRef(({ profile, styleName = 'royal', hideB
                 <div><span className="text-amber-300 font-semibold">Father Occ.:</span> {fmt(profile.fatherOccupation)}</div>
                 <div><span className="text-amber-300 font-semibold">Mother:</span> {fmt(profile.motherName)}</div>
                 <div><span className="text-amber-300 font-semibold">Mother Occ.:</span> {fmt(profile.motherOccupation)}</div>
+                {profile.managedBy && <div><span className="text-amber-300 font-semibold">Managed By:</span> {fmt(profile.managedBy)}</div>}
               </div>
 
               <div className="bg-amber-950/70 p-3 rounded-xl border border-amber-500/50 space-y-1">
@@ -765,6 +770,7 @@ const BiodataTemplates = React.forwardRef(({ profile, styleName = 'royal', hideB
                 <div><strong>Father's Occupation:</strong> {fmt(profile.fatherOccupation)}</div>
                 <div><strong>Mother's Name:</strong> {fmt(profile.motherName)}</div>
                 <div><strong>Mother's Occupation:</strong> {fmt(profile.motherOccupation)}</div>
+                {profile.managedBy && <div className="col-span-2"><strong>Managed By:</strong> {fmt(profile.managedBy)}</div>}
               </div>
             </div>
 
@@ -874,6 +880,7 @@ const BiodataTemplates = React.forwardRef(({ profile, styleName = 'royal', hideB
               <div><strong>Father Occ.:</strong> {fmt(profile.fatherOccupation)}</div>
               <div><strong>Mother:</strong> {fmt(profile.motherName)}</div>
               <div><strong>Mother Occ.:</strong> {fmt(profile.motherOccupation)}</div>
+              {profile.managedBy && <div><strong>Managed By:</strong> {fmt(profile.managedBy)}</div>}
             </div>
 
             {/* Card 4: Partner Expectations */}

@@ -64,3 +64,12 @@ export const resendOtp = async (email) => {
   logger.response('/api/auth/resend-otp', response.data);
   return response.data;
 };
+
+/** POST /api/auth/google — authenticate or register directly with Google ID token */
+export const loginWithGoogle = async (idToken) => {
+  logger.api('POST', '/api/auth/google', { idToken: idToken ? idToken.substring(0, 15) + '...' : null });
+  const response = await axiosInstance.post('/api/auth/google', { idToken });
+  logger.response('/api/auth/google', response.data);
+  return response.data;
+};
+

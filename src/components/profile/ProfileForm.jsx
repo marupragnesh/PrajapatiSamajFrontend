@@ -99,6 +99,7 @@ const ProfileForm = ({
     motherOccupation:  initialData.motherOccupation  || '',
     description:       initialData.description       || '',
     hobbies:           initialData.hobbies           || '',
+    managedBy:         initialData.managedBy         || 'Self',
   });
 
   const [errors, setErrors] = useState({});
@@ -240,6 +241,7 @@ const ProfileForm = ({
       diet:              form.diet,
       religion:          form.religion || null,
       hobbies:           form.hobbies  || null,
+      managedBy:         form.managedBy || 'Self',
     });
   };
 
@@ -301,6 +303,18 @@ const ProfileForm = ({
         hasError={personalErrorCount > 0}
         errorCount={personalErrorCount}
       >
+        <Field label={t.managedBy || 'Profile Managed By'}>
+          <select name="managedBy" value={form.managedBy} onChange={handleChange} className={inputClass}>
+            <option value="Self">{t.managedBySelf || 'Self (Creating for Myself)'}</option>
+            <option value="Father">{t.managedByFather || 'Father (Creating for Daughter / Son)'}</option>
+            <option value="Mother">{t.managedByMother || 'Mother (Creating for Daughter / Son)'}</option>
+            <option value="Brother">{t.managedByBrother || 'Brother (Creating for Sibling)'}</option>
+            <option value="Sister">{t.managedBySister || 'Sister (Creating for Sibling)'}</option>
+            <option value="Relative">{t.managedByRelative || 'Relative'}</option>
+            <option value="Friend">{t.managedByFriend || 'Friend'}</option>
+          </select>
+        </Field>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label={`${t.name} *`} error={errors.name}>
             <input name="name" value={form.name} onChange={handleChange}
@@ -636,17 +650,17 @@ const ProfileForm = ({
       >
         <Field label={`${t.education} *`} error={errors.education}>
           <input name="education" value={form.education} onChange={handleChange}
-            placeholder="B.Tech CS / M.Com" className={inputClass} />
+            placeholder={t.educationPlaceholder || "e.g. B.Com, BCA, Diploma, ITI (What you studied)"} className={inputClass} />
         </Field>
 
         <Field label={`${t.profession} *`} error={errors.profession}>
           <input name="profession" value={form.profession} onChange={handleChange}
-            placeholder="Software Engineer / Business" className={inputClass} />
+            placeholder={t.professionPlaceholder || "e.g. Student, Engineer, Job, Cook, Business..."} className={inputClass} />
         </Field>
 
         <Field label={t.income}>
           <input name="income" value={form.income} onChange={handleChange}
-            placeholder="25000" className={inputClass} />
+            placeholder={t.incomePlaceholder || "e.g. ₹3,00,000 / 5 LPA"} className={inputClass} />
         </Field>
       </AccordionSection>
 
