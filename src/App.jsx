@@ -1,7 +1,8 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuth from './hooks/useAuth';
 import Spinner from './components/common/Spinner';
+import { pingBackend } from './api/healthApi';
 
 /**
  * Lazy load all page-level components — only downloaded when first visited.
@@ -52,6 +53,16 @@ const PageLoader = () => (
  * Protected: everything else (requires valid JWT in AuthContext)
  */
 const App = () => {
+  // Keep-alive: Ping backend on startup and every 10 minutes to prevent Render free instance sleep
+  useEffect(() => {
+    pingBackend();
+    const intervalId = setInterval(() => {
+      pingBackend();
+    }, 10 * 60 * 1000); // 10 minutes = 600,000ms
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
