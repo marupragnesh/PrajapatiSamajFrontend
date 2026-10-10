@@ -7,11 +7,12 @@
  * since there's no proxy. VITE_API_URL provides the correct backend origin.
  */
 
-const BACKEND_ORIGIN = import.meta.env.VITE_API_URL;
+const BACKEND_ORIGIN = import.meta.env.VITE_API_URL || '';
 
 /**
- * Converts a backend image URL to a fully resolved URL.
- * - Strips any hardcoded origin and prepends the correct backend URL.
+ * Converts a backend or cloud image URL to a fully resolved URL.
+ * - If it's a Cloudinary or cloud HTTPS URL, returns directly.
+ * - If it's a relative path ("/uploads/..."), prepends BACKEND_ORIGIN.
  * - Returns null/undefined as-is (no photo case).
  *
  * @param {string|null|undefined} url - Full or relative URL from backend
@@ -20,20 +21,27 @@ const BACKEND_ORIGIN = import.meta.env.VITE_API_URL;
 export const resolveImageUrl = (url) => {
   if (!url) return null;
 
-  // If it's already a relative path like "/uploads/photos/..."
-  if (url.startsWith('/uploads')) {
-    return `${BACKEND_ORIGIN}${url}`;
+  // Cloudinary or external cloud URLs
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    // Return external cloud storage URLs (e.g. res.cloudinary.com) directly
+    if (!url.includes('/uploads/')) {
+      return url;
+    }
+    // If it has a hardcoded local origin pointing to /uploads/, normalize to current backend origin
+    try {
+      const parsed = new URL(url);
+      const path = parsed.pathname;
+      if (path.startsWith('/uploads')) {
+        return `${BACKEND_ORIGIN}${path}`;
+      }
+    } catch {
+      return url;
+    }
   }
 
-  // If it contains a hardcoded origin, strip it and prepend correct one
-  try {
-    const parsed = new URL(url);
-    const path = parsed.pathname;
-    if (path.startsWith('/uploads')) {
-      return `${BACKEND_ORIGIN}${path}`;
-    }
-  } catch {
-    // Not a valid URL — return as-is
+  // If it's a relative path like "/uploads/photos/..."
+  if (url.startsWith('/uploads')) {
+    return `${BACKEND_ORIGIN}${url}`;
   }
 
   return url;
