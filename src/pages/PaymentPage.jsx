@@ -54,7 +54,7 @@ const TRANSLATIONS = {
     t1F2: "Marriage Biodata PDF Download: Download clean A4 PDF in all 6 traditional themes!",
     t1F3: "2 Likes Per Day: Connect daily (resets every midnight).",
     t1F4: "10 Total Interests: Send up to 10 interest requests in 2 months.",
-    t1F5: "Partner Expectations: Full view of partner preferences.",
+    t1F5: "Free Partner Expectations: View partner expectations on any profile without payment.",
     t1F6: "Discover Filters Locked",
     t1F7: "Mobile No & Address Masked",
     t1Btn: "Get Level 1 (₹99)",
@@ -114,7 +114,7 @@ const TRANSLATIONS = {
     t1F2: "મેરેજ બાયોડેટા PDF ડાઉનલોડ: તમામ ૬ પરંપરાગત થીમ્સમાં સ્વચ્છ A4 PDF ડાઉનલોડ કરો!",
     t1F3: "દરરોજ ૨ લાઇક્સ: દરરોજ ૨ પ્રોફાઇલ લાઈક કરો (દરરોજ રાત્રે રીસેટ થશે).",
     t1F4: "કુલ ૧૦ ઇન્ટરેસ્ટ વિનંતીઓ: ૨ મહિનામાં ૧૦ પ્રોફાઇલને ઇન્ટરેસ્ટ મોકલો.",
-    t1F5: "જીવનસાથીની અપેક્ષાઓ: પાર્ટનરની તમામ અપેક્ષાઓ જુઓ.",
+    t1F5: "જીવનસાથીની અપેક્ષાઓ વિનામૂલ્યે: કોઈપણ પ્રોફાઇલની અપેક્ષાઓ ચૂકવણી વિના મફતમાં જુઓ.",
     t1F6: "ડિસ્કવર ફિલ્ટર્સ લૉક રહેશે",
     t1F7: "મોબાઇલ નંબર અને સરનામું છુપાયેલ રહેશે",
     t1Btn: "લેવલ ૧ મેળવો (₹૯૯)",
@@ -681,7 +681,7 @@ const PaymentPage = () => {
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2.5 shrink-0">
             <a
-              href="https://wa.me/919998000000?text=Hello%20Pragnesh,%20I%20have%20a%20website%20idea!"
+              href="https://wa.me/917698690157?text=Hello%20Pragnesh,%20I%20have%20a%20website%20idea!"
               target="_blank"
               rel="noreferrer"
               className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition shadow flex items-center gap-2 cursor-pointer"

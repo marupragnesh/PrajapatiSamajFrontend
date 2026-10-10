@@ -43,8 +43,8 @@ import logger from '../utils/logger';
 const InterestsReceivedPage = () => {
   const navigate = useNavigate();
 
-  // Active main tab: 'sent' or 'received'
-  const [activeMainTab, setActiveMainTab] = useState('sent');
+  // Active main tab: 'received' (default) or 'sent'
+  const [activeMainTab, setActiveMainTab] = useState('received');
 
   // Sent filter status: 'ALL', 'PENDING', 'ACCEPTED', 'DECLINED' (Not Interested)
   const [sentFilter, setSentFilter] = useState('ALL');

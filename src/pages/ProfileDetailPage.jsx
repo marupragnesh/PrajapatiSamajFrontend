@@ -319,12 +319,10 @@ const ProfileDetailPage = () => {
                   <span>Contact Details</span>
                 </a>
               )}
-              {hasExpectations && (
-                <a href="#sec-expectations" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer flex items-center gap-1.5">
-                  <HeartHandshake className="w-3.5 h-3.5 text-primary" />
-                  <span>Expectations</span>
-                </a>
-              )}
+              <a href="#sec-expectations" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer flex items-center gap-1.5">
+                <HeartHandshake className="w-3.5 h-3.5 text-primary" />
+                <span>Expectations</span>
+              </a>
             </div>
 
             {/* ── Personal Info ── */}
@@ -518,10 +516,10 @@ const ProfileDetailPage = () => {
         </div>
 
         {/* ── Partner Expectations Collapsible Wrap ── */}
-        {hasExpectations && (
-          <Section title="Partner Expectations" icon="💍" id="sec-expectations" defaultOpen={true}>
+        <Section title="Partner Expectations" icon="💍" id="sec-expectations" defaultOpen={true}>
+          {hasExpectations ? (
             <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-              {(exp.minAge || exp.maxAge) && (
+              {(exp?.minAge || exp?.maxAge) && (
                 <DetailRow
                   label="Age Range"
                   value={
@@ -534,7 +532,7 @@ const ProfileDetailPage = () => {
                 />
               )}
 
-              {(exp.preferredMinHeight || exp.preferredMaxHeight) && (
+              {(exp?.preferredMinHeight || exp?.preferredMaxHeight) && (
                 <DetailRow
                   label="Preferred Height"
                   value={
@@ -545,52 +543,56 @@ const ProfileDetailPage = () => {
                 />
               )}
 
-              {exp.preferredMaritalStatus && (
+              {exp?.preferredMaritalStatus && (
                 <DetailRow
                   label="Preferred Marital Status"
                   value={MARITAL_STATUS_LABELS[exp.preferredMaritalStatus] || exp.preferredMaritalStatus}
                 />
               )}
 
-              {exp.preferredDiet && (
+              {exp?.preferredDiet && (
                 <DetailRow
                   label="Preferred Diet"
                   value={DIET_LABELS[exp.preferredDiet] || exp.preferredDiet}
                 />
               )}
 
-              {exp.preferredGotra && (
+              {exp?.preferredGotra && (
                 <DetailRow label="Preferred Gotra" value={exp.preferredGotra} />
               )}
 
-              {exp.preferredReligion && (
+              {exp?.preferredReligion && (
                 <DetailRow label="Religion" value={exp.preferredReligion} />
               )}
 
-              {exp.preferredEducation && (
+              {exp?.preferredEducation && (
                 <DetailRow label="Preferred Education" value={exp.preferredEducation} />
               )}
 
-              {exp.preferredProfession && (
+              {exp?.preferredProfession && (
                 <DetailRow label="Preferred Profession" value={exp.preferredProfession} />
               )}
 
-              {exp.preferredIncome && (
+              {exp?.preferredIncome && (
                 <DetailRow label="Annual Income" value={exp.preferredIncome} />
               )}
 
-              {exp.preferredCity && (
+              {exp?.preferredCity && (
                 <DetailRow label="Preferred City" value={exp.preferredCity} />
               )}
 
-              {exp.aboutExpectations && (
+              {exp?.aboutExpectations && (
                 <div className="col-span-2">
                   <DetailRow label="About Expectations" value={exp.aboutExpectations} />
                 </div>
               )}
             </div>
-          </Section>
-        )}
+          ) : (
+            <div className="py-3 text-center text-xs text-gray-500 dark:text-gray-400 italic">
+              No specific partner expectations added yet by this member.
+            </div>
+          )}
+        </Section>
 
         <button
           onClick={() => navigate(-1)}

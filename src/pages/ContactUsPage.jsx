@@ -82,7 +82,7 @@ const ContactUsPage = () => {
             <h3 className="font-bold text-sm text-gray-900 dark:text-gray-100">Quick WhatsApp / Chat</h3>
             <p className="text-xs text-gray-500 dark:text-gray-400">Instant developer messaging</p>
             <a
-              href="https://wa.me/919998000000?text=Hello%20Pragnesh,%20I%20have%20an%20inquiry%20regarding%20PrajapatiSamaj"
+              href="https://wa.me/917698690157?text=Hello%20Pragnesh,%20I%20have%20an%20inquiry%20regarding%20PrajapatiSamaj"
               target="_blank"
               rel="noreferrer"
               className="text-xs font-semibold text-emerald-600 hover:underline block"

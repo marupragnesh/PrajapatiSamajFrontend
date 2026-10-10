@@ -70,7 +70,7 @@ const ImageAdjustModal = ({ files = [], onClose, onConfirm, uploading = false })
         rotation: 0, // 0, 90, 180, 270
         panX: 0,
         panY: 0,
-        aspectRatioId: '4:5', // Instagram portrait by default
+        aspectRatioId: '16:9', // 16:9 Wide (Best View) by default
       };
       initialSavedMap[index] = false;
     });
@@ -100,7 +100,7 @@ const ImageAdjustModal = ({ files = [], onClose, onConfirm, uploading = false })
     rotation: 0,
     panX: 0,
     panY: 0,
-    aspectRatioId: '4:5',
+    aspectRatioId: '16:9',
   };
 
   const updateCurrentAdj = useCallback(
@@ -111,7 +111,7 @@ const ImageAdjustModal = ({ files = [], onClose, onConfirm, uploading = false })
           rotation: 0,
           panX: 0,
           panY: 0,
-          aspectRatioId: '4:5',
+          aspectRatioId: '16:9',
         };
         const updated = typeof updater === 'function' ? updater(current) : { ...current, ...updater };
         return { ...prev, [currentIndex]: updated };
@@ -301,7 +301,7 @@ const ImageAdjustModal = ({ files = [], onClose, onConfirm, uploading = false })
       rotation: 0,
       panX: 0,
       panY: 0,
-      aspectRatioId: '4:5',
+      aspectRatioId: '16:9',
     });
   };
 
