@@ -162,10 +162,10 @@ const Navbar = () => {
           {/* User Profile Avatar Popover Menu (Logged in only) */}
           {isLoggedIn && (
             <div className="flex items-center gap-2">
-              <div className="relative" ref={menuRef}>
+              <div className="relative group" ref={menuRef}>
                 <button
                   onClick={() => setShowMenu((prev) => !prev)}
-                  title="My Account & Settings"
+                  title={showExclamation ? "Add partner expectation" : "My Profile & Settings"}
                   className="relative flex items-center justify-center w-9 h-9 rounded-full
                              border-2 border-primary overflow-visible focus:outline-none
                              hover:ring-2 hover:ring-primary-light transition cursor-pointer shadow-sm"
@@ -183,7 +183,7 @@ const Navbar = () => {
                   {/* Uncompleted expectations indicator */}
                   {showExclamation && (
                     <span
-                      title="Your partner expectations are empty — tap to fill them in"
+                      title="Add partner expectation"
                       className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500
                                  flex items-center justify-center text-white text-[10px] font-bold
                                  shadow pointer-events-none select-none z-10"
@@ -192,6 +192,16 @@ const Navbar = () => {
                     </span>
                   )}
                 </button>
+
+                {/* Hover suggestion tooltip when expectations are empty */}
+                {showExclamation && !showMenu && (
+                  <div className="absolute top-full right-0 mt-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200 transform scale-95 group-hover:scale-100 z-50 whitespace-nowrap">
+                    <div className="bg-amber-600 dark:bg-amber-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl shadow-xl flex items-center gap-1.5 border border-amber-300/40">
+                      <span>💍</span>
+                      <span>Add partner expectation</span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Avatar Popover Dropdown Menu */}
                 {showMenu && (

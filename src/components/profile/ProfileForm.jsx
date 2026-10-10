@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import Spinner from '../common/Spinner';
 import { translations } from '../../utils/translations';
 
@@ -7,7 +8,54 @@ import { translations } from '../../utils/translations';
  * Organized into default-closed collapsible accordions (group wise).
  * Auto-expands accordion sections containing validation errors upon form submit.
  * Supports English & Gujarati language toggle for field labels.
+ * Validates essential fields and redirects/scrolls to the missing section with a clear alert.
  */
+
+const FORM_FIELD_ORDER = [
+  'name',
+  'surname',
+  'age',
+  'gender',
+  'maritalStatus',
+  'dateOfBirth',
+  'birthTime',
+  'weight',
+  'birthPlace',
+  'diet',
+  'fatherName',
+  'motherName',
+  'mobileNo',
+  'alternateMobileNo',
+  'addressLine',
+  'state',
+  'city',
+  'pincode',
+  'education',
+  'profession',
+];
+
+const FIELD_METADATA = {
+  name:              { label: 'First Name',            labelGu: 'નામ',             section: 'personal',  sectionTitle: 'Personal Information',        sectionTitleGu: 'વ્યક્તિગત વિગત' },
+  surname:           { label: 'Surname',               labelGu: 'અટક',             section: 'personal',  sectionTitle: 'Personal Information',        sectionTitleGu: 'વ્યક્તિગત વિગત' },
+  age:               { label: 'Age',                   labelGu: 'ઉંમર',            section: 'personal',  sectionTitle: 'Personal Information',        sectionTitleGu: 'વ્યક્તિગત વિગત' },
+  gender:            { label: 'Gender',                labelGu: 'જાતિ (લિંગ)',     section: 'personal',  sectionTitle: 'Personal Information',        sectionTitleGu: 'વ્યક્તિગત વિગત' },
+  maritalStatus:     { label: 'Marital Status',        labelGu: 'વૈવાહિક દરજ્જો',   section: 'personal',  sectionTitle: 'Personal Information',        sectionTitleGu: 'વ્યક્તિગત વિગત' },
+  dateOfBirth:       { label: 'Date of Birth',         labelGu: 'જન્મ તારીખ',       section: 'birth',     sectionTitle: 'Birth & Astrological Details', sectionTitleGu: 'જન્મ અને જ્યોતિષ વિગત' },
+  birthTime:         { label: 'Birth Time',            labelGu: 'જન્મ સમય',         section: 'birth',     sectionTitle: 'Birth & Astrological Details', sectionTitleGu: 'જન્મ અને જ્યોતિષ વિગત' },
+  weight:            { label: 'Weight',                labelGu: 'વજન',             section: 'birth',     sectionTitle: 'Birth & Astrological Details', sectionTitleGu: 'જન્મ અને જ્યોતિષ વિગત' },
+  birthPlace:        { label: 'Birth Place',           labelGu: 'જન્મ સ્થળ',        section: 'birth',     sectionTitle: 'Birth & Astrological Details', sectionTitleGu: 'જન્મ અને જ્યોતિષ વિગત' },
+  diet:              { label: 'Dietary Preference',    labelGu: 'ખોરાકની પસંદગી',   section: 'birth',     sectionTitle: 'Birth & Astrological Details', sectionTitleGu: 'જન્મ અને જ્યોતિષ વિગત' },
+  fatherName:        { label: 'Father Name',           labelGu: 'પિતાનું નામ',       section: 'family',    sectionTitle: 'Family Information',           sectionTitleGu: 'કુટુંબની વિગત' },
+  motherName:        { label: 'Mother Name',           labelGu: 'માતાનું નામ',       section: 'family',    sectionTitle: 'Family Information',           sectionTitleGu: 'કુટુંબની વિગત' },
+  mobileNo:          { label: 'Mobile Number',         labelGu: 'મોબાઈલ નંબર',      section: 'contact',   sectionTitle: 'Contact & Address Details',    sectionTitleGu: 'સંપર્ક અને સરનામું' },
+  alternateMobileNo: { label: 'Alternate Mobile',      labelGu: 'બીજો મોબાઈલ',      section: 'contact',   sectionTitle: 'Contact & Address Details',    sectionTitleGu: 'સંપર્ક અને સરનામું' },
+  addressLine:       { label: 'Residential Address',   labelGu: 'ઘરનું સરનામું',   section: 'contact',   sectionTitle: 'Contact & Address Details',    sectionTitleGu: 'સંપર્ક અને સરનામું' },
+  state:             { label: 'State',                 labelGu: 'રાજ્ય',            section: 'contact',   sectionTitle: 'Contact & Address Details',    sectionTitleGu: 'સંપર્ક અને સરનામું' },
+  city:              { label: 'City',                  labelGu: 'શહેર',            section: 'contact',   sectionTitle: 'Contact & Address Details',    sectionTitleGu: 'સંપર્ક અને સરનામું' },
+  pincode:           { label: 'Pincode',               labelGu: 'પીનકોડ',          section: 'contact',   sectionTitle: 'Contact & Address Details',    sectionTitleGu: 'સંપર્ક અને સરનામું' },
+  education:         { label: 'Education',             labelGu: 'શિક્ષણ',          section: 'education', sectionTitle: 'Education & Career',           sectionTitleGu: 'શિક્ષણ અને કારકિર્દી' },
+  profession:        { label: 'Occupation/Profession', labelGu: 'વ્યવસાય',        section: 'education', sectionTitle: 'Education & Career',           sectionTitleGu: 'શિક્ષણ અને કારકિર્દી' },
+};
 
 const DIET_OPTIONS = [
   { value: '', label: 'Select dietary preference' },
@@ -204,6 +252,36 @@ const ProfileForm = ({
         contact:   contactErr   || prev.contact,
         education: educationErr || prev.education,
       }));
+
+      // Find the first missing essential field in document order
+      const firstErrorKey = FORM_FIELD_ORDER.find((k) => validationErrors[k]) || Object.keys(validationErrors)[0];
+      const meta = FIELD_METADATA[firstErrorKey] || {
+        label: firstErrorKey,
+        section: 'personal',
+        sectionTitle: 'Profile Information',
+      };
+
+      const errorFieldLabel = lang === 'gu' ? (meta.labelGu || meta.label) : meta.label;
+      const errorSectionTitle = lang === 'gu' ? (meta.sectionTitleGu || meta.sectionTitle) : meta.sectionTitle;
+
+      const alertMessage = lang === 'gu'
+        ? `જરૂરી વિગત ખૂટે છે: "${errorFieldLabel}" (${errorSectionTitle}) ભરવી જરૂરી છે. કૃપા કરીને તેને ભરો.`
+        : `Essential field is missing: "${errorFieldLabel}" in ${errorSectionTitle}. Please fill it to continue.`;
+
+      toast.error(alertMessage, { id: 'essential-field-error', duration: 4500 });
+
+      // Smoothly scroll and redirect user to that section and focus the input field
+      setTimeout(() => {
+        const inputElement = document.querySelector(`[name="${firstErrorKey}"]`);
+        if (inputElement) {
+          inputElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          inputElement.focus();
+        } else {
+          const sectionElement = document.getElementById(`section-${meta.section}`);
+          sectionElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 150);
+
       return;
     }
     setErrors({});
@@ -292,6 +370,20 @@ const ProfileForm = ({
           </button>
         </div>
       </div>
+
+      {/* ── Missing Essential Field Alert Banner ── */}
+      {Object.keys(errors).length > 0 && (
+        <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-semibold flex items-start gap-2.5 shadow-sm">
+          <span className="text-base leading-none shrink-0">⚠️</span>
+          <div>
+            <p className="font-bold">
+              {lang === 'gu'
+                ? 'જરૂરી વિગત ખૂટે છે! કૃપા કરીને લાલ રંગથી દર્શાવેલ વિગતો ભરીને આગળ વધો.'
+                : 'Essential field is missing! Please fill the highlighted required fields to save and continue.'}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ── 1. Personal Information Accordion ── */}
       <AccordionSection
@@ -703,7 +795,9 @@ const ProfileForm = ({
 
 /** Reusable Collapsible Accordion Section */
 const AccordionSection = ({ title, icon, sectionKey, isOpen, onToggle, hasError, errorCount, children }) => (
-  <div className={`border rounded-2xl overflow-hidden transition-all duration-200 shadow-sm ${
+  <div
+    id={`section-${sectionKey}`}
+    className={`border rounded-2xl overflow-hidden transition-all duration-200 shadow-sm ${
     hasError
       ? 'border-red-400 dark:border-red-500/80 bg-red-50/20 dark:bg-red-950/10'
       : 'border-border dark:border-gray-700 bg-white dark:bg-card-dark'
