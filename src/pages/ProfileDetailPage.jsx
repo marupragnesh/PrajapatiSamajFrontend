@@ -307,7 +307,7 @@ const ProfileDetailPage = () => {
                 <Users className="w-3.5 h-3.5 text-primary" />
                 <span>Family Details</span>
               </a>
-              {(profile.dateOfBirth || profile.birthTime || profile.birthPlace || profile.hasMangal !== undefined || profile.hasSani !== undefined) && (
+              {(profile.dateOfBirth || profile.birthTime || profile.birthPlace || profile.rashi || profile.hasMangal !== undefined || profile.hasSani !== undefined) && (
                 <a href="#sec-birth" className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition cursor-pointer flex items-center gap-1.5">
                   <FileText className="w-3.5 h-3.5 text-primary" />
                   <span>Birth &amp; Horoscope</span>
@@ -393,9 +393,12 @@ const ProfileDetailPage = () => {
             </Section>
 
             {/* ── Birth & Horoscope Details ── */}
-            {(profile.dateOfBirth || profile.birthTime || profile.birthPlace || profile.hasMangal !== undefined || profile.hasSani !== undefined) && (
+            {(profile.dateOfBirth || profile.birthTime || profile.birthPlace || profile.rashi || profile.hasMangal !== undefined || profile.hasSani !== undefined) && (
               <Section title="Birth & Horoscope Details" icon={<FileText className="w-4 h-4 text-primary" />} id="sec-birth">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                  {profile.rashi && (
+                    <DetailRow label="Rashi / Zodiac (રાશિ)" value={profile.rashi} />
+                  )}
                   {profile.dateOfBirth && (
                     <DetailRow label="Date of Birth" value={profile.dateOfBirth} />
                   )}

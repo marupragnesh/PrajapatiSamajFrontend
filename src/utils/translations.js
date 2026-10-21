@@ -40,6 +40,7 @@ export const translations = {
     dietEgg: "Eggetarian",
     
     bloodGroup: "Blood Group",
+    rashi: "Rashi / Zodiac (રાશિ)",
     gotra: "Gotra",
     hasMangal: "Mangal (Dosha)",
     hasSani: "Shani (Dosha)",
@@ -135,6 +136,7 @@ export const translations = {
     dietEgg: "ઈંડાહારી (Eggetarian)",
     
     bloodGroup: "બ્લડ ગ્રુપ (Blood Group)",
+    rashi: "રાશિ (Rashi / Zodiac)",
     gotra: "ગોત્ર (Gotra)",
     hasMangal: "મંગળ (Mangal)",
     hasSani: "શનિ (Shani)",

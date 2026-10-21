@@ -59,7 +59,7 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark flex flex-col
                     items-center justify-center px-4 py-8 relative">
-      <div className="w-full max-w-md bg-white dark:bg-card-dark rounded-2xl shadow-lg p-8 border border-border">
+      <div className="w-full max-w-md bg-white dark:bg-card-dark rounded-2xl shadow-lg p-6 sm:p-8 border border-border dark:border-gray-800">
         <h1 className="text-2xl font-bold text-primary mb-1 flex items-center gap-2">
           <LogoIcon className="w-8 h-8" />
           <span className="font-serif font-extrabold tracking-wide text-amber-700 dark:text-amber-400">PrajapatiSamaj</span>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { loginWithGoogle } from '../../api/authApi';
@@ -11,8 +11,8 @@ import Spinner from '../common/Spinner';
  * GoogleLoginButton — Provides 1-click Google OAuth authentication & registration.
  *
  * Uses official Google Identity Services (GIS).
- * If VITE_GOOGLE_CLIENT_ID is configured, renders Google's secure GIS button.
- * If client ID is missing or pending, displays a polished button with helpful guidance.
+ * Responsive on all mobile devices (prevents horizontal overflow).
+ * Automatically detects and synchronizes with application dark / light theme.
  *
  * @param {string} mode - 'login' | 'register'
  * @param {Function} onError - Optional error callback
@@ -20,14 +20,20 @@ import Spinner from '../common/Spinner';
 const GoogleLoginButton = ({ mode = 'login', onError }) => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const containerRef = useRef(null);
   const buttonRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
+  // Synchronize button theme with application dark mode
+  const [isDark, setIsDark] = useState(() =>
+    typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
+  );
+
   const clientId = import.meta.env.GOOGLE_CLIENT_ID || import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   // Handle successful Google authentication credential response
-  const handleCredentialResponse = async (response) => {
+  const handleCredentialResponse = useCallback(async (response) => {
     if (!response || !response.credential) {
       logger.warn('Google credential response empty');
       toast.error('Google sign-in was cancelled or failed.');
@@ -69,7 +75,33 @@ const GoogleLoginButton = ({ mode = 'login', onError }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [login, mode, navigate, onError]);
+
+  // Listen for dark/light mode class changes on <html>
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+
+    const checkTheme = () => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    };
+
+    checkTheme();
+
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          checkTheme();
+        }
+      }
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   // Load Google Identity Services script
   useEffect(() => {
@@ -98,9 +130,9 @@ const GoogleLoginButton = ({ mode = 'login', onError }) => {
     document.body.appendChild(script);
   }, []);
 
-  // Initialize and render Google button once script and client ID are available
-  useEffect(() => {
-    if (!scriptLoaded || !clientId || !window.google?.accounts?.id || !buttonRef.current) {
+  // Function to render Google button with responsive width and dynamic theme
+  const renderGoogleButton = useCallback(() => {
+    if (!window.google?.accounts?.id || !buttonRef.current || !clientId) {
       return;
     }
 
@@ -112,8 +144,13 @@ const GoogleLoginButton = ({ mode = 'login', onError }) => {
         cancel_on_tap_outside: true,
       });
 
-      // Render official Google button inside ref container
+      // Calculate width to fit container exactly, clamped within Google's allowed bounds (200px - 400px)
+      const containerWidth = containerRef.current?.clientWidth || buttonRef.current?.parentElement?.clientWidth || 320;
+      const computedWidth = Math.max(200, Math.min(Math.floor(containerWidth), 400));
+
+      // Clear previous button DOM nodes
       buttonRef.current.innerHTML = '';
+
       window.google.accounts.id.renderButton(buttonRef.current, {
         type: 'standard',
         theme: 'outline',
@@ -121,12 +158,46 @@ const GoogleLoginButton = ({ mode = 'login', onError }) => {
         text: mode === 'register' ? 'signup_with' : 'signin_with',
         shape: 'rectangular',
         logo_alignment: 'left',
-        width: 380,
+        width: computedWidth,
       });
     } catch (err) {
-      logger.error('Error initializing Google GIS button', err);
+      logger.error('Error rendering Google GIS button', err);
     }
-  }, [scriptLoaded, clientId, mode]);
+  }, [clientId, handleCredentialResponse, isDark, mode]);
+
+  // Render button when ready and re-render on resize or theme change
+  useEffect(() => {
+    if (!scriptLoaded || !clientId) return;
+
+    renderGoogleButton();
+
+    let resizeTimer;
+    const handleResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        renderGoogleButton();
+      }, 150);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    let resizeObserver;
+    if (containerRef.current && typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          renderGoogleButton();
+        }, 150);
+      });
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (resizeObserver) resizeObserver.disconnect();
+      clearTimeout(resizeTimer);
+    };
+  }, [scriptLoaded, clientId, renderGoogleButton]);
 
   // Click handler for when client ID is not configured or custom click
   const handleCustomButtonClick = () => {
@@ -140,16 +211,16 @@ const GoogleLoginButton = ({ mode = 'login', onError }) => {
     if (window.google?.accounts?.id) {
       window.google.accounts.id.prompt((notification) => {
         if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          // If One Tap is skipped/dismissed, trigger normal button flow
+          // If One Tap is skipped/dismissed
         }
       });
     }
   };
 
   return (
-    <div className="w-full flex flex-col items-center justify-center my-1">
+    <div ref={containerRef} className="w-full flex flex-col items-center justify-center my-1">
       {loading ? (
-        <div className="w-full py-2.5 px-4 rounded-lg border border-border dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex items-center justify-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200">
+        <div className="w-full py-2.5 px-4 rounded-xl border border-border dark:border-gray-700 bg-gray-50 dark:bg-card-dark flex items-center justify-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200">
           <Spinner />
           <span>Connecting to Google...</span>
         </div>
@@ -159,7 +230,7 @@ const GoogleLoginButton = ({ mode = 'login', onError }) => {
           {clientId && (
             <div
               ref={buttonRef}
-              className="w-full flex justify-center min-h-[44px]"
+              className="w-full flex justify-center items-center min-h-[44px] overflow-hidden rounded-lg [&>div]:!w-full [&>div]:flex [&>div]:justify-center [&_iframe]:!max-w-full"
             />
           )}
 
@@ -168,9 +239,9 @@ const GoogleLoginButton = ({ mode = 'login', onError }) => {
             <button
               type="button"
               onClick={handleCustomButtonClick}
-              className="w-full py-2.5 px-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium text-sm transition-colors flex items-center justify-center gap-3 shadow-sm hover:shadow"
+              className="w-full py-2.5 px-4 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-card-dark hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 font-medium text-sm transition-colors flex items-center justify-center gap-3 shadow-sm hover:shadow"
             >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"
                   d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"

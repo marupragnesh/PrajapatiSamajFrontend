@@ -68,6 +68,7 @@ const BiodataTemplates = React.forwardRef(({ profile, styleName = 'royal', hideB
                 📌 Personal Details
               </div>
               <div className="grid grid-cols-2 gap-x-6 gap-y-1 mt-1.5 px-2">
+                <div><strong>Rashi (રાશિ):</strong> {fmt(profile.rashi)}</div>
                 <div><strong>Date of Birth:</strong> {fmt(profile.dateOfBirth)}</div>
                 <div><strong>Birth Time:</strong> {fmt(profile.birthTime)}</div>
                 <div><strong>Birthplace:</strong> {fmt(profile.birthPlace)}</div>
@@ -294,6 +295,7 @@ const BiodataTemplates = React.forwardRef(({ profile, styleName = 'royal', hideB
                   📌 Birth &amp; Astro Details
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-1">
+                  <div><strong>Rashi (રાશિ):</strong> {fmt(profile.rashi)}</div>
                   <div><strong>Date of Birth:</strong> {fmt(profile.dateOfBirth)}</div>
                   <div><strong>Birth Time:</strong> {fmt(profile.birthTime)}</div>
                   <div><strong>Birthplace:</strong> {fmt(profile.birthPlace)}</div>
@@ -517,6 +519,7 @@ const BiodataTemplates = React.forwardRef(({ profile, styleName = 'royal', hideB
                 📌 Personal &amp; Horoscope Credentials
               </div>
               <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-amber-100">
+                <div><span className="text-amber-300 font-semibold">Rashi (રાશિ):</span> {fmt(profile.rashi)}</div>
                 <div><span className="text-amber-300 font-semibold">Date of Birth:</span> {fmt(profile.dateOfBirth)}</div>
                 <div><span className="text-amber-300 font-semibold">Birth Time:</span> {fmt(profile.birthTime)}</div>
                 <div><span className="text-amber-300 font-semibold">Birthplace:</span> {fmt(profile.birthPlace)}</div>
@@ -626,6 +629,7 @@ const BiodataTemplates = React.forwardRef(({ profile, styleName = 'royal', hideB
               <div className="font-serif font-bold text-emerald-900 border-b border-emerald-200 pb-1 text-sm">
                 📌 Personal Details
               </div>
+              <div><strong>Rashi (રાશિ):</strong> {fmt(profile.rashi)}</div>
               <div><strong>DOB:</strong> {fmt(profile.dateOfBirth)}</div>
               <div><strong>Birth Time:</strong> {fmt(profile.birthTime)}</div>
               <div><strong>Birthplace:</strong> {fmt(profile.birthPlace)}</div>
@@ -733,6 +737,7 @@ const BiodataTemplates = React.forwardRef(({ profile, styleName = 'royal', hideB
                 <span className="text-[11px] font-sans font-normal text-rose-700">Horoscope Profile</span>
               </div>
               <div className="grid grid-cols-2 gap-x-6 gap-y-1 mt-1.5 px-2 text-rose-900">
+                <div><strong>Rashi (રાશિ):</strong> {fmt(profile.rashi)}</div>
                 <div><strong>Date of Birth:</strong> {fmt(profile.dateOfBirth)}</div>
                 <div><strong>Birth Time:</strong> {fmt(profile.birthTime)}</div>
                 <div><strong>Birthplace:</strong> {fmt(profile.birthPlace)}</div>
@@ -849,6 +854,7 @@ const BiodataTemplates = React.forwardRef(({ profile, styleName = 'royal', hideB
               <div className="font-serif font-bold text-blue-900 border-b border-slate-200 pb-1 text-sm flex items-center justify-between">
                 <span>📌 Personal Details</span>
               </div>
+              <div><strong>Rashi (રાશિ):</strong> {fmt(profile.rashi)}</div>
               <div><strong>DOB:</strong> {fmt(profile.dateOfBirth)}</div>
               <div><strong>Birth Time:</strong> {fmt(profile.birthTime)}</div>
               <div><strong>Birthplace:</strong> {fmt(profile.birthPlace)}</div>

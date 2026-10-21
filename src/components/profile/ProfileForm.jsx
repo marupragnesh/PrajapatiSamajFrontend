@@ -2,6 +2,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import Spinner from '../common/Spinner';
 import { translations } from '../../utils/translations';
+import { predictRashiByName, RASHI_OPTIONS } from '../../utils/rashiUtil';
 
 /**
  * Reusable profile form — used on ProfileSetupPage and EditProfilePage.
@@ -42,6 +43,7 @@ const FIELD_METADATA = {
   maritalStatus:     { label: 'Marital Status',        labelGu: 'વૈવાહિક દરજ્જો',   section: 'personal',  sectionTitle: 'Personal Information',        sectionTitleGu: 'વ્યક્તિગત વિગત' },
   dateOfBirth:       { label: 'Date of Birth',         labelGu: 'જન્મ તારીખ',       section: 'birth',     sectionTitle: 'Birth & Astrological Details', sectionTitleGu: 'જન્મ અને જ્યોતિષ વિગત' },
   birthTime:         { label: 'Birth Time',            labelGu: 'જન્મ સમય',         section: 'birth',     sectionTitle: 'Birth & Astrological Details', sectionTitleGu: 'જન્મ અને જ્યોતિષ વિગત' },
+  rashi:             { label: 'Rashi (Zodiac)',        labelGu: 'રાશિ',            section: 'birth',     sectionTitle: 'Birth & Astrological Details', sectionTitleGu: 'જન્મ અને જ્યોતિષ વિગત' },
   weight:            { label: 'Weight',                labelGu: 'વજન',             section: 'birth',     sectionTitle: 'Birth & Astrological Details', sectionTitleGu: 'જન્મ અને જ્યોતિષ વિગત' },
   birthPlace:        { label: 'Birth Place',           labelGu: 'જન્મ સ્થળ',        section: 'birth',     sectionTitle: 'Birth & Astrological Details', sectionTitleGu: 'જન્મ અને જ્યોતિષ વિગત' },
   diet:              { label: 'Dietary Preference',    labelGu: 'ખોરાકની પસંદગી',   section: 'birth',     sectionTitle: 'Birth & Astrological Details', sectionTitleGu: 'જન્મ અને જ્યોતિષ વિગત' },
@@ -115,8 +117,12 @@ const ProfileForm = ({
   const [timeMinute, setTimeMinute] = useState(initialTime.minute);
   const [timePeriod, setTimePeriod] = useState(initialTime.period);
 
+  const initialName = initialData.name || (initialData.fullName ? initialData.fullName.split(' ')[0] : '');
+  const initialRashi = initialData.rashi || predictRashiByName(initialName) || '';
+  const [isRashiManual, setIsRashiManual] = useState(Boolean(initialData.rashi));
+
   const [form, setForm] = useState({
-    name:              initialData.name              || (initialData.fullName ? initialData.fullName.split(' ')[0] : ''),
+    name:              initialName,
     surname:           initialData.surname           || (initialData.fullName ? initialData.fullName.substring(initialData.fullName.indexOf(' ') + 1) : ''),
     age:               initialData.age               || '',
     gender:            initialData.gender            || '',
@@ -134,6 +140,7 @@ const ProfileForm = ({
     weight:            initialData.weight !== undefined && initialData.weight !== null ? initialData.weight : '',
     bloodGroup:        initialData.bloodGroup        || '',
     birthPlace:        initialData.birthPlace        || '',
+    rashi:             initialRashi,
     hasMangal:         initialData.hasMangal !== undefined ? initialData.hasMangal : null,
     hasSani:           initialData.hasSani !== undefined ? initialData.hasSani : null,
     height:            initialData.height            || '',
@@ -220,6 +227,13 @@ const ProfileForm = ({
     const { name, value, type, checked } = e.target;
     if (type === 'checkbox') {
       setForm((prev) => ({ ...prev, [name]: checked }));
+    } else if (name === 'name') {
+      const autoRashi = !isRashiManual ? predictRashiByName(value) : null;
+      setForm((prev) => ({
+        ...prev,
+        name: value,
+        ...(autoRashi ? { rashi: autoRashi } : {}),
+      }));
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
     }
@@ -320,6 +334,7 @@ const ProfileForm = ({
       religion:          form.religion || null,
       hobbies:           form.hobbies  || null,
       managedBy:         form.managedBy || 'Self',
+      rashi:             form.rashi    || null,
     });
   };
 
@@ -550,23 +565,69 @@ const ProfileForm = ({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t.rashi || 'Rashi (રાશિ)'}
+              </label>
+              {form.name && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const auto = predictRashiByName(form.name);
+                    if (auto) {
+                      setForm((prev) => ({ ...prev, rashi: auto }));
+                      setIsRashiManual(false);
+                      toast.success(`Rashi detected: ${auto}`);
+                    } else {
+                      toast('Could not determine Rashi from name. Please select manually.', { icon: 'ℹ️' });
+                    }
+                  }}
+                  className="text-xs text-primary hover:underline font-semibold cursor-pointer"
+                  title="Auto-detect Rashi from First Name"
+                >
+                  ⚡ Auto-detect
+                </button>
+              )}
+            </div>
+            <select
+              name="rashi"
+              value={form.rashi}
+              onChange={(e) => {
+                setIsRashiManual(true);
+                handleChange(e);
+              }}
+              className={inputClass}
+            >
+              <option value="">-- Select Rashi / રાશિ પસંદ કરો --</option>
+              {RASHI_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.value} ({opt.letters})
+                </option>
+              ))}
+            </select>
+            {errors.rashi && <p className="text-error text-xs mt-1">{errors.rashi}</p>}
+          </div>
+
           <Field label={t.gotra}>
             <input name="gotra" value={form.gotra} onChange={handleChange}
               placeholder="e.g. Kashyap" className={inputClass} />
           </Field>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Religion">
             <input name="religion" value={form.religion} onChange={handleChange}
               placeholder="Hindu" className={inputClass} />
           </Field>
+          <Field label={`${t.diet} *`} error={errors.diet}>
+            <select name="diet" value={form.diet} onChange={handleChange} className={inputClass}>
+              {DIET_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </Field>
         </div>
-
-        <Field label={`${t.diet} *`} error={errors.diet}>
-          <select name="diet" value={form.diet} onChange={handleChange} className={inputClass}>
-            {DIET_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-        </Field>
 
         {/* 2 Gujarati Toggle / Choice Groups */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
