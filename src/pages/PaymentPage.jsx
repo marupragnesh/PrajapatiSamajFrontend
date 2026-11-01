@@ -416,20 +416,20 @@ const PaymentPage = () => {
             <Tag className="w-4 h-4 text-primary" />
             <span className="text-xs font-bold text-gray-700 dark:text-gray-200">{t.couponSectionTitle}</span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <input
               type="text"
               value={couponInput}
               onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
               placeholder={t.couponPlaceholder}
               disabled={Boolean(appliedCoupon)}
-              className="flex-1 px-3.5 py-2 text-xs font-semibold rounded-xl border border-border dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:border-primary uppercase tracking-wider"
+              className="flex-1 px-3.5 py-2.5 text-xs font-semibold rounded-xl border border-border dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:border-primary uppercase tracking-wider"
             />
             {appliedCoupon ? (
               <button
                 type="button"
                 onClick={handleRemoveCoupon}
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-bold transition shadow-sm"
+                className="px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-bold transition shadow-sm whitespace-nowrap cursor-pointer"
               >
                 {t.removeCoupon}
               </button>
@@ -437,7 +437,7 @@ const PaymentPage = () => {
               <button
                 type="button"
                 onClick={handleApplyCoupon}
-                className="px-5 py-2 bg-primary hover:bg-primary-light text-white rounded-xl text-xs font-bold transition shadow-sm"
+                className="px-5 py-2.5 bg-primary hover:bg-primary-light text-white rounded-xl text-xs font-bold transition shadow-sm whitespace-nowrap cursor-pointer"
               >
                 {t.applyCoupon}
               </button>
