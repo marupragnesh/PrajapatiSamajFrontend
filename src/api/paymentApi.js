@@ -5,23 +5,27 @@ import logger from '../utils/logger';
  * paymentApi — Razorpay payment endpoints.
  *
  * Two-step flow used by UnlockContactButton:
- *   1. createOrder(feature)   → backend creates a Razorpay order, amount is
- *      decided server-side from `feature` (never trusted from this file).
- *   2. verifyPayment({...})   → after the Razorpay checkout modal succeeds,
+ *   1. createOrder(feature, targetProfileId, couponCode) → backend creates a Razorpay order,
+ *      amount is decided server-side from `feature` and validated `couponCode`.
+ *   2. verifyPayment({...}) → after the Razorpay checkout modal succeeds,
  *      send back the three fields it returns so the backend can verify the
- *      HMAC-SHA256 signature. Only a `success: true` response means the
- *      payment is genuinely confirmed — never assume success just because
- *      the checkout modal closed.
+ *      HMAC-SHA256 signature.
  */
 
 /**
  * POST /api/payments/create-order — create a Razorpay order for a feature.
- * @param {string} feature - one of the PaymentFeature enum values (e.g. 'CONTACT_UNLOCK')
- * @returns {Promise<{orderId, amount, currency, keyId}>}
+ * @param {string} feature - one of the PaymentFeature enum values (e.g. 'LEVEL_1', 'LEVEL_2', 'LEVEL_3')
+ * @param {number|null} targetProfileId - optional target profile ID
+ * @param {string|null} couponCode - optional coupon code for discount
+ * @returns {Promise<{orderId, amount, currency, keyId, couponCode, originalAmount, discountPercentage}>}
  */
-export const createOrder = async (feature, targetProfileId = null) => {
+export const createOrder = async (feature, targetProfileId = null, couponCode = null) => {
   logger.api('POST', '/api/payments/create-order');
-  const response = await axiosInstance.post('/api/payments/create-order', { feature, targetProfileId });
+  const payload = { feature, targetProfileId };
+  if (couponCode && couponCode.trim()) {
+    payload.couponCode = couponCode.trim();
+  }
+  const response = await axiosInstance.post('/api/payments/create-order', payload);
   logger.response('/api/payments/create-order', response.data);
   return response.data;
 };
@@ -41,7 +45,7 @@ export const verifyPayment = async (payload) => {
 
 /**
  * GET /api/payments/status — get feature unlock status for logged in user.
- * @returns {Promise<{contactUnlocked: boolean, filtersUnlocked: boolean}>}
+ * @returns {Promise<any>}
  */
 export const getPaymentStatus = async () => {
   logger.api('GET', '/api/payments/status');
@@ -49,4 +53,3 @@ export const getPaymentStatus = async () => {
   logger.response('/api/payments/status', response.data);
   return response.data;
 };
-

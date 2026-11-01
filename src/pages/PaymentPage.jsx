@@ -7,7 +7,8 @@ import {
   Sparkles,
   MessageCircle,
   Mail,
-  Lightbulb
+  Lightbulb,
+  Tag
 } from 'lucide-react';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
@@ -24,9 +25,9 @@ import logger from '../utils/logger';
  *   - English (default)
  *   - Gujarati (ગુજરાતી)
  *
- * Tier 1 (₹99):  Unlock all profiles + Biodata PDF (all themes) + 2 likes/day + 10 interests in 2 months + Expectations
- * Tier 2 (₹199): Level 1 all + Higher Visibility + Advanced Filters + Unlimited likes + Unlimited interests
- * Tier 3 (₹299): Level 2 all + Highest Visibility + Unlimited Mobile No & Address + Unlimited Likes & Interests
+ * Tier 1: Unlock all profiles + Biodata PDF (all themes) + 2 likes/day + 10 interests in 2 months + Expectations
+ * Tier 2: Level 1 all + Higher Visibility + Advanced Filters + Unlimited likes + Unlimited interests
+ * Tier 3: Level 2 all + Highest Visibility + Unlimited Mobile No & Address + Unlimited Likes & Interests
  */
 
 const TRANSLATIONS = {
@@ -41,6 +42,15 @@ const TRANSLATIONS = {
     validity: "Valid for 2 Months",
     currentActivePlan: "Current Active Plan",
     vipAccessActive: "VIP Access Active",
+
+    // Coupon translations
+    couponSectionTitle: "Have a Coupon Code?",
+    couponPlaceholder: "Enter coupon code (e.g. diwali20)",
+    applyCoupon: "Apply",
+    removeCoupon: "Remove",
+    couponApplied: "Coupon applied successfully!",
+    couponInvalid: "Invalid or expired coupon code",
+    discountBadge: "OFF",
 
     // Active banner descriptions
     level3Desc: "You have full VIP access: Unlimited Contact & Address, Highest Visibility, Unlimited Likes & Interests.",
@@ -57,7 +67,7 @@ const TRANSLATIONS = {
     t1F5: "Free Partner Expectations: View partner expectations on any profile without payment.",
     t1F6: "Discover Filters Locked",
     t1F7: "Mobile No & Address Masked",
-    t1Btn: "Get Level 1 (₹99)",
+    t1Btn: "Get Level 1",
 
     // Tier 2
     t2Badge: "Level 2",
@@ -69,7 +79,7 @@ const TRANSLATIONS = {
     t2F4: "Unlimited Likes: Like as many profiles as you want in 2 months.",
     t2F5: "Unlimited Interests: Send interest requests to any profile without limits.",
     t2F6: "Mobile No & Address Masked",
-    t2Btn: "Get Level 2 (₹199)",
+    t2Btn: "Get Level 2",
 
     // Tier 3
     t3Badge: "Level 3 VIP",
@@ -81,8 +91,8 @@ const TRANSLATIONS = {
     t3F4: "Unlimited Likes: Like as many profiles as you want.",
     t3F5: "Unlimited Interests: Send interest requests to any profile without limits.",
     t3F6: "Biodata Studio & Discover Filters: Full access to all features.",
-    t3BtnUpgrade: "Upgrade to VIP Level 3 (₹299)",
-    t3BtnGet: "Get VIP Level 3 (₹299)",
+    t3BtnUpgrade: "Upgrade to VIP Level 3",
+    t3BtnGet: "Get VIP Level 3",
 
     // Footer Trust Items
     secTitle: "100% Safe & Instant Payment",
@@ -102,6 +112,15 @@ const TRANSLATIONS = {
     currentActivePlan: "હાલનો સક્રિય પ્લાન",
     vipAccessActive: "VIP ઍક્સેસ સક્રિય",
 
+    // Coupon translations
+    couponSectionTitle: "શું તમારી પાસે કૂપન કોડ છે?",
+    couponPlaceholder: "કૂપન કોડ દાખલ કરો (દા.ત. diwali20)",
+    applyCoupon: "લાગુ કરો",
+    removeCoupon: "દૂર કરો",
+    couponApplied: "કૂપન સફળતાપૂર્વક લાગુ થઈ!",
+    couponInvalid: "અમાન્ય અથવા સમાપ્ત થયેલ કૂપન કોડ",
+    discountBadge: "છૂટ",
+
     // Active banner descriptions
     level3Desc: "તમારી પાસે પૂર્ણ VIP ઍક્સેસ છે: બધા પ્રોફાઇલ્સના મોબાઇલ નંબર અને સરનામું, સૌથી વધુ દૃશ્યતા, અમર્યાદિત લાઇક્સ અને ઇન્ટરેસ્ટ.",
     level2Desc: "તમારી પાસે લેવલ ૨ ઍક્સેસ છે: ઉચ્ચ દૃશ્યતા રેન્કિંગ, ડિસ્કવર ફિલ્ટર્સ, અમર્યાદિત લાઇક્સ અને ઇન્ટરેસ્ટ.",
@@ -117,7 +136,7 @@ const TRANSLATIONS = {
     t1F5: "જીવનસાથીની અપેક્ષાઓ વિનામૂલ્યે: કોઈપણ પ્રોફાઇલની અપેક્ષાઓ ચૂકવણી વિના મફતમાં જુઓ.",
     t1F6: "ડિસ્કવર ફિલ્ટર્સ લૉક રહેશે",
     t1F7: "મોબાઇલ નંબર અને સરનામું છુપાયેલ રહેશે",
-    t1Btn: "લેવલ ૧ મેળવો (₹૯૯)",
+    t1Btn: "લેવલ ૧ મેળવો",
 
     // Tier 2
     t2Badge: "🥈 લેવલ ૨",
@@ -129,7 +148,7 @@ const TRANSLATIONS = {
     t2F4: "અમર્યાદિત લાઇક્સ: ૨ મહિનામાં ગમે તેટલી પ્રોફાઇલ્સ લાઈક કરો.",
     t2F5: "અમર્યાદિત ઇન્ટરેસ્ટ: કોઈપણ મર્યાદા વિના પ્રોફાઇલ્સને સંબંધ માટે વિનંતી મોકલો.",
     t2F6: "મોબાઇલ નંબર અને સરનામું છુપાયેલ રહેશે",
-    t2Btn: "લેવલ ૨ મેળવો (₹૧૯૯)",
+    t2Btn: "લેવલ ૨ મેળવો",
 
     // Tier 3
     t3Badge: "🥇 લેવલ ૩ VIP",
@@ -141,8 +160,8 @@ const TRANSLATIONS = {
     t3F4: "અમર્યાદિત લાઇક્સ: ઇચ્છા મુજબ ગમે તેટલી પ્રોફાઇલ્સ લાઈક કરો.",
     t3F5: "અમર્યાદિત ઇન્ટરેસ્ટ: કોઈપણ મર્યાદા વગર સીધા સંબંધની વિનંતી મોકલો.",
     t3F6: "બાયોડેટા સ્ટુડિયો અને તમામ ડિસ્કવર ફિલ્ટર્સ: સંપૂર્ણ સુવિધાઓ અનલોક.",
-    t3BtnUpgrade: "VIP લેવલ ૩ માં અપગ્રેડ કરો (₹૨૯૯)",
-    t3BtnGet: "VIP લેવલ ૩ મેળવો (₹૨૯૯)",
+    t3BtnUpgrade: "VIP લેવલ ૩ માં અપગ્રેડ કરો",
+    t3BtnGet: "VIP લેવલ ૩ મેળવો",
 
     // Footer Trust Items
     secTitle: "🔒 ૧૦૦% સુરક્ષિત અને ત્વરિત ચૂકવણી",
@@ -173,7 +192,19 @@ const PaymentPage = () => {
     level1Price: 99,
     level2Price: 199,
     level3Price: 299,
+    hasActiveCoupon: false,
+    activeCouponCode: '',
+    couponValidDays: null,
+    level1DiscountPercent: 0,
+    level2DiscountPercent: 0,
+    level3DiscountPercent: 0,
+    level1DiscountedPrice: 99,
+    level2DiscountedPrice: 199,
+    level3DiscountedPrice: 299,
   });
+
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState('');
   const [profile, setProfile] = useState(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
   const [processingFeature, setProcessingFeature] = useState(null);
@@ -206,10 +237,46 @@ const PaymentPage = () => {
     fetchData();
   }, []);
 
-  const handlePay = async (featureName, tierName, price) => {
+  const handleApplyCoupon = () => {
+    const code = couponInput.trim();
+    if (!code) {
+      toast.error(t.couponPlaceholder);
+      return;
+    }
+
+    if (
+      status.hasActiveCoupon &&
+      status.activeCouponCode &&
+      status.activeCouponCode.toLowerCase() === code.toLowerCase()
+    ) {
+      setAppliedCoupon(code.toUpperCase());
+      toast.success(t.couponApplied);
+    } else {
+      toast.error(t.couponInvalid);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon('');
+    setCouponInput('');
+  };
+
+  // Determine current effective prices based on applied coupon
+  const isCouponEffective = Boolean(
+    appliedCoupon &&
+    status.hasActiveCoupon &&
+    status.activeCouponCode &&
+    status.activeCouponCode.toLowerCase() === appliedCoupon.toLowerCase()
+  );
+
+  const l1Price = isCouponEffective && status.level1DiscountedPrice ? status.level1DiscountedPrice : status.level1Price;
+  const l2Price = isCouponEffective && status.level2DiscountedPrice ? status.level2DiscountedPrice : status.level2Price;
+  const l3Price = isCouponEffective && status.level3DiscountedPrice ? status.level3DiscountedPrice : status.level3Price;
+
+  const handlePay = async (featureName, tierName, finalPrice) => {
     setProcessingFeature(featureName);
     try {
-      const order = await createOrder(featureName);
+      const order = await createOrder(featureName, null, appliedCoupon || null);
 
       const options = {
         key: order.keyId,
@@ -217,7 +284,7 @@ const PaymentPage = () => {
         currency: order.currency,
         order_id: order.orderId,
         name: 'Prajapati Samaj',
-        description: `2-Month ${tierName} Membership (₹${price} Incl. 18% GST)`,
+        description: `2-Month ${tierName} Membership (₹${finalPrice} Incl. 18% GST)`,
         handler: async (response) => {
           try {
             const result = await verifyPayment({
@@ -343,6 +410,47 @@ const PaymentPage = () => {
           </p>
         </div>
 
+        {/* Coupon Code Section */}
+        <div className="max-w-md mx-auto p-4 bg-white dark:bg-card-dark rounded-2xl border border-border/80 dark:border-gray-700 shadow-sm">
+          <div className="flex items-center gap-2 mb-2.5">
+            <Tag className="w-4 h-4 text-primary" />
+            <span className="text-xs font-bold text-gray-700 dark:text-gray-200">{t.couponSectionTitle}</span>
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={couponInput}
+              onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+              placeholder={t.couponPlaceholder}
+              disabled={Boolean(appliedCoupon)}
+              className="flex-1 px-3.5 py-2 text-xs font-semibold rounded-xl border border-border dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:border-primary uppercase tracking-wider"
+            />
+            {appliedCoupon ? (
+              <button
+                type="button"
+                onClick={handleRemoveCoupon}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-bold transition shadow-sm"
+              >
+                {t.removeCoupon}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleApplyCoupon}
+                className="px-5 py-2 bg-primary hover:bg-primary-light text-white rounded-xl text-xs font-bold transition shadow-sm"
+              >
+                {t.applyCoupon}
+              </button>
+            )}
+          </div>
+          {isCouponEffective && (
+            <div className="mt-2 text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5">
+              <span>✓</span>
+              <span>Coupon <strong>{appliedCoupon}</strong> active! Discounts applied below.</span>
+            </div>
+          )}
+        </div>
+
         {/* Active Membership Banner */}
         {currentTier !== 'FREE' && (
           <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white rounded-2xl p-5 shadow-lg flex flex-col md:flex-row items-center justify-between gap-4 border border-emerald-400/40">
@@ -380,7 +488,7 @@ const PaymentPage = () => {
           /* 3 Pricing Tier Cards Grid */
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto items-stretch">
 
-            {/* TIER 1: Level 1 (₹99) */}
+            {/* TIER 1: Level 1 */}
             <div className={`bg-white dark:bg-card-dark rounded-3xl p-6 shadow-lg flex flex-col justify-between space-y-6 relative overflow-hidden transition ${currentTier === 'LEVEL_1' ? 'border-2 border-emerald-500 ring-2 ring-emerald-500/20' : 'border border-border/80 dark:border-gray-700'
               }`}>
               <div className="space-y-4">
@@ -394,7 +502,19 @@ const PaymentPage = () => {
                     </h2>
                   </div>
                   <div className="text-right">
-                    <p className="text-3xl font-extrabold text-blue-600 dark:text-blue-400">₹99</p>
+                    {isCouponEffective && status.level1DiscountPercent > 0 ? (
+                      <div>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <span className="text-sm line-through text-gray-400 font-bold">₹{status.level1Price}</span>
+                          <span className="text-[10px] bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 font-extrabold px-1.5 py-0.5 rounded">
+                            {status.level1DiscountPercent}% {t.discountBadge}
+                          </span>
+                        </div>
+                        <p className="text-3xl font-extrabold text-blue-600 dark:text-blue-400">₹{l1Price}</p>
+                      </div>
+                    ) : (
+                      <p className="text-3xl font-extrabold text-blue-600 dark:text-blue-400">₹{status.level1Price}</p>
+                    )}
                     <p className="text-[10px] text-blue-700 dark:text-blue-300 font-bold uppercase tracking-wider">{t.gstBadge}</p>
                     <p className="text-xs text-gray-400 font-medium">{t.validity}</p>
                   </div>
@@ -456,17 +576,17 @@ const PaymentPage = () => {
                   </div>
                 ) : (
                   <button
-                    onClick={() => handlePay('LEVEL_1', 'Level 1', 99)}
+                    onClick={() => handlePay('LEVEL_1', 'Level 1', l1Price)}
                     disabled={processingFeature !== null || currentTier === 'LEVEL_2' || currentTier === 'LEVEL_3'}
                     className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow cursor-pointer disabled:opacity-50"
                   >
-                    {processingFeature === 'LEVEL_1' ? <Spinner size="sm" /> : t.t1Btn}
+                    {processingFeature === 'LEVEL_1' ? <Spinner size="sm" /> : `${t.t1Btn} (₹${l1Price})`}
                   </button>
                 )}
               </div>
             </div>
 
-            {/* TIER 2: Level 2 (₹199) - RECOMMENDED */}
+            {/* TIER 2: Level 2 - RECOMMENDED */}
             <div className={`bg-white dark:bg-card-dark rounded-3xl p-6 shadow-xl flex flex-col justify-between space-y-6 relative overflow-hidden transition ${currentTier === 'LEVEL_2' ? 'border-2 border-emerald-500 ring-2 ring-emerald-500/20' : 'border-2 border-primary/70 dark:border-primary ring-4 ring-primary/10'
               }`}>
               <div className="absolute top-0 right-0 bg-primary text-white text-[9px] font-extrabold uppercase px-3 py-0.5 rounded-bl-lg tracking-wider">
@@ -484,7 +604,19 @@ const PaymentPage = () => {
                     </h2>
                   </div>
                   <div className="text-right">
-                    <p className="text-3xl font-extrabold text-primary">₹199</p>
+                    {isCouponEffective && status.level2DiscountPercent > 0 ? (
+                      <div>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <span className="text-sm line-through text-gray-400 font-bold">₹{status.level2Price}</span>
+                          <span className="text-[10px] bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 font-extrabold px-1.5 py-0.5 rounded">
+                            {status.level2DiscountPercent}% {t.discountBadge}
+                          </span>
+                        </div>
+                        <p className="text-3xl font-extrabold text-primary">₹{l2Price}</p>
+                      </div>
+                    ) : (
+                      <p className="text-3xl font-extrabold text-primary">₹{status.level2Price}</p>
+                    )}
                     <p className="text-[10px] text-primary font-bold uppercase tracking-wider">{t.gstBadge}</p>
                     <p className="text-xs text-gray-400 font-medium">{t.validity}</p>
                   </div>
@@ -540,17 +672,17 @@ const PaymentPage = () => {
                   </div>
                 ) : (
                   <button
-                    onClick={() => handlePay('LEVEL_2', 'Level 2', 199)}
+                    onClick={() => handlePay('LEVEL_2', 'Level 2', l2Price)}
                     disabled={processingFeature !== null || currentTier === 'LEVEL_3'}
                     className="w-full py-3 rounded-xl bg-primary hover:bg-primary-light text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-md cursor-pointer disabled:opacity-50"
                   >
-                    {processingFeature === 'LEVEL_2' ? <Spinner size="sm" /> : t.t2Btn}
+                    {processingFeature === 'LEVEL_2' ? <Spinner size="sm" /> : `${t.t2Btn} (₹${l2Price})`}
                   </button>
                 )}
               </div>
             </div>
 
-            {/* TIER 3: Level 3 (₹299) - VIP ALL-ACCESS */}
+            {/* TIER 3: Level 3 - VIP ALL-ACCESS */}
             <div className={`bg-gradient-to-b from-amber-500/10 via-white to-amber-500/5 dark:from-amber-950/30 dark:via-card-dark dark:to-amber-950/20 rounded-3xl p-6 shadow-2xl flex flex-col justify-between space-y-6 relative overflow-hidden transition ${currentTier === 'LEVEL_3' ? 'border-2 border-emerald-500 ring-2 ring-emerald-500/20' : 'border-2 border-amber-500/80 dark:border-amber-400/80 ring-4 ring-amber-500/20'
               }`}>
               <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-950 text-[9px] font-black uppercase px-3.5 py-0.5 rounded-bl-lg tracking-wider shadow">
@@ -568,7 +700,19 @@ const PaymentPage = () => {
                     </h2>
                   </div>
                   <div className="text-right">
-                    <p className="text-3xl font-extrabold text-amber-600 dark:text-amber-400">₹299</p>
+                    {isCouponEffective && status.level3DiscountPercent > 0 ? (
+                      <div>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <span className="text-sm line-through text-gray-400 font-bold">₹{status.level3Price}</span>
+                          <span className="text-[10px] bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 font-extrabold px-1.5 py-0.5 rounded">
+                            {status.level3DiscountPercent}% {t.discountBadge}
+                          </span>
+                        </div>
+                        <p className="text-3xl font-extrabold text-amber-600 dark:text-amber-400">₹{l3Price}</p>
+                      </div>
+                    ) : (
+                      <p className="text-3xl font-extrabold text-amber-600 dark:text-amber-400">₹{status.level3Price}</p>
+                    )}
                     <p className="text-[10px] text-amber-700 dark:text-amber-300 font-bold uppercase tracking-wider">{t.gstBadge}</p>
                     <p className="text-xs text-gray-400 font-medium">{t.validity}</p>
                   </div>
@@ -624,16 +768,16 @@ const PaymentPage = () => {
                   </div>
                 ) : (
                   <button
-                    onClick={() => handlePay('LEVEL_3', 'Level 3 VIP', 299)}
+                    onClick={() => handlePay('LEVEL_3', 'Level 3 VIP', l3Price)}
                     disabled={processingFeature !== null}
                     className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-xs transition flex items-center justify-center gap-2 shadow-lg cursor-pointer disabled:opacity-50"
                   >
                     {processingFeature === 'LEVEL_3' ? (
                       <Spinner size="sm" />
                     ) : currentTier !== 'FREE' ? (
-                      t.t3BtnUpgrade
+                      `${t.t3BtnUpgrade} (₹${l3Price})`
                     ) : (
-                      t.t3BtnGet
+                      `${t.t3BtnGet} (₹${l3Price})`
                     )}
                   </button>
                 )}
