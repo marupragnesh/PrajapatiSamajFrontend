@@ -17,6 +17,7 @@ import {
   Clock
 } from 'lucide-react';
 import LogoIcon from './LogoIcon';
+import ClearCacheButton from './ClearCacheButton';
 import { getTodayRegistrationsCount } from '../../api/profileApi';
 import logger from '../../utils/logger';
 
@@ -228,9 +229,13 @@ const Footer = () => {
 
         {/* Bottom Section: Copyright */}
         <div className="pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-400 text-center sm:text-left">
-          <p>
-            &copy; {new Date().getFullYear()} PrajapatiSamaj. All rights reserved.
-          </p>
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
+            <p>
+              &copy; {new Date().getFullYear()} PrajapatiSamaj. All rights reserved.
+            </p>
+            <span className="hidden sm:inline text-slate-700">•</span>
+            <ClearCacheButton variant="link" />
+          </div>
           <p className="flex items-center gap-1.5 text-gray-400">
             <span>Crafted with</span>
             <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 inline-block" />

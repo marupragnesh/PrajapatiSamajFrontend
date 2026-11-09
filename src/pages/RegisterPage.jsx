@@ -10,6 +10,7 @@ import { registerUser, verifyRegistrationOtp, resendRegistrationOtp } from '../a
 import useAuth from '../hooks/useAuth';
 import logger from '../utils/logger';
 import LogoIcon from '../components/common/LogoIcon';
+import ClearCacheButton from '../components/common/ClearCacheButton';
 
 const REG_PENDING_KEY = 'matrimonial_pending_registration';
 
@@ -283,6 +284,8 @@ const RegisterPage = () => {
         <Link to="/terms-conditions" className="hover:text-primary transition-colors">Terms &amp; Conditions</Link>
         <span>•</span>
         <Link to="/contact" className="hover:text-primary transition-colors">Contact Support</Link>
+        <span>•</span>
+        <ClearCacheButton variant="link" />
       </div>
 
       {/* Developer credit */}
