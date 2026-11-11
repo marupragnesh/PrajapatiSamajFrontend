@@ -298,7 +298,8 @@ const DiscoverPage = () => {
 
       <div className="max-w-6xl mx-auto px-4 py-8">
 
-        {/* ── Community Live Growth Stats Banner ── */}
+        {/* ── Community Live Growth Stats Banner (Hidden as requested) ── */}
+        {/*
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6 p-3 sm:px-4 sm:py-2.5 rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-white dark:to-card-dark border border-primary/20 text-xs shadow-sm">
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <span className="flex h-2 w-2 relative shrink-0">
@@ -326,6 +327,7 @@ const DiscoverPage = () => {
             <span>{stats.loading ? 'Refreshing...' : 'Refresh Stats'}</span>
           </button>
         </div>
+        */}
 
         {/* ── Search Bar, View Mode Toggle & Filter Button ── */}
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-3 mb-6">
