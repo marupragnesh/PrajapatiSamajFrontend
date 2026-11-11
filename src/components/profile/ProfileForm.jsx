@@ -3,6 +3,8 @@ import toast from 'react-hot-toast';
 import Spinner from '../common/Spinner';
 import { translations } from '../../utils/translations';
 import { predictRashiByName, RASHI_OPTIONS } from '../../utils/rashiUtil';
+import { POPULAR_HOBBIES } from '../../utils/hobbiesData';
+import { INDIAN_MOTHER_TONGUES } from '../../utils/languageData';
 
 /**
  * Reusable profile form — used on ProfileSetupPage and EditProfilePage.
@@ -153,7 +155,8 @@ const ProfileForm = ({
     motherName:        initialData.motherName        || '',
     motherOccupation:  initialData.motherOccupation  || '',
     description:       initialData.description       || '',
-    hobbies:           initialData.hobbies           || '',
+    motherTongue:      initialData.motherTongue      || 'Gujarati',
+    hobbies:           initialData.hobbies           || 'Watching Movies, Listening to Music',
     managedBy:         initialData.managedBy         || 'Self',
   });
 
@@ -455,6 +458,14 @@ const ProfileForm = ({
             <option value="SINGLE">{t.maritalStatusSingle}</option>
             <option value="DIVORCED">{t.maritalStatusDivorced}</option>
             <option value="WIDOWED">{t.maritalStatusWidowed}</option>
+          </select>
+        </Field>
+
+        <Field label={lang === 'gu' ? 'માતૃભાષા (Mother Tongue)' : 'Mother Tongue'}>
+          <select name="motherTongue" value={form.motherTongue || 'Gujarati'} onChange={handleChange} className={inputClass}>
+            {INDIAN_MOTHER_TONGUES.map((l) => (
+              <option key={l} value={l}>{l}</option>
+            ))}
           </select>
         </Field>
       </AccordionSection>
@@ -832,10 +843,49 @@ const ProfileForm = ({
             rows={4} placeholder="Write something about yourself, your background, and family..." className={inputClass} />
         </Field>
 
-        <Field label="Hobbies">
-          <textarea name="hobbies" value={form.hobbies} onChange={handleChange}
-            rows={3} placeholder="Cricket, Coding, Music..." className={inputClass} />
-        </Field>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            {lang === 'gu' ? 'શોખ અને રુચિઓ (Hobbies & Interests)' : 'Hobbies & Interests'}
+          </label>
+          <div className="flex flex-wrap gap-1.5 mb-2.5">
+            {POPULAR_HOBBIES.map((h) => {
+              const currentList = form.hobbies
+                ? form.hobbies.split(',').map((s) => s.trim()).filter(Boolean)
+                : [];
+              const isSelected = currentList.includes(h.label);
+              return (
+                <button
+                  key={h.id}
+                  type="button"
+                  onClick={() => {
+                    let updated;
+                    if (isSelected) {
+                      updated = currentList.filter((s) => s !== h.label);
+                    } else {
+                      updated = [...currentList, h.label];
+                    }
+                    setForm((prev) => ({ ...prev, hobbies: updated.join(', ') }));
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer border flex items-center gap-1 ${
+                    isSelected
+                      ? 'bg-primary text-white border-primary shadow-sm'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-border dark:border-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <span>{h.icon}</span>
+                  <span>{h.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          <input
+            name="hobbies"
+            value={form.hobbies || ''}
+            onChange={handleChange}
+            placeholder="Watching Movies, Listening to Music, Cricket..."
+            className={inputClass}
+          />
+        </div>
       </AccordionSection>
 
       {serverError && <p className="text-error text-sm pt-2">{serverError}</p>}

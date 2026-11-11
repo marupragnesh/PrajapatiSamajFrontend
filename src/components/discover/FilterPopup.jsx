@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { SlidersHorizontal, X, Lock } from 'lucide-react';
+import { INDIAN_STATES, getCitiesByState } from '../../utils/indiaLocationData';
+import { INDIAN_MOTHER_TONGUES } from '../../utils/languageData';
 
 /**
  * FilterPopup — Modal component for Discover Page Filters.
@@ -46,6 +48,9 @@ const DEFAULT_FILTERS = {
   maxHeight: '',
   diet: '',
   surname: '',
+  state: '',
+  city: '',
+  motherTongue: '',
 };
 
 const FilterPopup = ({
@@ -120,8 +125,19 @@ const FilterPopup = ({
   const isMaritalStatusActive = Boolean(localFilters.maritalStatus);
   const isDietActive = Boolean(localFilters.diet);
   const isSurnameActive = Boolean(localFilters.surname);
+  const isStateActive = Boolean(localFilters.state);
+  const isCityActive = Boolean(localFilters.city);
+  const isMotherTongueActive = Boolean(localFilters.motherTongue);
 
-  const hasAnyActiveFilter = isGenderActive || isAgeActive || isMaritalStatusActive || isDietActive || isSurnameActive;
+  const hasAnyActiveFilter =
+    isGenderActive ||
+    isAgeActive ||
+    isMaritalStatusActive ||
+    isDietActive ||
+    isSurnameActive ||
+    isStateActive ||
+    isCityActive ||
+    isMotherTongueActive;
 
   const inputClass =
     'w-full px-3 py-1.5 rounded-lg border border-border dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary';
@@ -362,6 +378,117 @@ const FilterPopup = ({
               onChange={(e) => handleFieldChange('surname', e.target.value)}
               className={inputClass}
             />
+          </div>
+
+          {/* 6. State & City Cascading Filter */}
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* State */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    State
+                  </label>
+                  {isStateActive && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleFieldChange('state', '');
+                        handleFieldChange('city', '');
+                      }}
+                      className="text-xs text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      ✕ Clear
+                    </button>
+                  )}
+                </div>
+                <select
+                  value={localFilters.state || ''}
+                  onChange={(e) => {
+                    handleFieldChange('state', e.target.value);
+                    handleFieldChange('city', '');
+                  }}
+                  className={inputClass}
+                >
+                  <option value="">All States</option>
+                  {INDIAN_STATES.map((st) => (
+                    <option key={st} value={st}>
+                      {st}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* City */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    City
+                  </label>
+                  {isCityActive && (
+                    <button
+                      type="button"
+                      onClick={() => handleClearField('city')}
+                      className="text-xs text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      ✕ Clear
+                    </button>
+                  )}
+                </div>
+                {localFilters.state ? (
+                  <select
+                    value={localFilters.city || ''}
+                    onChange={(e) => handleFieldChange('city', e.target.value)}
+                    className={inputClass}
+                  >
+                    <option value="">All Cities in {localFilters.state}</option>
+                    {getCitiesByState(localFilters.state).map((ct) => (
+                      <option key={ct} value={ct}>
+                        {ct}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    placeholder="Select State first or type City"
+                    value={localFilters.city || ''}
+                    onChange={(e) => handleFieldChange('city', e.target.value)}
+                    className={inputClass}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 7. Mother Tongue Filter */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Mother Tongue
+              </label>
+              {isMotherTongueActive && (
+                <button
+                  type="button"
+                  onClick={() => handleClearField('motherTongue')}
+                  className="text-xs text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  ✕ Clear
+                </button>
+              )}
+            </div>
+            <select
+              value={localFilters.motherTongue || ''}
+              onChange={(e) => handleFieldChange('motherTongue', e.target.value)}
+              className={inputClass}
+            >
+              <option value="">All Languages</option>
+              {INDIAN_MOTHER_TONGUES.map((lang) => (
+                <option key={lang} value={lang}>
+                  {lang}
+                </option>
+              ))}
+            </select>
           </div>
 
         </div>

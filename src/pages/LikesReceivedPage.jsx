@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Heart, User } from 'lucide-react';
+import { Heart, User, Crown } from 'lucide-react';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import SkeletonCard from '../components/common/SkeletonCard';
@@ -88,14 +88,31 @@ const LikesReceivedPage = () => {
 };
 
 const LikerCard = ({ liker, onClick }) => {
-  const { profileId, fullName, age, city, profession, primaryPhotoUrl } = liker;
+  const {
+    profileId,
+    fullName,
+    age,
+    city,
+    profession,
+    primaryPhotoUrl,
+    likerMembershipTier,
+    isLevel2OrAbove
+  } = liker;
+
+  const isVip = isLevel2OrAbove || likerMembershipTier === 'LEVEL_2' || likerMembershipTier === 'LEVEL_3';
 
   return (
     <div
       onClick={() => onClick(profileId)}
-      className="cursor-pointer rounded-2xl border border-border bg-white dark:bg-card-dark overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col h-full"
+      className="cursor-pointer rounded-2xl border border-border bg-white dark:bg-card-dark overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col h-full relative"
     >
-      <div className="h-48 bg-gray-100 dark:bg-gray-800 overflow-hidden">
+      <div className="h-48 bg-gray-100 dark:bg-gray-800 overflow-hidden relative">
+        {isVip && (
+          <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white shadow-md flex items-center gap-1 z-10 border border-amber-200">
+            <Crown className="w-3.5 h-3.5 fill-white" />
+            <span>{likerMembershipTier === 'LEVEL_3' ? 'Level 3 VIP' : 'Level 2 Premium'}</span>
+          </span>
+        )}
         {primaryPhotoUrl ? (
           <img
             src={resolveImageUrl(primaryPhotoUrl)}

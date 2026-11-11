@@ -43,6 +43,9 @@ const DEFAULT_FILTERS = {
   maxHeight: '',
   diet: '',
   surname: '',
+  state: '',
+  city: '',
+  motherTongue: '',
 };
 
 const DiscoverPage = () => {
@@ -144,6 +147,9 @@ const DiscoverPage = () => {
     filters.minHeight || filters.maxHeight,
     filters.diet,
     filters.surname,
+    filters.state,
+    filters.city,
+    filters.motherTongue,
   ].filter(Boolean).length;
 
   // ── Browse helpers ──
