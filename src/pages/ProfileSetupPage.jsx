@@ -22,14 +22,18 @@ const ProfileSetupPage = () => {
     logger.info('ProfileSetupPage loaded with 5-Card Wizard');
   }, []);
 
-  /** Called by ProfileWizard with validated profile payload */
+  /** Called by ProfileWizard to persist profile before uploading photos */
   const handleCreateProfile = async (profileData) => {
     logger.api('POST', '/api/profile', profileData);
     const data = await createProfile(profileData);
     logger.response('/api/profile', data);
-    logger.info('Profile created — redirecting to /discover');
-    navigate('/discover');
     return data;
+  };
+
+  /** Called by ProfileWizard only after photos and expectations finish */
+  const handleWizardComplete = () => {
+    logger.info('Profile, photos & expectations created — redirecting to /discover');
+    navigate('/discover');
   };
 
   return (
@@ -45,7 +49,8 @@ const ProfileSetupPage = () => {
 
       <ProfileWizard
         initialData={user || {}}
-        onComplete={handleCreateProfile}
+        onCreateProfile={handleCreateProfile}
+        onComplete={handleWizardComplete}
       />
     </div>
   );

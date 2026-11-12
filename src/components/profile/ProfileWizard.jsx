@@ -19,24 +19,20 @@ import toast from 'react-hot-toast';
 import imageCompression from 'browser-image-compression';
 import { INDIAN_STATES, getCitiesByState } from '../../utils/indiaLocationData';
 import { INDIAN_MOTHER_TONGUES } from '../../utils/languageData';
-import { POPULAR_HOBBIES } from '../../utils/hobbiesData';
 import { uploadPhoto, saveExpectations } from '../../api/profileApi';
 import logger from '../../utils/logger';
 
 const MARITAL_STATUS_OPTIONS = [
-  { value: 'NEVER_MARRIED', label: 'Never Married (અપરિણીત)' },
+  { value: 'SINGLE', label: 'Never Married / Single (અપરિણીત)' },
   { value: 'DIVORCED', label: 'Divorced (છૂટાછેડા)' },
   { value: 'WIDOWED', label: 'Widowed (વિધવા / વિધુર)' },
-  { value: 'AWAITING_DIVORCE', label: 'Awaiting Divorce' },
 ];
 
 const DIET_OPTIONS = [
-  { value: 'PURE_VEGETARIAN', label: 'Pure Vegetarian (ચુસ્ત શાકાહારી)' },
-  { value: 'VEGETARIAN', label: 'Vegetarian (શાકાહારી)' },
-  { value: 'JAIN', label: 'Jain (જૈન)' },
-  { value: 'EGGETARIAN', label: 'Eggetarian (ઈંડા સાથે)' },
-  { value: 'NON_VEGETARIAN', label: 'Non-Vegetarian' },
-  { value: 'VEGAN', label: 'Vegan' },
+  { value: 'VEG', label: 'Vegetarian (શાકાહારી)' },
+  { value: 'VEG_EGG', label: 'Eggetarian (ઈંડા સાથે)' },
+  { value: 'NON_VEG', label: 'Non-Vegetarian (માંસાહારી)' },
+  { value: 'VEGAN', label: 'Vegan (વીગન)' },
 ];
 
 const RASHI_OPTIONS = [
@@ -83,20 +79,24 @@ const calculateAge = (dobString) => {
 /**
  * 5-Step Card Profile Registration Wizard
  */
-const ProfileWizard = ({ initialData = {}, onComplete, onCancel }) => {
+const ProfileWizard = ({ initialData = {}, onCreateProfile, onComplete, onCancel }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitProgress, setSubmitProgress] = useState('');
 
   // ── Form State ──
   const [formData, setFormData] = useState({
-    // Step 1: Personal
+    // Step 1: Personal & Family
     name: initialData.name || '',
     surname: initialData.surname || 'Prajapati',
     gender: initialData.gender || 'MALE',
-    maritalStatus: initialData.maritalStatus || 'NEVER_MARRIED',
+    maritalStatus: initialData.maritalStatus || 'SINGLE',
     motherTongue: initialData.motherTongue || 'Gujarati',
     managedBy: initialData.managedBy || 'Self',
+    fatherName: initialData.fatherName || '',
+    fatherOccupation: initialData.fatherOccupation || '',
+    motherName: initialData.motherName || '',
+    motherOccupation: initialData.motherOccupation || '',
 
     // Step 2: Birth & Horoscope
     dateOfBirth: initialData.dateOfBirth || '',
@@ -105,7 +105,7 @@ const ProfileWizard = ({ initialData = {}, onComplete, onCancel }) => {
     birthPlace: initialData.birthPlace || '',
     rashi: initialData.rashi || '',
     weight: initialData.weight || '',
-    diet: initialData.diet || 'PURE_VEGETARIAN',
+    diet: initialData.diet || 'VEG',
     hasMangal: initialData.hasMangal ?? false,
     hasSani: initialData.hasSani ?? false,
 
@@ -118,21 +118,17 @@ const ProfileWizard = ({ initialData = {}, onComplete, onCancel }) => {
     addressLine: initialData.addressLine || '',
     pincode: initialData.pincode || '',
 
-    // Step 4: Education, Career & Hobbies
+    // Step 4: Education & Career
     education: initialData.education || '',
     profession: initialData.profession || '',
     income: initialData.income || '',
-    selectedHobbies: initialData.hobbies
-      ? initialData.hobbies.split(',').map((h) => h.trim()).filter(Boolean)
-      : ['Watching Movies', 'Listening to Music'],
-    customHobbyInput: '',
     description: initialData.description || '',
 
     // Step 5: Partner Expectations (auto-filled on age/gender selection, editable)
     preferredGender: initialData.gender === 'FEMALE' ? 'MALE' : 'FEMALE',
     prefMinAge: 21,
     prefMaxAge: 26,
-    prefMaritalStatus: 'NEVER_MARRIED',
+    prefMaritalStatus: 'SINGLE',
     prefCity: initialData.city || '',
     prefState: initialData.state || 'Gujarat',
   });
@@ -207,32 +203,6 @@ const ProfileWizard = ({ initialData = {}, onComplete, onCancel }) => {
     });
   };
 
-  // Toggle hobby chip
-  const toggleHobby = (hobbyLabel) => {
-    setFormData((prev) => {
-      const exists = prev.selectedHobbies.includes(hobbyLabel);
-      const nextHobbies = exists
-        ? prev.selectedHobbies.filter((h) => h !== hobbyLabel)
-        : [...prev.selectedHobbies, hobbyLabel];
-      return { ...prev, selectedHobbies: nextHobbies };
-    });
-  };
-
-  const handleAddCustomHobby = (e) => {
-    e.preventDefault();
-    const val = formData.customHobbyInput.trim();
-    if (!val) return;
-    if (!formData.selectedHobbies.includes(val)) {
-      setFormData((prev) => ({
-        ...prev,
-        selectedHobbies: [...prev.selectedHobbies, val],
-        customHobbyInput: '',
-      }));
-    } else {
-      setFormData((prev) => ({ ...prev, customHobbyInput: '' }));
-    }
-  };
-
   // ── Photo Selection Handlers ──
   const handlePhotoSelect = (e) => {
     const files = Array.from(e.target.files || []);
@@ -284,6 +254,14 @@ const ProfileWizard = ({ initialData = {}, onComplete, onCancel }) => {
           toast.error('Please enter your Surname.');
           return false;
         }
+        if (!formData.fatherName.trim()) {
+          toast.error("Please enter your Father's Name.");
+          return false;
+        }
+        if (!formData.motherName.trim()) {
+          toast.error("Please enter your Mother's Name.");
+          return false;
+        }
         return true;
 
       case 2:
@@ -295,11 +273,23 @@ const ProfileWizard = ({ initialData = {}, onComplete, onCancel }) => {
           toast.error('Must be at least 18 years old to create a matrimonial profile.');
           return false;
         }
+        if (!formData.birthTime.trim()) {
+          toast.error('Please enter your Birth Time.');
+          return false;
+        }
+        if (!formData.birthPlace.trim()) {
+          toast.error('Please enter your Birth Place.');
+          return false;
+        }
+        if (!formData.weight || Number(formData.weight) < 1 || Number(formData.weight) > 300) {
+          toast.error('Please enter a valid Weight in kg (1–300).');
+          return false;
+        }
         return true;
 
       case 3:
-        if (!formData.mobileNo.trim() || formData.mobileNo.trim().length < 10) {
-          toast.error('Please enter a valid 10-digit mobile number.');
+        if (!/^[6-9][0-9]{9}$/.test(formData.mobileNo.trim())) {
+          toast.error('Please enter a valid 10-digit Indian mobile number.');
           return false;
         }
         if (!formData.state) {
@@ -308,6 +298,14 @@ const ProfileWizard = ({ initialData = {}, onComplete, onCancel }) => {
         }
         if (!formData.city) {
           toast.error('Please select your City.');
+          return false;
+        }
+        if (!formData.addressLine.trim()) {
+          toast.error('Please enter your Residential Address.');
+          return false;
+        }
+        if (!/^[0-9]{6}$/.test(formData.pincode.trim())) {
+          toast.error('Please enter a valid 6-digit Pincode.');
           return false;
         }
         return true;
@@ -362,12 +360,16 @@ const ProfileWizard = ({ initialData = {}, onComplete, onCancel }) => {
         maritalStatus: formData.maritalStatus,
         motherTongue: formData.motherTongue,
         managedBy: formData.managedBy,
+        fatherName: formData.fatherName.trim(),
+        fatherOccupation: formData.fatherOccupation.trim() || null,
+        motherName: formData.motherName.trim(),
+        motherOccupation: formData.motherOccupation.trim() || null,
         dateOfBirth: formData.dateOfBirth,
         age: computedAge || formData.age,
-        birthTime: formData.birthTime || null,
-        birthPlace: formData.birthPlace || null,
+        birthTime: formData.birthTime.trim(),
+        birthPlace: formData.birthPlace.trim(),
         rashi: formData.rashi || null,
-        weight: formData.weight ? parseFloat(formData.weight) : null,
+        weight: parseFloat(formData.weight),
         diet: formData.diet,
         hasMangal: formData.hasMangal,
         hasSani: formData.hasSani,
@@ -375,37 +377,36 @@ const ProfileWizard = ({ initialData = {}, onComplete, onCancel }) => {
         city: formData.city,
         mobileNo: formData.mobileNo.trim(),
         alternateMobileNo: formData.alternateMobileNo.trim() || null,
-        addressLine: formData.addressLine.trim() || null,
-        pincode: formData.pincode.trim() || null,
+        addressLine: formData.addressLine.trim(),
+        pincode: formData.pincode.trim(),
         education: formData.education.trim(),
         profession: formData.profession.trim(),
         income: formData.income.trim() || null,
-        hobbies: formData.selectedHobbies.join(', '),
         description: formData.description.trim() || null,
       };
 
       logger.info('Submitting Profile Wizard form data', profilePayload);
-      if (onComplete) {
-        await onComplete(profilePayload);
+      if (onCreateProfile) {
+        await onCreateProfile(profilePayload);
       }
 
-      // 2. Upload photos sequentially
-      if (selectedPhotos.length > 0) {
-        for (let i = 0; i < selectedPhotos.length; i++) {
-          const item = selectedPhotos[i];
-          setSubmitProgress(`Compressing & uploading photo ${i + 1} of ${selectedPhotos.length}...`);
-          try {
-            const compressed = await imageCompression(item.file, {
-              maxSizeMB: 1,
-              maxWidthOrHeight: 1200,
-              useWebWorker: true,
-            });
-            const fd = new FormData();
-            fd.append('photo', compressed, item.file.name || `photo_${Date.now()}.jpg`);
-            await uploadPhoto(fd);
-          } catch (uploadErr) {
-            logger.error(`Photo ${i + 1} upload failed`, uploadErr);
-          }
+      // 2. Upload photos sequentially (primary photo first so it becomes DP)
+      const orderedPhotos = [
+        ...selectedPhotos.filter((p) => p.isPrimary),
+        ...selectedPhotos.filter((p) => !p.isPrimary),
+      ];
+      if (orderedPhotos.length > 0) {
+        for (let i = 0; i < orderedPhotos.length; i++) {
+          const item = orderedPhotos[i];
+          setSubmitProgress(`Compressing & uploading photo ${i + 1} of ${orderedPhotos.length}...`);
+          const compressed = await imageCompression(item.file, {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 1200,
+            useWebWorker: true,
+          });
+          const fd = new FormData();
+          fd.append('photo', compressed, item.file.name || `photo_${Date.now()}.jpg`);
+          await uploadPhoto(fd);
         }
       }
 
@@ -425,6 +426,9 @@ const ProfileWizard = ({ initialData = {}, onComplete, onCancel }) => {
       }
 
       toast.success('Profile created successfully! Welcome to PrajapatiSamaj 🎉');
+      if (onComplete) {
+        await onComplete(profilePayload);
+      }
     } catch (err) {
       logger.error('Registration wizard submission error', err);
       toast.error(err.response?.data?.message || 'Could not complete registration. Please try again.');
@@ -439,7 +443,7 @@ const ProfileWizard = ({ initialData = {}, onComplete, onCancel }) => {
     { num: 1, label: 'Personal', icon: <User className="w-4 h-4" /> },
     { num: 2, label: 'Birth & Horoscope', icon: <Calendar className="w-4 h-4" /> },
     { num: 3, label: 'Contact & Location', icon: <MapPin className="w-4 h-4" /> },
-    { num: 4, label: 'Education & Hobbies', icon: <Briefcase className="w-4 h-4" /> },
+    { num: 4, label: 'Education & Career', icon: <Briefcase className="w-4 h-4" /> },
     { num: 5, label: 'Photo & Partner', icon: <Camera className="w-4 h-4" /> },
   ];
 
@@ -620,6 +624,65 @@ const ProfileWizard = ({ initialData = {}, onComplete, onCancel }) => {
                 </select>
               </div>
             </div>
+
+            {/* Parents Details */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
+                  Father&apos;s Name <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Rameshbhai Prajapati"
+                  value={formData.fatherName}
+                  onChange={(e) => handleChange('fatherName', e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-border dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
+                  Father&apos;s Occupation (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Business / Farmer"
+                  value={formData.fatherOccupation}
+                  onChange={(e) => handleChange('fatherOccupation', e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-border dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
+                  Mother&apos;s Name <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Gitaben Prajapati"
+                  value={formData.motherName}
+                  onChange={(e) => handleChange('motherName', e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-border dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
+                  Mother&apos;s Occupation (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Homemaker / Teacher"
+                  value={formData.motherOccupation}
+                  onChange={(e) => handleChange('motherOccupation', e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-border dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
+                />
+              </div>
+            </div>
           </div>
         )}
 
@@ -676,19 +739,20 @@ const ProfileWizard = ({ initialData = {}, onComplete, onCancel }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                  Birth Time (જન્મ સમય)
+                  Birth Time (જન્મ સમય) <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="time"
                   value={formData.birthTime}
                   onChange={(e) => handleChange('birthTime', e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-border dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
+                  required
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                  Birth Place (જન્મ સ્થળ)
+                  Birth Place (જન્મ સ્થળ) <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -696,6 +760,7 @@ const ProfileWizard = ({ initialData = {}, onComplete, onCancel }) => {
                   value={formData.birthPlace}
                   onChange={(e) => handleChange('birthPlace', e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-border dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
+                  required
                 />
               </div>
             </div>
@@ -722,7 +787,7 @@ const ProfileWizard = ({ initialData = {}, onComplete, onCancel }) => {
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                  Weight in Kg (વજન)
+                  Weight in Kg (વજન) <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -733,6 +798,7 @@ const ProfileWizard = ({ initialData = {}, onComplete, onCancel }) => {
                   value={formData.weight}
                   onChange={(e) => handleChange('weight', e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-border dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
+                  required
                 />
               </div>
             </div>
@@ -949,7 +1015,7 @@ const ProfileWizard = ({ initialData = {}, onComplete, onCancel }) => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               <div className="sm:col-span-2">
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                  Residential Address
+                  Residential Address <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -957,12 +1023,13 @@ const ProfileWizard = ({ initialData = {}, onComplete, onCancel }) => {
                   value={formData.addressLine}
                   onChange={(e) => handleChange('addressLine', e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-border dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
+                  required
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                  Pincode
+                  Pincode <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -971,6 +1038,7 @@ const ProfileWizard = ({ initialData = {}, onComplete, onCancel }) => {
                   value={formData.pincode}
                   onChange={(e) => handleChange('pincode', e.target.value.replace(/\D/g, ''))}
                   className="w-full px-4 py-3 rounded-xl border border-border dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
+                  required
                 />
               </div>
             </div>
@@ -1025,62 +1093,6 @@ const ProfileWizard = ({ initialData = {}, onComplete, onCancel }) => {
                 onChange={(e) => handleChange('income', e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-border dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
               />
-            </div>
-
-            {/* Interactive Hobby Chips */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                  Select Hobbies & Interests (શોખ)
-                </label>
-                <span className="text-xs text-primary font-medium">
-                  {formData.selectedHobbies.length} selected
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2 mb-3">
-                {POPULAR_HOBBIES.map((h) => {
-                  const isSelected = formData.selectedHobbies.includes(h.label);
-                  return (
-                    <button
-                      key={h.id}
-                      type="button"
-                      onClick={() => toggleHobby(h.label)}
-                      className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium transition-all ${
-                        isSelected
-                          ? 'bg-primary text-white shadow-sm scale-105'
-                          : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-border dark:border-gray-700'
-                      }`}
-                    >
-                      <span>{h.icon}</span>
-                      <span>{h.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Add custom hobby */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Add another hobby..."
-                  value={formData.customHobbyInput}
-                  onChange={(e) => handleChange('customHobbyInput', e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddCustomHobby(e);
-                    }
-                  }}
-                  className="flex-1 px-4 py-2 rounded-xl border border-border dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddCustomHobby}
-                  className="px-4 py-2 rounded-xl bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs font-semibold hover:bg-gray-300 transition"
-                >
-                  + Add
-                </button>
-              </div>
             </div>
 
             {/* About Me / Description */}
