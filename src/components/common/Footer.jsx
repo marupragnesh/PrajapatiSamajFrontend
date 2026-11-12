@@ -14,7 +14,8 @@ import {
   Heart,
   Mail,
   MapPin,
-  Clock
+  Clock,
+  HelpCircle
 } from 'lucide-react';
 import LogoIcon from './LogoIcon';
 import ClearCacheButton from './ClearCacheButton';
@@ -129,6 +130,15 @@ const Footer = () => {
                 >
                   <UserCheck className="w-4 h-4 text-gray-400 shrink-0" />
                   <span>About Platform &amp; Developer</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/faq"
+                  className="flex items-center gap-2 text-gray-300 hover:text-amber-400 transition-colors py-0.5"
+                >
+                  <HelpCircle className="w-4 h-4 text-gray-400 shrink-0" />
+                  <span>Frequently Asked Questions</span>
                 </Link>
               </li>
               <li>

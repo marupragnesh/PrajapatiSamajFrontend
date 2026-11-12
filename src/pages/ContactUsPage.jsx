@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
+import Seo from '../seo/Seo';
 
 /**
  * ContactUsPage — /contact and /contact-us
@@ -41,6 +42,11 @@ const ContactUsPage = () => {
 
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100 flex flex-col">
+      <Seo
+        title="Contact & Support — PrajapatiSamaj Matrimonial"
+        description="Contact PrajapatiSamaj Matrimonial support via email or WhatsApp for help with your profile, biodata studio, or membership plans."
+        path="/contact"
+      />
       <Navbar />
 
       <main className="max-w-4xl mx-auto px-4 py-8 flex-1 space-y-8 w-full">

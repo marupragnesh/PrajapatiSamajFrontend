@@ -1,4 +1,5 @@
 import Navbar from '../../components/common/Navbar';
+import Seo from '../../seo/Seo';
 
 /**
  * TermsConditionsPage — Copied from Razorpay-site terms-and-conditions.html
@@ -6,6 +7,11 @@ import Navbar from '../../components/common/Navbar';
 const TermsConditionsPage = () => {
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100 flex flex-col">
+      <Seo
+        title="Terms & Conditions — PrajapatiSamaj Matrimonial"
+        description="Read the Terms and Conditions governing use of the PrajapatiSamaj Matrimonial platform."
+        path="/terms-conditions"
+      />
       <Navbar />
 
       <main className="max-w-3xl mx-auto px-4 py-10 flex-1 w-full">

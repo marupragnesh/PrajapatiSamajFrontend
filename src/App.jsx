@@ -1,12 +1,15 @@
 import { lazy, Suspense, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import useAuth from './hooks/useAuth';
 import Spinner from './components/common/Spinner';
 import { pingBackend } from './api/healthApi';
+import Seo from './seo/Seo';
 
 /**
  * Lazy load all page-level components — only downloaded when first visited.
  */
+const HomePage              = lazy(() => import('./pages/HomePage'));
+const FaqPage               = lazy(() => import('./pages/FaqPage'));
 const RegisterPage          = lazy(() => import('./pages/RegisterPage'));
 const LoginPage             = lazy(() => import('./pages/LoginPage'));
 const ForgotPasswordPage    = lazy(() => import('./pages/ForgotPasswordPage'));
@@ -33,11 +36,28 @@ const DisclaimerPage         = lazy(() => import('./pages/legal/DisclaimerPage')
 const CancellationRefundPage = lazy(() => import('./pages/legal/CancellationRefundPage'));
 const ShippingPolicyPage     = lazy(() => import('./pages/legal/ShippingPolicyPage'));
 
-/** Redirects to /login if user is not authenticated. */
+/** Marks non-indexable auth/utility routes as noindex. */
+const NoIndexRoute = ({ children }) => {
+  const { pathname } = useLocation();
+  return (
+    <>
+      <Seo noindex path={pathname} />
+      {children}
+    </>
+  );
+};
+
+/** Redirects to /login if user is not authenticated; marks protected pages noindex. */
 const ProtectedRoute = ({ children }) => {
   const { isLoggedIn } = useAuth();
+  const { pathname } = useLocation();
   if (!isLoggedIn) return <Navigate to="/login" replace />;
-  return children;
+  return (
+    <>
+      <Seo noindex path={pathname} />
+      {children}
+    </>
+  );
 };
 
 /** Full-page spinner shown while a lazy page chunk is loading. */
@@ -66,20 +86,21 @@ const App = () => {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
-        {/* Root — redirect based on auth status */}
-        <Route path="/" element={<RootRedirect />} />
+        {/* Root — HomePage for logged-out visitors, /discover for logged-in users */}
+        <Route path="/" element={<RootRoute />} />
+        <Route path="/faq" element={<FaqPage />} />
 
-        {/* ── Public routes ── */}
-        <Route path="/register"         element={<RegisterPage />} />
-        <Route path="/login"            element={<LoginPage />} />
-        <Route path="/forgot-password"  element={<ForgotPasswordPage />} />
-        <Route path="/verify-otp"       element={<VerifyOtpPage />} />
-        <Route path="/reset-password"   element={<ResetPasswordPage />} />
-        <Route path="/account-deleted"  element={<AccountDeletedPage />} />
+        {/* ── Auth & Account Public Routes (noindex) ── */}
+        <Route path="/register"         element={<NoIndexRoute><RegisterPage /></NoIndexRoute>} />
+        <Route path="/login"            element={<NoIndexRoute><LoginPage /></NoIndexRoute>} />
+        <Route path="/forgot-password"  element={<NoIndexRoute><ForgotPasswordPage /></NoIndexRoute>} />
+        <Route path="/verify-otp"       element={<NoIndexRoute><VerifyOtpPage /></NoIndexRoute>} />
+        <Route path="/reset-password"   element={<NoIndexRoute><ResetPasswordPage /></NoIndexRoute>} />
+        <Route path="/account-deleted"  element={<NoIndexRoute><AccountDeletedPage /></NoIndexRoute>} />
 
         {/* ── Legal & About Public Routes ── */}
-        <Route path="/about"                            element={<AboutDeveloperPage />} />
-        <Route path="/about-developer"                  element={<AboutDeveloperPage />} />
+        <Route path="/about"                            element={<NoIndexRoute><AboutDeveloperPage /></NoIndexRoute>} />
+        <Route path="/about-developer"                  element={<NoIndexRoute><AboutDeveloperPage /></NoIndexRoute>} />
         <Route path="/contact"                          element={<ContactUsPage />} />
         <Route path="/contact-us"                       element={<ContactUsPage />} />
         <Route path="/legal/contact-us"                 element={<ContactUsPage />} />
@@ -91,13 +112,13 @@ const App = () => {
         <Route path="/terms-and-conditions"             element={<TermsConditionsPage />} />
         <Route path="/legal/terms-conditions"           element={<TermsConditionsPage />} />
         <Route path="/legal/terms-and-conditions"       element={<TermsConditionsPage />} />
-        <Route path="/disclaimer"                       element={<DisclaimerPage />} />
-        <Route path="/legal/disclaimer"                 element={<DisclaimerPage />} />
-        <Route path="/cancellation-refund"              element={<CancellationRefundPage />} />
-        <Route path="/legal/cancellation-refund-policy" element={<CancellationRefundPage />} />
-        <Route path="/shipping-policy"                  element={<ShippingPolicyPage />} />
-        <Route path="/legal/shipping-policy font"       element={<ShippingPolicyPage />} />
-        <Route path="/legal/shipping-policy"            element={<ShippingPolicyPage />} />
+        <Route path="/disclaimer"                       element={<NoIndexRoute><DisclaimerPage /></NoIndexRoute>} />
+        <Route path="/legal/disclaimer"                 element={<NoIndexRoute><DisclaimerPage /></NoIndexRoute>} />
+        <Route path="/cancellation-refund"              element={<NoIndexRoute><CancellationRefundPage /></NoIndexRoute>} />
+        <Route path="/legal/cancellation-refund-policy" element={<NoIndexRoute><CancellationRefundPage /></NoIndexRoute>} />
+        <Route path="/shipping-policy"                  element={<NoIndexRoute><ShippingPolicyPage /></NoIndexRoute>} />
+        <Route path="/legal/shipping-policy font"       element={<NoIndexRoute><ShippingPolicyPage /></NoIndexRoute>} />
+        <Route path="/legal/shipping-policy"            element={<NoIndexRoute><ShippingPolicyPage /></NoIndexRoute>} />
 
         {/* ── Protected routes ── */}
         <Route path="/profile/setup"        element={<ProtectedRoute><ProfileSetupPage /></ProtectedRoute>} />
@@ -118,10 +139,11 @@ const App = () => {
   );
 };
 
-/** Logged-in → /discover, logged-out → /login */
-const RootRedirect = () => {
+/** Logged-in → /discover, logged-out → public HomePage */
+const RootRoute = () => {
   const { isLoggedIn } = useAuth();
-  return <Navigate to={isLoggedIn ? '/discover' : '/login'} replace />;
+  if (isLoggedIn) return <Navigate to="/discover" replace />;
+  return <HomePage />;
 };
 
 export default App;

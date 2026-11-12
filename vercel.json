@@ -1,4 +1,18 @@
 {
+  "headers": [
+    {
+      "source": "/(login|register|forgot-password|verify-otp|reset-password|account-deleted|discover|likes|interests|matches|payment|biodata|about|about-developer|disclaimer|cancellation-refund|shipping-policy)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
+    {
+      "source": "/(profile|profiles|legal)/(.*)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
   ]

@@ -1,4 +1,5 @@
 import Navbar from '../../components/common/Navbar';
+import Seo from '../../seo/Seo';
 
 /**
  * PrivacyPolicyPage — Copied from Razorpay-site privacy-policy.html
@@ -6,6 +7,11 @@ import Navbar from '../../components/common/Navbar';
 const PrivacyPolicyPage = () => {
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100 flex flex-col">
+      <Seo
+        title="Privacy Policy — PrajapatiSamaj Matrimonial"
+        description="Read the Privacy Policy for PrajapatiSamaj Matrimonial explaining how your information is collected, used, and protected."
+        path="/privacy-policy"
+      />
       <Navbar />
 
       <main className="max-w-3xl mx-auto px-4 py-10 flex-1 w-full">
